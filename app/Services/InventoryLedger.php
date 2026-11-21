@@ -38,7 +38,8 @@ class InventoryLedger
                 ->where('ingredient_id', $ingredientId)
                 ->lockForUpdate()
                 ->firstOrFail();
-            $balance = round((float) $stock->quantity + $quantity, 3);
+            $previous = (float) $stock->quantity;
+            $balance = round($previous + $quantity, 3);
             if ($balance < 0) {
                 throw ValidationException::withMessages([
                     'quantity' =>
@@ -57,6 +58,12 @@ class InventoryLedger
                 'reference' => $reference,
             ]);
 
+            if (
+                $balance <= (float) $stock->minimum &&
+                $previous > (float) $stock->minimum
+            ) {
+                app(NotificationCenter::class)->lowStock($stock, true);
+            }
             return $stock;
         });
     }

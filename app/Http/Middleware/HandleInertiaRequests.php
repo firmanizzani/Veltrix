@@ -12,6 +12,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         return [
+            'business' => fn() => $request->user() ? \App\Models\Setting::business() : [],
             ...parent::share($request),
             'auth' => ['user' => $request->user()?->load('branch')],
             'flash' => [

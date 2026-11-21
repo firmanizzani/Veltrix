@@ -60,6 +60,7 @@ export type User = {
     branch?: Row;
 };
 export type Shared = {
+    business: Record<string, string>;
     auth: { user: User };
     flash: { success?: string; status?: string };
     [key: string]: unknown;

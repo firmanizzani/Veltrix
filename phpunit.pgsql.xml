@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" colors="true">
+    <testsuites>
+        <testsuite name="PostgreSQL integration">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing" force="true"/>
+        <env name="DB_CONNECTION" value="pgsql" force="true"/>
+        <env name="DB_HOST" value="127.0.0.1" force="true"/>
+        <env name="DB_PORT" value="55432" force="true"/>
+        <env name="DB_DATABASE" value="veltrix_test" force="true"/>
+        <env name="DB_USERNAME" value="postgres" force="true"/>
+        <env name="DB_PASSWORD" value="" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
+        <env name="DB_SSLMODE" value="disable" force="true"/>
+        <env name="PGCHANNELBINDING" value="disable" force="true"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="SESSION_DRIVER" value="array"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+    </php>
+</phpunit>

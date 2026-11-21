@@ -1,4 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Button } from '../components/ui/button';
 import { Bell, PackageSearch, ClipboardCheck, RotateCcw } from 'lucide-react';
 import { Empty, PageTitle, Status } from '../components/common';
 import { money, number, type Row } from '../lib/utils';
@@ -6,19 +7,69 @@ export default function Alerts({
     stock,
     purchases,
     refunds,
+    notifications,
 }: {
     stock: Row[];
     purchases: Row[];
     refunds: Row[];
+    notifications: Row[];
 }) {
+    const read = useForm({});
     return (
         <>
             <Head title="Notifikasi operasional" />
             <PageTitle
                 title="Notifikasi operasional"
                 description="Pekerjaan yang perlu ditindaklanjuti berdasarkan data saat ini."
+                action={
+                    <Button
+                        variant="outline"
+                        disabled={
+                            read.processing || !notifications.some((n) => !n.read_at)
+                        }
+                        onClick={() =>
+                            read.post('/alerts/read', { preserveScroll: true })
+                        }
+                    >
+                        Tandai sudah dibaca
+                    </Button>
+                }
             />
             <div className="alerts-layout">
+                <section>
+                    <div className="section-heading">
+                        <h2>
+                            <Bell size={18} />
+                            Pemberitahuan Anda
+                        </h2>
+                    </div>
+                    {notifications.length ? (
+                        notifications.map((notification) => (
+                            <div
+                                className="alert-row"
+                                key={notification.id}
+                            >
+                                <div>
+                                    <strong>{notification.title}</strong>
+                                    <p>{notification.message}</p>
+                                </div>
+                                <span className="status">
+                                    {notification.read_at
+                                        ? 'Sudah dibaca'
+                                        : 'Belum dibaca'}
+                                </span>
+                                <Link
+                                    href={notification.link}
+                                    className="text-link"
+                                >
+                                    Tindak lanjuti
+                                </Link>
+                            </div>
+                        ))
+                    ) : (
+                        <Empty>Belum ada pemberitahuan baru.</Empty>
+                    )}
+                </section>
                 <section>
                     <div className="section-heading">
                         <h2>

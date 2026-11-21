@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\Role;
 use App\Models\User;
+use App\Models\StockReceipt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -45,7 +46,44 @@ class Workflows
                     $data['reason'],
                 );
             } elseif ($key === 'purchases' && $action === 'receive') {
+                $quantities = collect($data['quantities'])
+                    ->map(fn($quantity) => (float) $quantity)
+                    ->sortKeys();
+                $hash = hash('sha256', $quantities->toJson());
+                $previous = StockReceipt::where(
+                    'idempotency_key',
+                    $data['idempotency_key'],
+                )->first();
+                if ($previous) {
+                    if (
+                        $previous->purchase_order_id !== $record->id ||
+                        $previous->request_hash !== $hash
+                    ) {
+                        throw ValidationException::withMessages([
+                            'quantities' =>
+                                'Kunci penerimaan sudah dipakai untuk data lain.',
+                        ]);
+                    }
+                    return;
+                }
                 abort_unless(in_array($record->status, ['ordered', 'partial']), 422);
+                $itemIds = $record->items()->pluck('id');
+                if (
+                    $quantities->sum() <= 0 ||
+                    $quantities->keys()->diff($itemIds)->isNotEmpty()
+                ) {
+                    throw ValidationException::withMessages([
+                        'quantities' =>
+                            'Masukkan jumlah diterima untuk bahan pada pesanan ini.',
+                    ]);
+                }
+                $receipt = StockReceipt::create([
+                    'idempotency_key' => $data['idempotency_key'],
+                    'request_hash' => $hash,
+                    'purchase_order_id' => $record->id,
+                    'branch_id' => $record->branch_id,
+                    'received_by' => $actor->id,
+                ]);
                 foreach (
                     $record->items()->orderBy('ingredient_id')->lockForUpdate()->get()
                     as $item
@@ -66,10 +104,15 @@ class Workflows
                         $quantity,
                         'receiving',
                         'Penerimaan pembelian',
-                        $record->number,
+                        'RCV-' . $receipt->id . ' / ' . $record->number,
                         $item->unit_price,
                     );
                     $item->increment('received', $quantity);
+                    $receipt->items()->create([
+                        'ingredient_id' => $item->ingredient_id,
+                        'quantity' => $quantity,
+                        'unit_cost' => $item->unit_price,
+                    ]);
                 }
                 $items = $record->items()->get();
                 $record->update([

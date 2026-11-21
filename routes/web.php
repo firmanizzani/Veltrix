@@ -10,6 +10,12 @@ use Inertia\Inertia;
 
 Route::get('/', fn() => redirect('/dashboard'));
 Route::middleware('auth')->group(function () {
+    Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'edit']);
+    Route::put('/settings', [\App\Http\Controllers\SettingsController::class, 'update']);
+    Route::post('/alerts/read', [
+        \App\Http\Controllers\SettingsController::class,
+        'readNotifications',
+    ]);
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/reports', [DashboardController::class, 'index']);
     Route::get('/reports/export', [DashboardController::class, 'export']);

@@ -126,12 +126,10 @@ class DemoSeeder extends Seeder
                     'version' => 1,
                 ]);
                 foreach ($recipe as $ingredientIndex => $quantity) {
-                    $version
-                        ->items()
-                        ->create([
-                            'ingredient_id' => $ingredients[$ingredientIndex]->id,
-                            'quantity' => $quantity,
-                        ]);
+                    $version->items()->create([
+                        'ingredient_id' => $ingredients[$ingredientIndex]->id,
+                        'quantity' => $quantity,
+                    ]);
                 }
             }
             $ledger = app(InventoryLedger::class);

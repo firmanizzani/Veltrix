@@ -28,7 +28,13 @@ class ResetUserPassword implements ResetsUserPasswords
         $user
             ->forceFill([
                 'password' => Hash::make($input['password']),
+                'session_version' => $user->session_version + 1,
+                'remember_token' => \Illuminate\Support\Str::random(60),
             ])
             ->save();
+        \Illuminate\Support\Facades\DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->delete();
+        \App\Services\Audit::record($user, 'password.reset', 'user', $user->id);
     }
 }

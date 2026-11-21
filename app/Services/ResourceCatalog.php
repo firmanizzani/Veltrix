@@ -640,6 +640,22 @@ class ResourceCatalog
                 'none',
             ],
         ];
+        $definitions['receipts'] = [
+            \App\Models\StockReceipt::class,
+            'Penerimaan bahan',
+            'Penerimaan pembelian tercatat per dokumen, jumlah, biaya, dan penerima.',
+            [
+                'id' => 'ID penerimaan',
+                'purchase.number' => 'Pembelian',
+                'purchase.branch.name' => 'Cabang',
+                'receiver.name' => 'Penerima',
+                'created_at' => 'Waktu',
+            ],
+            [],
+            ['purchase.branch', 'receiver', 'items.ingredient'],
+            'operations',
+            'none',
+        ];
         abort_unless(isset($definitions[$key]), 404);
         [
             $model,

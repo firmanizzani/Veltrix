@@ -61,6 +61,7 @@ const groups: { title: string; items: NavItem[] }[] = [
             ['Riwayat stok', '/manage/movements', History, ops],
             ['Supplier', '/manage/suppliers', Truck, ops],
             ['Pembelian bahan', '/manage/purchases', PackagePlus, ops],
+            ['Penerimaan bahan', '/manage/receipts', ClipboardCheck, ops],
             ['Transfer stok', '/manage/transfers', ArrowLeftRight, ops],
         ],
     },
@@ -91,12 +92,13 @@ const groups: { title: string; items: NavItem[] }[] = [
             ['Cabang', '/manage/branches', Building2, owner],
             ['Pengguna', '/manage/users', UserRoundCog, owner],
             ['Audit log', '/manage/audit', History, owner],
+            ['Pengaturan bisnis', '/settings', Settings2, owner],
         ],
     },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-    const { auth, flash } = usePage<Shared>().props;
+    const { auth, flash, business } = usePage<Shared>().props;
     const { user } = auth;
     const { url } = usePage();
     const [menu, setMenu] = useState(false);
@@ -158,7 +160,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <div className="workspace">
                     <Coffee size={18} />
                     <div>
-                        <strong>Veltrix Coffee</strong>
+                        <strong>{business.business_name ?? 'Veltrix Coffee'}</strong>
                         <span>{user.branch?.city ?? 'Seluruh cabang'}</span>
                     </div>
                 </div>

@@ -104,6 +104,13 @@ class DashboardController extends Controller
         $branchId = $access->selected($request);
 
         return Inertia::render('Alerts', [
+            'notifications' => \App\Models\OperationalNotification::where(
+                'user_id',
+                $request->user()->id,
+            )
+                ->latest('updated_at')
+                ->limit(30)
+                ->get(),
             'stock' => Inventory::with('ingredient', 'branch')
                 ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                 ->whereColumn('quantity', '<=', 'minimum')

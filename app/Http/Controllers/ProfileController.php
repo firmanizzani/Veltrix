@@ -59,13 +59,11 @@ class ProfileController extends Controller
             ],
         ]);
         DB::transaction(function () use ($request, $data) {
-            $request
-                ->user()
-                ->update([
-                    'password' => $data['password'],
-                    'remember_token' => Str::random(60),
-                    'session_version' => $request->user()->session_version + 1,
-                ]);
+            $request->user()->update([
+                'password' => $data['password'],
+                'remember_token' => Str::random(60),
+                'session_version' => $request->user()->session_version + 1,
+            ]);
             $request
                 ->session()
                 ->put('session_version', $request->user()->session_version);

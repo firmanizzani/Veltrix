@@ -100,6 +100,7 @@ export default function Records({
         actionForm.setData(
             action === 'receive' && d.key === 'purchases'
                 ? {
+                      idempotency_key: crypto.randomUUID(),
                       quantities: Object.fromEntries(
                           row.items.map((item: Row) => [
                               item.id,

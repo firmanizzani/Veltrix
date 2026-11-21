@@ -379,18 +379,21 @@ export default function Pos({
                         </div>
                         <div className="cart-payment">
                             <Errors errors={payment.errors} />
-                            <label className="field cart-note">
-                                Catatan pesanan
-                                <input
-                                    placeholder="Contoh: tanpa es, bawa pulang"
-                                    maxLength={1000}
-                                    value={payment.data.notes}
-                                    onChange={(e) =>
-                                        payment.setData('notes', e.target.value)
-                                    }
-                                    disabled={payment.processing}
-                                />
-                            </label>
+                            <details className="cart-notes">
+                                <summary>Catatan pesanan (opsional)</summary>
+                                <label className="field cart-note">
+                                    <span className="sr-only">Catatan pesanan</span>
+                                    <input
+                                        placeholder="Contoh: tanpa es, bawa pulang"
+                                        maxLength={1000}
+                                        value={payment.data.notes}
+                                        onChange={(e) =>
+                                            payment.setData('notes', e.target.value)
+                                        }
+                                        disabled={payment.processing}
+                                    />
+                                </label>
+                            </details>
                             <div className="cart-subtotal">
                                 <span>Subtotal ({count} produk)</span>
                                 <span>{money(total)}</span>

@@ -6,6 +6,7 @@ import { Dialog } from '../components/ui/dialog';
 import { Errors, PageTitle, Status } from '../components/common';
 import { date, labels, money, type Row, type Shared } from '../lib/utils';
 export default function Receipt({ order }: { order: Row }) {
+    const { business } = usePage<Shared>().props;
     const [refund, setRefund] = useState(false);
     const form = useForm({ reason: '' });
     function submit(e: FormEvent) {
@@ -89,8 +90,7 @@ export default function Receipt({ order }: { order: Row }) {
                         <p className="receipt-note">Catatan: {order.notes}</p>
                     )}
                     <div className="receipt-thanks">
-                        <p>Terima kasih sudah singgah.</p>
-                        <span>Sampai di cangkir berikutnya.</span>
+                        <p>{business.receipt_footer}</p>
                     </div>
                 </article>
                 <aside className="receipt-status">

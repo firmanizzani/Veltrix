@@ -40,6 +40,7 @@ class ResourceRecords
                 'branch-prices',
                 'inventory',
                 'purchases',
+                'receipts',
                 'employees',
                 'expenses',
                 'orders',

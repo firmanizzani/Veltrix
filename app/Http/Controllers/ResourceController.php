@@ -126,6 +126,7 @@ class ResourceController extends Controller
                 'reason' => 'required|string|min:5|max:1000',
             ],
             'purchases.receive' => [
+                'idempotency_key' => 'required|uuid',
                 'quantities' => 'required|array|min:1',
                 'quantities.*' => 'required|numeric|min:0|max:100000000',
             ],
