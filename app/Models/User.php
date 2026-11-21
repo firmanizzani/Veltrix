@@ -3,17 +3,29 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role', 'branch_id', 'is_active', 'session_version'])]
+#[Fillable([
+    'name',
+    'email',
+    'password',
+    'role',
+    'branch_id',
+    'is_active',
+    'session_version',
+])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    protected $attributes = ['is_active' => true, 'session_version' => 1];
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
@@ -28,16 +40,22 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
-            'role' => \App\Enums\Role::class,
+            'role' => Role::class,
         ];
     }
 
-    public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);
     }
 
-    public function isOwner(): bool { return $this->role === \App\Enums\Role::Owner; }
+    public function isOwner(): bool
+    {
+        return $this->role === Role::Owner;
+    }
 
-    public function canAccessBranch(int $branchId): bool { return $this->isOwner() || $this->branch_id === $branchId; }
+    public function canAccessBranch(int $branchId): bool
+    {
+        return $this->isOwner() || $this->branch_id === $branchId;
+    }
 }

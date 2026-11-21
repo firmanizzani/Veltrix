@@ -1,8 +1,18 @@
 <?php
+
 namespace App\Models;
-class RecipeItem extends \Illuminate\Database\Eloquent\Model
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class RecipeItem extends Model
 {
     public $timestamps = false;
+
     protected $guarded = [];
-    public function ingredient(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Ingredient::class); }
+
+    public function ingredient(): BelongsTo
+    {
+        return $this->belongsTo(Ingredient::class);
+    }
 }

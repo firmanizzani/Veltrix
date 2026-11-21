@@ -1,7 +1,18 @@
 <?php
+
 namespace App\Models;
-class Payment extends \Illuminate\Database\Eloquent\Model
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Payment extends Model
 {
-    public $timestamps = false; protected $guarded = [];
-    public function order(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Order::class); }
+    public $timestamps = false;
+
+    protected $guarded = [];
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Order::class);
+    }
 }

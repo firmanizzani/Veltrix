@@ -1,3 +1,12 @@
 <?php
+
 namespace App\Models;
-class OrderItem extends \Illuminate\Database\Eloquent\Model { public $timestamps = false; protected $guarded = []; }
+
+use Illuminate\Database\Eloquent\Model;
+
+class OrderItem extends Model
+{
+    public $timestamps = false;
+
+    protected $guarded = [];
+}

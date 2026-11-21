@@ -1,7 +1,16 @@
 <?php
+
 namespace App\Models;
-class Expense extends \Illuminate\Database\Eloquent\Model
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Expense extends Model
 {
     protected $guarded = [];
-    public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Branch::class); }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

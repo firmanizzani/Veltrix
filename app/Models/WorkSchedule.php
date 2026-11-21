@@ -1,7 +1,16 @@
 <?php
+
 namespace App\Models;
-class WorkSchedule extends \Illuminate\Database\Eloquent\Model
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class WorkSchedule extends Model
 {
     protected $guarded = [];
-    public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Employee::class); }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
 }

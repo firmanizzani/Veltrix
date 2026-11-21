@@ -8,8 +8,16 @@ use Inertia\Middleware;
 class HandleInertiaRequests extends Middleware
 {
     protected $rootView = 'app';
+
     public function share(Request $request): array
     {
-        return [...parent::share($request), 'auth' => ['user' => $request->user()?->load('branch')], 'flash' => ['success' => fn () => $request->session()->get('success'), 'status' => fn () => $request->session()->get('status')]];
+        return [
+            ...parent::share($request),
+            'auth' => ['user' => $request->user()?->load('branch')],
+            'flash' => [
+                'success' => fn() => $request->session()->get('success'),
+                'status' => fn() => $request->session()->get('status'),
+            ],
+        ];
     }
 }

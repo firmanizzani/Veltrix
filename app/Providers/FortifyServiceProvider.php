@@ -6,11 +6,14 @@ use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
+use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Fortify;
 
@@ -33,21 +36,40 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
         Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
         Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
-        Fortify::loginView(fn () => \Inertia\Inertia::render('Auth', ['mode' => 'login']));
-        Fortify::requestPasswordResetLinkView(fn () => \Inertia\Inertia::render('Auth', ['mode' => 'forgot']));
-        Fortify::resetPasswordView(fn (Request $request) => \Inertia\Inertia::render('Auth', ['mode' => 'reset', 'email' => $request->email, 'token' => $request->route('token')]));
+        Fortify::loginView(fn() => Inertia::render('Auth', ['mode' => 'login']));
+        Fortify::requestPasswordResetLinkView(
+            fn() => Inertia::render('Auth', ['mode' => 'forgot']),
+        );
+        Fortify::resetPasswordView(
+            fn(Request $request) => Inertia::render('Auth', [
+                'mode' => 'reset',
+                'email' => $request->email,
+                'token' => $request->route('token'),
+            ]),
+        );
         Fortify::authenticateUsing(function (Request $request) {
-            $user = \App\Models\User::where('email', strtolower($request->string('email')))->first();
-            if ($user && $user->is_active && ($user->isOwner() || $user->branch?->is_active) && \Illuminate\Support\Facades\Hash::check($request->string('password'), $user->password)) {
+            $user = User::where('email', strtolower($request->string('email')))->first();
+            if (
+                $user &&
+                $user->is_active &&
+                ($user->isOwner() || $user->branch?->is_active) &&
+                Hash::check($request->string('password'), $user->password)
+            ) {
                 $request->session()->put('session_version', $user->session_version);
+
                 return $user;
             }
+
             return null;
         });
-        Fortify::redirectUserForTwoFactorAuthenticationUsing(RedirectIfTwoFactorAuthenticatable::class);
+        Fortify::redirectUserForTwoFactorAuthenticationUsing(
+            RedirectIfTwoFactorAuthenticatable::class,
+        );
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $throttleKey = Str::transliterate(
+                Str::lower($request->input(Fortify::username())) . '|' . $request->ip(),
+            );
 
             return Limit::perMinute(5)->by($throttleKey);
         });
@@ -60,7 +82,7 @@ class FortifyServiceProvider extends ServiceProvider
             $credentialId = $request->input('credential.id');
 
             return Limit::perMinute(10)->by(
-                ($credentialId ?: $request->session()->getId()).'|'.$request->ip()
+                ($credentialId ?: $request->session()->getId()) . '|' . $request->ip(),
             );
         });
     }

@@ -1,8 +1,21 @@
 <?php
+
 namespace App\Models;
-class Payroll extends \Illuminate\Database\Eloquent\Model
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Payroll extends Model
 {
     protected $guarded = [];
-    public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Employee::class); }
-    public function branch(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Branch::class); }
+
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
+    public function branch(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }

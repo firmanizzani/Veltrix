@@ -3,7 +3,6 @@
 use Laravel\Fortify\Features;
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Fortify Guard
@@ -165,5 +164,4 @@ return [
         Features::resetPasswords(),
         // Features::emailVerification(),
     ],
-
 ];

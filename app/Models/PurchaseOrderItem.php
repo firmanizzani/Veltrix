@@ -1,7 +1,18 @@
 <?php
+
 namespace App\Models;
-class PurchaseOrderItem extends \Illuminate\Database\Eloquent\Model
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class PurchaseOrderItem extends Model
 {
-    public $timestamps = false; protected $guarded = [];
-    public function ingredient(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Ingredient::class); }
+    public $timestamps = false;
+
+    protected $guarded = [];
+
+    public function ingredient(): BelongsTo
+    {
+        return $this->belongsTo(Ingredient::class);
+    }
 }

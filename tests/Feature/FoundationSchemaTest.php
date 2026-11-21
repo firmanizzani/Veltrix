@@ -1,4 +1,5 @@
 <?php
+
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -11,7 +12,18 @@ class FoundationSchemaTest extends TestCase
 
     public function test_business_schema_is_migratable_without_external_ai(): void
     {
-        foreach (['branches', 'users', 'orders', 'inventories', 'inventory_movements', 'payrolls', 'audit_logs'] as $table) {
+        foreach (
+            [
+                'branches',
+                'users',
+                'orders',
+                'inventories',
+                'inventory_movements',
+                'payrolls',
+                'audit_logs',
+            ]
+            as $table
+        ) {
             $this->assertTrue(Schema::hasTable($table));
         }
     }

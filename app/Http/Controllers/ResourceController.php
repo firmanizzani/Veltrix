@@ -1,0 +1,187 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Enums\Role;
+use App\Http\Requests\ResourceRequest;
+use App\Models\Expense;
+use App\Models\Order;
+use App\Models\Refund;
+use App\Services\Audit;
+use App\Services\BranchAccess;
+use App\Services\ResourceCatalog;
+use App\Services\ResourceRecords;
+use App\Services\Workflows;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
+class ResourceController extends Controller
+{
+    public function index(
+        Request $request,
+        string $resource,
+        ResourceCatalog $catalog,
+        ResourceRecords $records,
+        BranchAccess $access,
+    ): Response {
+        $definition = $catalog->definition($resource);
+        $query = $records->query($resource, $request->user());
+        $access->selected($request);
+        if ($request->filled('q')) {
+            $searchable = array_filter(
+                array_keys($definition['columns']),
+                fn($key) => !str_contains($key, '.') &&
+                    in_array($key, [
+                        'name',
+                        'email',
+                        'code',
+                        'sku',
+                        'number',
+                        'order_number',
+                        'reason',
+                        'description',
+                        'action',
+                        'category',
+                    ]),
+            );
+            if ($searchable) {
+                $query->where(function ($q) use ($searchable, $request) {
+                    foreach ($searchable as $key) {
+                        $q->orWhere($key, 'like', '%' . $request->string('q') . '%');
+                    }
+                });
+            }
+        }
+
+        return Inertia::render('Records', [
+            'definition' => collect($definition)
+                ->except(['model', 'relations'])
+                ->all(),
+            'records' => $query->latest('id')->paginate(15)->withQueryString(),
+            'options' =>
+                $request->user()->role === Role::Cashier
+                    ? []
+                    : $catalog->options($request->user()),
+            'canWrite' => $catalog->allowed($request->user(), $definition['write']),
+            'filters' => $request->only('q'),
+        ]);
+    }
+
+    public function store(
+        ResourceRequest $request,
+        string $resource,
+        ResourceRecords $records,
+    ): RedirectResponse {
+        return $this->persist($request, $resource, $records);
+    }
+
+    public function update(
+        ResourceRequest $request,
+        string $resource,
+        int $record,
+        ResourceRecords $records,
+    ): RedirectResponse {
+        return $this->persist($request, $resource, $records, $record);
+    }
+
+    private function persist(
+        ResourceRequest $request,
+        string $resource,
+        ResourceRecords $records,
+        ?int $id = null,
+    ): RedirectResponse {
+        try {
+            $records->save($resource, $request->user(), $request->validated(), $id);
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages([
+                'record' => 'Kombinasi data sudah tercatat. Ubah catatan yang sudah ada.',
+            ]);
+        }
+
+        return back()->with('success', 'Data berhasil disimpan.');
+    }
+
+    public function action(
+        Request $request,
+        string $resource,
+        int $record,
+        string $action,
+        Workflows $workflows,
+    ): RedirectResponse {
+        $rules = match ($resource . '.' . $action) {
+            'inventory.adjust' => [
+                'quantity' => 'required|numeric|not_in:0|between:-100000000,100000000',
+                'reason' => 'required|string|min:5|max:1000',
+            ],
+            'inventory.count' => [
+                'quantity' => 'required|numeric|min:0|max:100000000',
+                'reason' => 'required|string|min:5|max:1000',
+            ],
+            'purchases.receive' => [
+                'quantities' => 'required|array|min:1',
+                'quantities.*' => 'required|numeric|min:0|max:100000000',
+            ],
+            default => [],
+        };
+        $workflows->run(
+            $resource,
+            $record,
+            $action,
+            $request->user(),
+            $request->validate($rules),
+        );
+
+        return back()->with('success', 'Perubahan berhasil dicatat.');
+    }
+
+    public function requestRefund(Request $request, Order $order): RedirectResponse
+    {
+        Gate::authorize('view', $order);
+        $data = $request->validate(['reason' => 'required|string|min:5|max:1000']);
+        DB::transaction(function () use ($request, $order, $data) {
+            $order = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
+            if ($order->status !== 'completed' || $order->refund()->exists()) {
+                throw ValidationException::withMessages([
+                    'reason' => 'Transaksi sudah memiliki permintaan refund.',
+                ]);
+            }
+            $refund = Refund::create([
+                'order_id' => $order->id,
+                'requested_by' => $request->user()->id,
+                'amount' => $order->total_amount,
+                'reason' => $data['reason'],
+            ]);
+            Audit::record(
+                $request->user(),
+                'refund.requested',
+                'refund',
+                $refund->id,
+                $data,
+                $order->branch_id,
+            );
+        });
+
+        return back()->with('success', 'Permintaan refund dikirim untuk persetujuan.');
+    }
+
+    public function receipt(Request $request, Expense $expense): BinaryFileResponse
+    {
+        abort_if($request->user()->role === Role::Cashier, 403);
+        abort_unless($request->user()->canAccessBranch($expense->branch_id), 403);
+        abort_unless(
+            $expense->receipt_path &&
+                Storage::disk('local')->exists($expense->receipt_path),
+            404,
+        );
+
+        return response()->file(Storage::disk('local')->path($expense->receipt_path));
+    }
+}

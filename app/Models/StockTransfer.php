@@ -1,9 +1,26 @@
 <?php
+
 namespace App\Models;
-class StockTransfer extends \Illuminate\Database\Eloquent\Model
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class StockTransfer extends Model
 {
     protected $guarded = [];
-    public function source(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Branch::class, 'source_branch_id'); }
-    public function destination(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Branch::class, 'destination_branch_id'); }
-    public function ingredient(): \Illuminate\Database\Eloquent\Relations\BelongsTo { return $this->belongsTo(Ingredient::class); }
+
+    public function source(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'source_branch_id');
+    }
+
+    public function destination(): BelongsTo
+    {
+        return $this->belongsTo(Branch::class, 'destination_branch_id');
+    }
+
+    public function ingredient(): BelongsTo
+    {
+        return $this->belongsTo(Ingredient::class);
+    }
 }

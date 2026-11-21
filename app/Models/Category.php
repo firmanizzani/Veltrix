@@ -1,3 +1,10 @@
 <?php
+
 namespace App\Models;
-class Category extends \Illuminate\Database\Eloquent\Model { protected $guarded = []; }
+
+use Illuminate\Database\Eloquent\Model;
+
+class Category extends Model
+{
+    protected $guarded = [];
+}
