@@ -5,7 +5,9 @@
     "scripts": {
         "build": "tsc --noEmit && vite build",
         "dev": "vite",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "format": "prettier --write resources/js resources/css app database routes tests \"bootstrap/*.php\" config package.json vite.config.js tsconfig.json components.json",
+        "format:check": "prettier --check resources/js resources/css app database routes tests \"bootstrap/*.php\" config package.json vite.config.js tsconfig.json components.json"
     },
     "dependencies": {
         "@fontsource-variable/inter": "latest",

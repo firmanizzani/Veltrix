@@ -93,6 +93,34 @@ class ResourceRecords
             $record = $id
                 ? $this->query($key, $actor)->lockForUpdate()->findOrFail($id)
                 : new ($definition['model'])();
+            $before = $record->exists ? $record->getOriginal() : [];
+            if ($record->exists && in_array($key, ['inventory', 'branch-prices'])) {
+                $identity = $key === 'inventory' ? 'ingredient_id' : 'product_id';
+                if (
+                    (int) $data['branch_id'] !== $record->branch_id ||
+                    (int) $data[$identity] !== $record->{$identity}
+                ) {
+                    throw ValidationException::withMessages([
+                        'record' =>
+                            'Identitas menu atau persediaan tidak dapat dipindahkan. Gunakan transfer stok atau buat catatan baru.',
+                    ]);
+                }
+            }
+            if (
+                $key === 'ingredients' &&
+                $record->exists &&
+                $data['unit'] !== $record->unit &&
+                (\App\Models\RecipeItem::where('ingredient_id', $record->id)->exists() ||
+                    \App\Models\InventoryMovement::whereHas(
+                        'inventory',
+                        fn($q) => $q->where('ingredient_id', $record->id),
+                    )->exists())
+            ) {
+                throw ValidationException::withMessages([
+                    'unit' =>
+                        'Satuan bahan yang sudah digunakan tidak dapat diubah. Buat bahan baru dengan satuan yang sesuai.',
+                ]);
+            }
             if (isset($data['branch_id'])) {
                 $this->access->require($actor, (int) $data['branch_id']);
             }
@@ -240,9 +268,7 @@ class ResourceRecords
                 $key . ($id ? '.updated' : '.created'),
                 $key,
                 $record->id,
-                collect($record->getChanges())
-                    ->except(['password', 'remember_token'])
-                    ->all(),
+                ['before' => $before, 'after' => $record->getAttributes()],
                 $record->branch_id,
             );
 

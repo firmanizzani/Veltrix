@@ -18,7 +18,7 @@ class InventoryLedger
         string $type,
         string $reason,
         ?string $reference = null,
-        ?int $unitCost = null,
+        int|float|null $unitCost = null,
     ): Inventory {
         return DB::transaction(function () use (
             $actor,
@@ -46,14 +46,27 @@ class InventoryLedger
                         'Stok ' . $stock->ingredient->name . ' tidak mencukupi.',
                 ]);
             }
-            $stock->update(['quantity' => $balance]);
+            $oldCost = (float) $stock->average_unit_cost;
+            $movementCost =
+                $unitCost ?? ($previous > 0 ? $oldCost : $stock->ingredient->unit_cost);
+            $average =
+                $quantity > 0 && $balance > 0
+                    ? round(
+                        ($previous * $oldCost + $quantity * $movementCost) / $balance,
+                        6,
+                    )
+                    : $oldCost;
+            $stock->update([
+                'quantity' => $balance,
+                'average_unit_cost' => $average,
+            ]);
             InventoryMovement::create([
                 'inventory_id' => $stock->id,
                 'actor_id' => $actor->id,
                 'type' => $type,
                 'quantity' => $quantity,
                 'balance' => $balance,
-                'unit_cost' => $unitCost ?? $stock->ingredient->unit_cost,
+                'unit_cost' => $quantity < 0 ? $oldCost : $movementCost,
                 'reason' => $reason,
                 'reference' => $reference,
             ]);

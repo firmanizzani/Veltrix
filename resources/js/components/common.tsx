@@ -2,7 +2,7 @@ import { Link } from '@inertiajs/react';
 import { Search, Coffee, ChevronLeft, ChevronRight } from 'lucide-react';
 import { date, labels, money, number, type Row } from '../lib/utils';
 import { Button } from './ui/button';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export function Status({ value }: { value: unknown }) {
     const text =
@@ -26,9 +26,17 @@ export function ErrorText({ message }: { message?: string }) {
     ) : null;
 }
 export function Errors({ errors }: { errors: Record<string, string> }) {
+    const summary = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        if (Object.keys(errors).length) {
+            summary.current?.focus();
+        }
+    }, [errors]);
     return Object.keys(errors).length ? (
         <div
             className="error-summary"
+            ref={summary}
+            tabIndex={-1}
             role="alert"
         >
             {Object.entries(errors).map(([key, value]) => (
@@ -96,6 +104,8 @@ export function ProductImage({
                     src={product.image_url}
                     alt={product.name}
                     loading="lazy"
+                    width={large ? 500 : 42}
+                    height={large ? 300 : 42}
                     referrerPolicy="no-referrer"
                     onError={() => setFailed(true)}
                 />
@@ -114,6 +124,8 @@ export function getValue(row: Row, path: string): any {
 const moneyFields = [
     'price',
     'base_price',
+    'stock_value',
+    'estimated_cost',
     'amount',
     'total_amount',
     'net_pay',

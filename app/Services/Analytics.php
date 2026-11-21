@@ -61,6 +61,38 @@ class Analytics
                     (int) ($salesByDay[$date] ?? 0) - (int) ($refundsByDay[$date] ?? 0),
             ];
         }
+        if ($start === $end) {
+            $hourSql =
+                DB::getDriverName() === 'pgsql'
+                    ? 'EXTRACT(HOUR FROM %s)::int'
+                    : "CAST(strftime('%%H', %s) AS INTEGER)";
+            $salesByHour = (clone $orders)
+                ->selectRaw(
+                    sprintf($hourSql, 'completed_at') .
+                        ' AS hour, SUM(total_amount) AS amount',
+                )
+                ->groupByRaw(sprintf($hourSql, 'completed_at'))
+                ->pluck('amount', 'hour');
+            $refundsByHour = (clone $refunds)
+                ->selectRaw(
+                    sprintf($hourSql, 'processed_at') . ' AS hour, SUM(amount) AS amount',
+                )
+                ->groupByRaw(sprintf($hourSql, 'processed_at'))
+                ->pluck('amount', 'hour');
+            $trend = [];
+            foreach (range(0, 23) as $hour) {
+                $trend[] = [
+                    'date' =>
+                        $start .
+                        'T' .
+                        str_pad((string) $hour, 2, '0', STR_PAD_LEFT) .
+                        ':00:00+07:00',
+                    'amount' =>
+                        (int) ($salesByHour[$hour] ?? 0) -
+                        (int) ($refundsByHour[$hour] ?? 0),
+                ];
+            }
+        }
         $top = DB::table('order_items')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->whereBetween('orders.completed_at', [$from, $until])
@@ -137,6 +169,7 @@ class Analytics
             ->get();
 
         return [
+            'granularity' => $start === $end ? 'hour' : 'day',
             'metrics' => [
                 'gross' => (int) $totals->gross,
                 'net' => $net,

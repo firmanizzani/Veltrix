@@ -15,7 +15,7 @@ import {
     Search,
     X,
 } from 'lucide-react';
-import { useMemo, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Dialog } from '../components/ui/dialog';
 import { Empty, Errors, ProductImage, SearchBox } from '../components/common';
@@ -41,6 +41,18 @@ export default function Pos({
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('Semua menu');
     const [cart, setCart] = useState<CartLine[]>([]);
+    const cartRef = useRef<HTMLElement>(null);
+    const [cartVisible, setCartVisible] = useState(false);
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => setCartVisible(entry.isIntersecting),
+            { threshold: 0.05 },
+        );
+        if (cartRef.current) {
+            observer.observe(cartRef.current);
+        }
+        return () => observer.disconnect();
+    }, []);
     const [shiftDialog, setShiftDialog] = useState<'open' | 'close' | null>(null);
     const [confirmClear, setConfirmClear] = useState(false);
     const [key, setKey] = useState(() => crypto.randomUUID());
@@ -280,6 +292,8 @@ export default function Pos({
                     )}
                 </section>
                 <aside
+                    id="active-order"
+                    ref={cartRef}
                     className="cart-panel"
                     aria-label="Pesanan aktif"
                 >
@@ -521,6 +535,15 @@ export default function Pos({
                     </form>
                 </aside>
             </div>
+            {count > 0 && !cartVisible && (
+                <a
+                    className="mobile-cart-shortcut"
+                    href="#active-order"
+                >
+                    <span>Lihat pesanan ({count})</span>
+                    <strong>{money(total)}</strong>
+                </a>
+            )}
             <Dialog
                 open={!!shiftDialog}
                 onOpenChange={(open) => {

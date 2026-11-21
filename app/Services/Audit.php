@@ -21,9 +21,24 @@ class Audit
             'action' => $action,
             'entity_type' => $type,
             'entity_id' => $id,
-            'changes' => collect($changes)
-                ->except(['password', 'remember_token'])
-                ->all(),
+            'changes' => self::withoutSecrets($changes),
         ]);
+    }
+
+    private static function withoutSecrets(array $values): array
+    {
+        $safe = [];
+        foreach ($values as $key => $value) {
+            if (
+                preg_match(
+                    '/password|secret|token|request_hash|session_version/i',
+                    (string) $key,
+                )
+            ) {
+                continue;
+            }
+            $safe[$key] = is_array($value) ? self::withoutSecrets($value) : $value;
+        }
+        return $safe;
     }
 }

@@ -33,7 +33,11 @@ class DashboardController extends Controller
             'end' =>
                 'nullable|date_format:Y-m-d|after_or_equal:start|before_or_equal:today',
         ]);
-        $start = $filters['start'] ?? now()->startOfMonth()->toDateString();
+        $start =
+            $filters['start'] ??
+            ($request->user()->isOwner() || $request->is('reports')
+                ? now()->startOfMonth()->toDateString()
+                : now()->toDateString());
         $end = $filters['end'] ?? now()->toDateString();
         if (Carbon::parse($start)->diffInDays($end) > 366 || $start > $end) {
             throw ValidationException::withMessages([
@@ -44,6 +48,29 @@ class DashboardController extends Controller
         $report = $analytics->report($start, $end, $branchId);
         if (!$request->user()->isOwner()) {
             unset($report['metrics']['payroll'], $report['metrics']['profit']);
+            $report['tasks'] = [
+                [
+                    'label' => 'Pembelian menunggu bahan',
+                    'href' => '/manage/purchases',
+                    'count' => PurchaseOrder::where('branch_id', $branchId)
+                        ->whereIn('status', ['ordered', 'partial'])
+                        ->count(),
+                ],
+                [
+                    'label' => 'Refund perlu ditinjau',
+                    'href' => '/manage/refunds',
+                    'count' => Refund::where('status', 'pending')
+                        ->whereHas('order', fn($q) => $q->where('branch_id', $branchId))
+                        ->count(),
+                ],
+                [
+                    'label' => 'Pengeluaran diajukan',
+                    'href' => '/manage/expenses',
+                    'count' => \App\Models\Expense::where('branch_id', $branchId)
+                        ->where('approval_status', 'pending')
+                        ->count(),
+                ],
+            ];
         }
 
         return Inertia::render('Dashboard', [
@@ -96,6 +123,45 @@ class DashboardController extends Controller
             'veltrix-report-' . $data['start'] . '.csv',
             ['Content-Type' => 'text/csv; charset=UTF-8'],
         );
+    }
+
+    public function pdf(
+        Request $request,
+        Analytics $analytics,
+        BranchAccess $access,
+    ): \Illuminate\Http\Response {
+        abort_if($request->user()->role === Role::Cashier, 403);
+        $filters = $request->validate([
+            'start' => 'required|date_format:Y-m-d',
+            'end' =>
+                'required|date_format:Y-m-d|after_or_equal:start|before_or_equal:today',
+        ]);
+        abort_if(
+            Carbon::parse($filters['start'])->diffInDays($filters['end']) > 366,
+            422,
+        );
+        $branchId = $access->selected($request);
+        $report = $analytics->report($filters['start'], $filters['end'], $branchId);
+        if (!$request->user()->isOwner()) {
+            unset($report['metrics']['payroll'], $report['metrics']['profit']);
+        }
+        $pdf = new \Dompdf\Dompdf();
+        $pdf->setPaper('A4');
+        $pdf->loadHtml(
+            view('reports.summary', [
+                'report' => $report,
+                'filters' => $filters,
+                'scope' => $branchId
+                    ? Branch::findOrFail($branchId)->name
+                    : 'Seluruh cabang',
+            ])->render(),
+        );
+        $pdf->render();
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' =>
+                'attachment; filename="veltrix-report-' . $filters['start'] . '.pdf"',
+        ]);
     }
 
     public function alerts(Request $request, BranchAccess $access): Response

@@ -92,16 +92,15 @@ class Checkout
                             'Resep ' . $menu->product->name . ' belum dikonfigurasi.',
                     ]);
                 }
-                $lineCost = 0;
+                $lineConsumption = [];
                 foreach ($recipe->items as $ingredient) {
                     $used = round((float) $ingredient->quantity * $item['quantity'], 3);
                     $consumption[$ingredient->ingredient_id] =
                         ($consumption[$ingredient->ingredient_id] ?? 0) + $used;
-                    $lineCost += (int) round($used * $ingredient->ingredient->unit_cost);
+                    $lineConsumption[$ingredient->ingredient_id] = $used;
                 }
                 $lineTotal = $menu->price * $item['quantity'];
                 $total += $lineTotal;
-                $cost += $lineCost;
                 $lines[] = [
                     'product_id' => $menu->product_id,
                     'product_name_snapshot' => $menu->product->name,
@@ -109,9 +108,26 @@ class Checkout
                     'unit_price' => $menu->price,
                     'quantity' => $item['quantity'],
                     'total_price' => $lineTotal,
-                    'cost_amount' => $lineCost,
+                    'consumption' => $lineConsumption,
                 ];
             }
+            $stocks = \App\Models\Inventory::where('branch_id', $cashier->branch_id)
+                ->whereIn('ingredient_id', array_keys($consumption))
+                ->orderBy('ingredient_id')
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('ingredient_id');
+            foreach ($lines as &$line) {
+                $lineCost = 0;
+                foreach ($line['consumption'] as $ingredientId => $used) {
+                    $lineCost +=
+                        $used * (float) ($stocks[$ingredientId]->average_unit_cost ?? 0);
+                }
+                $line['cost_amount'] = (int) round($lineCost);
+                $cost += $line['cost_amount'];
+                unset($line['consumption']);
+            }
+            unset($line);
             if ($data['method'] === 'cash' && $data['tendered'] < $total) {
                 throw ValidationException::withMessages([
                     'tendered' => 'Uang diterima kurang dari total pembayaran.',

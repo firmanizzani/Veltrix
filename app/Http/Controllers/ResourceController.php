@@ -34,28 +34,89 @@ class ResourceController extends Controller
     ): Response {
         $definition = $catalog->definition($resource);
         $query = $records->query($resource, $request->user());
-        $access->selected($request);
+        $branchId = $access->selected($request);
+        $request->validate([
+            'q' => 'nullable|string|max:100',
+            'direction' => 'nullable|in:asc,desc',
+            'category_id' => 'nullable|integer|exists:categories,id',
+        ]);
+        $directColumns = array_filter(
+            array_keys($definition['columns']),
+            fn($column) => !str_contains($column, '.') &&
+                !in_array($column, [
+                    'users_count',
+                    'items_count',
+                    'stock_value',
+                    'estimated_cost',
+                ]),
+        );
+        $request->validate([
+            'sort' => [
+                'nullable',
+                \Illuminate\Validation\Rule::in(['id', ...$directColumns]),
+            ],
+        ]);
+        if ($request->user()->isOwner() && $branchId) {
+            match ($resource) {
+                'branches' => $query->whereKey($branchId),
+                'branch-prices',
+                'inventory',
+                'purchases',
+                'receipts',
+                'employees',
+                'expenses',
+                'payroll',
+                'orders',
+                'shifts'
+                    => $query->where('branch_id', $branchId),
+                'movements' => $query->whereHas(
+                    'inventory',
+                    fn($q) => $q->where('branch_id', $branchId),
+                ),
+                'refunds' => $query->whereHas(
+                    'order',
+                    fn($q) => $q->where('branch_id', $branchId),
+                ),
+                'schedules' => $query->whereHas(
+                    'employee',
+                    fn($q) => $q->where('branch_id', $branchId),
+                ),
+                default => null,
+            };
+        }
+        if ($resource === 'products' && $request->filled('category_id')) {
+            $query->where('category_id', $request->integer('category_id'));
+        }
         if ($request->filled('q')) {
             $searchable = array_filter(
                 array_keys($definition['columns']),
-                fn($key) => !str_contains($key, '.') &&
-                    in_array($key, [
-                        'name',
-                        'email',
-                        'code',
-                        'sku',
-                        'number',
-                        'order_number',
-                        'reason',
-                        'description',
-                        'action',
-                        'category',
-                    ]),
+                fn($key) => in_array(\Illuminate\Support\Str::afterLast($key, '.'), [
+                    'name',
+                    'email',
+                    'code',
+                    'sku',
+                    'number',
+                    'order_number',
+                    'reason',
+                    'description',
+                    'action',
+                    'category',
+                ]),
             );
             if ($searchable) {
                 $query->where(function ($q) use ($searchable, $request) {
                     foreach ($searchable as $key) {
-                        $q->orWhere($key, 'like', '%' . $request->string('q') . '%');
+                        $value = '%' . $request->string('q') . '%';
+                        if (str_contains($key, '.')) {
+                            $relation = \Illuminate\Support\Str::beforeLast($key, '.');
+                            $column = \Illuminate\Support\Str::afterLast($key, '.');
+                            $q->orWhereHas(
+                                $relation,
+                                fn($related) => $related->whereLike($column, $value),
+                            );
+                        } else {
+                            $q->orWhereLike($key, $value);
+                        }
                     }
                 });
             }
@@ -65,13 +126,25 @@ class ResourceController extends Controller
             'definition' => collect($definition)
                 ->except(['model', 'relations'])
                 ->all(),
-            'records' => $query->latest('id')->paginate(15)->withQueryString(),
+            'records' => $query
+                ->orderBy(
+                    $request->input('sort') ?? 'id',
+                    $request->input('direction') ?? 'desc',
+                )
+                ->paginate(15)
+                ->withQueryString(),
             'options' =>
                 $request->user()->role === Role::Cashier
                     ? []
                     : $catalog->options($request->user()),
             'canWrite' => $catalog->allowed($request->user(), $definition['write']),
-            'filters' => $request->only('q'),
+            'filters' => $request->only(
+                'q',
+                'sort',
+                'direction',
+                'category_id',
+                'branch_id',
+            ),
         ]);
     }
 

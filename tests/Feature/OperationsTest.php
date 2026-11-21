@@ -619,4 +619,108 @@ class OperationsTest extends TestCase
             'read_at' => null,
         ]);
     }
+
+    public function test_weighted_average_cost_is_snapshotted_at_checkout(): void
+    {
+        app(InventoryLedger::class)->move(
+            $this->owner,
+            $this->branch->id,
+            $this->ingredient->id,
+            100,
+            'receiving',
+            'Penerimaan dengan harga baru',
+            null,
+            200,
+        );
+        $stock = Inventory::first();
+        $this->assertSame(150.0, (float) $stock->average_unit_cost);
+        $this->assertSame(30000, $stock->stock_value);
+        $this->openShift();
+        $this->post('/pos/checkout', $this->payload())->assertSessionHasNoErrors();
+        $order = Order::firstOrFail();
+        $this->assertSame(5400, (int) $order->cost_amount);
+        $this->ingredient->update(['unit_cost' => 999]);
+        $this->assertSame(5400, (int) $order->fresh()->cost_amount);
+    }
+
+    public function test_search_and_category_filters_apply_to_server_results(): void
+    {
+        $this->actingAs($this->manager)
+            ->get('/manage/inventory?q=BIJI')
+            ->assertInertia(
+                fn(Assert $page) => $page
+                    ->component('Records', false)
+                    ->has('records.data', 1),
+            );
+        $this->get('/manage/inventory?q=tidak-ada')->assertInertia(
+            fn(Assert $page) => $page->has('records.data', 0),
+        );
+        $this->get('/manage/products?sort=invalid-column')->assertSessionHasErrors(
+            'sort',
+        );
+    }
+
+    public function test_pdf_report_is_downloadable_and_cashier_cannot_export(): void
+    {
+        $url =
+            '/reports/pdf?start=' .
+            now()->toDateString() .
+            '&end=' .
+            now()->toDateString();
+        $response = $this->actingAs($this->owner)->get($url);
+        $response->assertOk()->assertHeader('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF-', $response->getContent());
+        $this->actingAs($this->cashier)->get($url)->assertForbidden();
+    }
+
+    public function test_stock_identity_and_used_ingredient_units_cannot_be_rewritten(): void
+    {
+        $stock = Inventory::first();
+        $this->actingAs($this->owner)
+            ->put('/manage/inventory/' . $stock->id, [
+                'branch_id' => $this->otherBranch->id,
+                'ingredient_id' => $this->ingredient->id,
+                'minimum' => 10,
+            ])
+            ->assertSessionHasErrors('record');
+        $this->put('/manage/ingredients/' . $this->ingredient->id, [
+            'name' => $this->ingredient->name,
+            'unit' => 'ml',
+            'unit_cost' => 100,
+        ])->assertSessionHasErrors('unit');
+        $this->assertSame($this->branch->id, $stock->fresh()->branch_id);
+        $this->assertSame('g', $this->ingredient->fresh()->unit);
+    }
+
+    public function test_audit_preserves_change_snapshots_without_nested_secrets(): void
+    {
+        \App\Services\Audit::record(
+            $this->owner,
+            'test.security',
+            'user',
+            $this->cashier->id,
+            [
+                'before' => ['name' => 'Before', 'password' => 'private-secret'],
+                'after' => ['name' => 'After', 'remember_token' => 'private-token'],
+            ],
+        );
+        $changes = \App\Models\AuditLog::latest('id')->first()->changes;
+        $this->assertSame('Before', $changes['before']['name']);
+        $this->assertSame('After', $changes['after']['name']);
+        $this->assertArrayNotHasKey('password', $changes['before']);
+        $this->assertArrayNotHasKey('remember_token', $changes['after']);
+    }
+
+    public function test_cashier_cannot_read_a_colleagues_receipt(): void
+    {
+        $this->openShift();
+        $this->post('/pos/checkout', $this->payload())->assertSessionHasNoErrors();
+        $colleague = User::factory()->create([
+            'role' => 'cashier',
+            'branch_id' => $this->branch->id,
+        ]);
+        $this->actingAs($colleague)
+            ->get('/orders/' . Order::first()->id)
+            ->assertForbidden();
+    }
 }

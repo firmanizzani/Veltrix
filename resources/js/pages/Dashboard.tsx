@@ -85,17 +85,29 @@ export default function Dashboard({
                 }
                 action={
                     isReport ? (
-                        <Button
-                            variant="outline"
-                            asChild
-                        >
-                            <a
-                                href={`/reports/export?${new URLSearchParams(filters).toString()}`}
+                        <div className="page-actions">
+                            <Button
+                                variant="outline"
+                                asChild
                             >
-                                <Download size={16} />
-                                Ekspor CSV
-                            </a>
-                        </Button>
+                                <a
+                                    href={`/reports/export?${new URLSearchParams(filters).toString()}`}
+                                >
+                                    <Download size={16} />
+                                    Ekspor CSV
+                                </a>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                asChild
+                            >
+                                <a
+                                    href={`/reports/pdf?${new URLSearchParams(filters).toString()}`}
+                                >
+                                    Ekspor PDF
+                                </a>
+                            </Button>
+                        </div>
                     ) : (
                         <Button
                             asChild
@@ -186,7 +198,11 @@ export default function Dashboard({
                     <div className="panel-header">
                         <div>
                             <h2>Tren penjualan</h2>
-                            <p>Penjualan bersih per hari, dalam Rupiah</p>
+                            <p>
+                                Penjualan bersih per{' '}
+                                {report.granularity === 'hour' ? 'jam' : 'hari'}, dalam
+                                Rupiah
+                            </p>
                         </div>
                         <span className="series-key">Periode terpilih</span>
                     </div>
@@ -210,10 +226,18 @@ export default function Dashboard({
                                     minTickGap={40}
                                     tick={{ fill: '#626b65', fontSize: 12 }}
                                     tickFormatter={(v) =>
-                                        new Date(v + 'T12:00:00').toLocaleDateString(
-                                            'id-ID',
-                                            { day: 'numeric', month: 'short' },
-                                        )
+                                        report.granularity === 'hour'
+                                            ? new Date(v).toLocaleTimeString('id-ID', {
+                                                  hour: '2-digit',
+                                                  minute: '2-digit',
+                                                  timeZone: 'Asia/Jakarta',
+                                              })
+                                            : new Date(
+                                                  v + 'T12:00:00',
+                                              ).toLocaleDateString('id-ID', {
+                                                  day: 'numeric',
+                                                  month: 'short',
+                                              })
                                     }
                                 />
                                 <YAxis
@@ -260,46 +284,79 @@ export default function Dashboard({
                         </p>
                     )}
                 </section>
-                <section className="panel branch-panel">
-                    <div className="panel-header">
-                        <div>
-                            <h2>Performa cabang</h2>
-                            <p>{report.branches.length} cabang dalam cakupan</p>
+                {user.role === 'manager' ? (
+                    <section className="panel branch-panel">
+                        <div className="panel-header">
+                            <div>
+                                <h2>Tindak lanjut cabang</h2>
+                                <p>Pekerjaan yang masih menunggu</p>
+                            </div>
+                            <ClipboardCheck size={18} />
                         </div>
-                        <Store size={18} />
-                    </div>
-                    <div className="branch-ranking">
-                        {[...report.branches]
-                            .sort((a: Row, b: Row) => b.amount - a.amount)
-                            .map((b: Row) => (
-                                <div
-                                    className="branch-rank"
-                                    key={b.id}
+                        <div className="manager-tasks">
+                            {(report.tasks ?? []).map((task: Row) => (
+                                <Link
+                                    key={task.href}
+                                    href={task.href}
                                 >
-                                    <div>
-                                        <span className="branch-initial">
-                                            {b.city.slice(0, 2)}
-                                        </span>
-                                        <div>
-                                            <strong>{b.city}</strong>
-                                            <p>{number(b.transactions)} transaksi</p>
-                                        </div>
-                                        <strong className="num">{money(b.amount)}</strong>
-                                    </div>
-                                    <div className="thin-track">
-                                        <span
-                                            style={{
-                                                width: `${(Math.max(0, b.amount) / Math.max(1, ...report.branches.map((v: Row) => v.amount))) * 100}%`,
-                                            }}
-                                        />
-                                    </div>
-                                </div>
+                                    <span>{task.label}</span>
+                                    <strong>{task.count}</strong>
+                                </Link>
                             ))}
-                    </div>
-                    <div className="panel-footer">
-                        {number(m.active_branches)} cabang aktif dalam cakupan
-                    </div>
-                </section>
+                        </div>
+                        <div className="panel-footer">
+                            <Link
+                                className="text-link"
+                                href="/alerts"
+                            >
+                                Buka notifikasi operasional
+                            </Link>
+                        </div>
+                    </section>
+                ) : (
+                    <section className="panel branch-panel">
+                        <div className="panel-header">
+                            <div>
+                                <h2>Performa cabang</h2>
+                                <p>{report.branches.length} cabang dalam cakupan</p>
+                            </div>
+                            <Store size={18} />
+                        </div>
+                        <div className="branch-ranking">
+                            {[...report.branches]
+                                .sort((a: Row, b: Row) => b.amount - a.amount)
+                                .map((b: Row) => (
+                                    <div
+                                        className="branch-rank"
+                                        key={b.id}
+                                    >
+                                        <div>
+                                            <span className="branch-initial">
+                                                {b.city.slice(0, 2)}
+                                            </span>
+                                            <div>
+                                                <strong>{b.city}</strong>
+                                                <p>{number(b.transactions)} transaksi</p>
+                                            </div>
+                                            <strong className="num">
+                                                {money(b.amount)}
+                                            </strong>
+                                        </div>
+                                        <div className="thin-track">
+                                            <span
+                                                style={{
+                                                    width: `${(Math.max(0, b.amount) / Math.max(1, ...report.branches.map((v: Row) => v.amount))) * 100}%`,
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+                        </div>
+                        <div className="panel-footer">
+                            {number(m.active_branches)} cabang aktif dalam cakupan
+                        </div>
+                    </section>
+                )}
                 <section className="panel products-panel">
                     <div className="panel-header">
                         <div>

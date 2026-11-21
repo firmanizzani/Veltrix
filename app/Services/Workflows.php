@@ -28,6 +28,7 @@ class Workflows
                 ->query($key, $actor)
                 ->lockForUpdate()
                 ->findOrFail($id);
+            $before = $record->getOriginal();
             if ($key === 'branch-prices' && $action === 'availability') {
                 abort_if($actor->role === Role::Cashier, 403);
                 $record->update(['is_available' => !$record->is_available]);
@@ -131,9 +132,21 @@ class Workflows
                     422,
                 );
                 $record->update(['status' => 'cancelled']);
+            } elseif ($key === 'transfers' && $action === 'reject') {
+                abort_unless($actor->isOwner(), 403);
+                abort_unless($record->status === 'pending', 422);
+                $record->update(['status' => 'rejected']);
             } elseif ($key === 'transfers' && $action === 'ship') {
                 abort_unless($actor->isOwner(), 403);
                 abort_unless($record->status === 'pending', 422);
+                $source = \App\Models\Inventory::where(
+                    'branch_id',
+                    $record->source_branch_id,
+                )
+                    ->where('ingredient_id', $record->ingredient_id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+                $record->unit_cost_snapshot = $source->average_unit_cost;
                 $this->ledger->move(
                     $actor,
                     $record->source_branch_id,
@@ -143,7 +156,8 @@ class Workflows
                     'Pengiriman transfer',
                     'TR-' . $record->id,
                 );
-                $record->update(['status' => 'shipped']);
+                $record->status = 'shipped';
+                $record->save();
             } elseif ($key === 'transfers' && $action === 'receive') {
                 $this->access->require($actor, $record->destination_branch_id);
                 abort_unless($record->status === 'shipped', 422);
@@ -155,6 +169,7 @@ class Workflows
                     'transfer_in',
                     'Penerimaan transfer',
                     'TR-' . $record->id,
+                    (float) $record->unit_cost_snapshot,
                 );
                 $record->update(['status' => 'received']);
             } elseif ($key === 'expenses' && in_array($action, ['approve', 'reject'])) {
@@ -203,7 +218,11 @@ class Workflows
                 $key . '.' . $action,
                 $key,
                 $id,
-                collect($data)->except('quantities')->all(),
+                [
+                    'before' => $before,
+                    'after' => $record->fresh()->getAttributes(),
+                    'input' => $data,
+                ],
                 $record->branch_id,
             );
         }, 3);

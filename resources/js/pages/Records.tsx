@@ -45,6 +45,9 @@ export default function Records({
         auth: { user },
     } = usePage<Shared>().props;
     const [q, setQ] = useState(filters.q ?? '');
+    const [sort, setSort] = useState(filters.sort ?? 'id');
+    const [categoryFilter, setCategoryFilter] = useState(filters.category_id ?? '');
+    const [branchFilter, setBranchFilter] = useState(filters.branch_id ?? '');
     const [edit, setEdit] = useState<Row | null>(null);
     const [creating, setCreating] = useState(false);
     const [detail, setDetail] = useState<Row | null>(null);
@@ -150,7 +153,7 @@ export default function Records({
                 </Button>,
             );
         }
-        if (['recipes', 'purchases', 'payroll'].includes(d.key)) {
+        if (['recipes', 'purchases', 'receipts', 'payroll', 'audit'].includes(d.key)) {
             result.push(
                 <Button
                     key="detail"
@@ -201,6 +204,7 @@ export default function Records({
         }
         if (d.key === 'transfers' && row.status === 'pending' && user.role === 'owner') {
             button('ship', 'Setujui & kirim');
+            button('reject', 'Tolak transfer', X);
         }
         if (
             d.key === 'transfers' &&
@@ -243,6 +247,8 @@ export default function Records({
             'price',
             'amount',
             'base_price',
+            'stock_value',
+            'estimated_cost',
             'net_pay',
             'total_amount',
             'quantity',
@@ -289,7 +295,7 @@ export default function Records({
                 title={d.title}
                 description={d.description}
                 action={
-                    canWrite ? (
+                    canWrite && d.key !== 'branch-prices' ? (
                         <Button onClick={() => openForm()}>
                             <Plus size={16} />
                             {d.key === 'recipes'
@@ -310,7 +316,13 @@ export default function Records({
                     e.preventDefault();
                     router.get(
                         path,
-                        { q },
+                        {
+                            q,
+                            sort,
+                            direction: sort === 'id' ? 'desc' : 'asc',
+                            ...(categoryFilter ? { category_id: categoryFilter } : {}),
+                            ...(branchFilter ? { branch_id: branchFilter } : {}),
+                        },
                         { preserveState: true, preserveScroll: true },
                     );
                 }}
@@ -320,12 +332,88 @@ export default function Records({
                     onChange={setQ}
                     placeholder={`Cari ${d.title.toLowerCase()}…`}
                 />
+                {d.key === 'products' && (
+                    <select
+                        aria-label="Filter kategori produk"
+                        value={categoryFilter}
+                        onChange={(e) => setCategoryFilter(e.target.value)}
+                    >
+                        <option value="">Semua kategori</option>
+                        {options.categories?.map((category) => (
+                            <option
+                                key={category.value}
+                                value={category.value}
+                            >
+                                {category.label}
+                            </option>
+                        ))}
+                    </select>
+                )}
+                {user.role === 'owner' &&
+                    [
+                        'branches',
+                        'branch-prices',
+                        'inventory',
+                        'purchases',
+                        'receipts',
+                        'employees',
+                        'expenses',
+                        'payroll',
+                        'orders',
+                        'shifts',
+                        'movements',
+                        'refunds',
+                        'schedules',
+                    ].includes(d.key) && (
+                        <select
+                            aria-label="Filter cabang data"
+                            value={branchFilter}
+                            onChange={(e) => setBranchFilter(e.target.value)}
+                        >
+                            <option value="">Seluruh cabang</option>
+                            {options.branches?.map((branch) => (
+                                <option
+                                    key={branch.value}
+                                    value={branch.value}
+                                >
+                                    {branch.label}
+                                </option>
+                            ))}
+                        </select>
+                    )}
+                <select
+                    aria-label="Urutkan data"
+                    value={sort}
+                    onChange={(e) => setSort(e.target.value)}
+                >
+                    <option value="id">Terbaru</option>
+                    {Object.entries(d.columns)
+                        .filter(
+                            ([key]) =>
+                                !key.includes('.') &&
+                                ![
+                                    'id',
+                                    'users_count',
+                                    'items_count',
+                                    'stock_value',
+                                    'estimated_cost',
+                                ].includes(key),
+                        )
+                        .map(([key, label]) => (
+                            <option
+                                key={key}
+                                value={key}
+                            >
+                                {String(label)} (naik)
+                            </option>
+                        ))}
+                </select>
                 <Button
                     variant="outline"
                     type="submit"
                     size="sm"
                 >
-                    Cari
+                    Terapkan
                 </Button>
                 <span className="list-scope">
                     {user.branch?.city ?? 'Seluruh cabang'}
@@ -765,7 +853,11 @@ export default function Records({
             >
                 {detail && (
                     <div className="record-detail">
-                        {d.key === 'payroll' ? (
+                        {d.key === 'audit' ? (
+                            <pre className="audit-detail">
+                                {JSON.stringify(detail.changes, null, 2)}
+                            </pre>
+                        ) : d.key === 'payroll' ? (
                             <>
                                 <div className="slip-header">
                                     <strong>VELTRIX</strong>

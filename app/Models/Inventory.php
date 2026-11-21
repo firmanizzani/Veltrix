@@ -8,6 +8,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Inventory extends Model
 {
     protected $guarded = [];
+    protected $appends = ['stock_value'];
+
+    public function getStockValueAttribute(): int
+    {
+        return (int) round((float) $this->quantity * (float) $this->average_unit_cost);
+    }
 
     public function ingredient(): BelongsTo
     {

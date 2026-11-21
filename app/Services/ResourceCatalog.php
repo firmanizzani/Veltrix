@@ -230,6 +230,7 @@ class ResourceCatalog
                     'product.name' => 'Produk',
                     'version' => 'Versi',
                     'items_count' => 'Bahan',
+                    'estimated_cost' => 'Estimasi biaya resep',
                     'created_at' => 'Dibuat',
                 ],
                 [
@@ -262,6 +263,7 @@ class ResourceCatalog
                     'quantity' => 'Stok',
                     'ingredient.unit' => 'Satuan',
                     'minimum' => 'Batas minimum',
+                    'stock_value' => 'Nilai persediaan',
                 ],
                 [
                     $branch,

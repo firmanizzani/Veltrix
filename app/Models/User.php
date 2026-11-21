@@ -21,7 +21,13 @@ use Illuminate\Notifications\Notifiable;
     'is_active',
     'session_version',
 ])]
-#[Hidden(['password', 'remember_token'])]
+#[Hidden([
+    'password',
+    'remember_token',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+    'session_version',
+])]
 class User extends Authenticatable
 {
     protected $attributes = ['is_active' => true, 'session_version' => 1];

@@ -9,6 +9,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class RecipeVersion extends Model
 {
     protected $guarded = [];
+    protected $appends = ['estimated_cost'];
+
+    public function getEstimatedCostAttribute(): int
+    {
+        return (int) round(
+            $this->items->sum(
+                fn($item) => (float) $item->quantity * $item->ingredient->unit_cost,
+            ),
+        );
+    }
 
     public function items(): HasMany
     {
