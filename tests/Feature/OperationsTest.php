@@ -723,4 +723,17 @@ class OperationsTest extends TestCase
             ->get('/orders/' . Order::first()->id)
             ->assertForbidden();
     }
+
+    public function test_empty_list_filters_are_serialized_as_an_object(): void
+    {
+        $response = $this->actingAs($this->owner)->get('/manage/orders', [
+            'X-Inertia' => 'true',
+            'X-Inertia-Version' => app(
+                \App\Http\Middleware\HandleInertiaRequests::class,
+            )->version(\Illuminate\Http\Request::create('/manage/orders')),
+        ]);
+        $response->assertOk();
+        $page = json_decode($response->getContent());
+        $this->assertInstanceOf(\stdClass::class, $page->props->filters);
+    }
 }

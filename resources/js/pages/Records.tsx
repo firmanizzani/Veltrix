@@ -45,7 +45,9 @@ export default function Records({
         auth: { user },
     } = usePage<Shared>().props;
     const [q, setQ] = useState(filters.q ?? '');
-    const [sort, setSort] = useState(filters.sort ?? 'id');
+    const [sort, setSort] = useState(
+        typeof filters.sort === 'string' ? filters.sort : 'id',
+    );
     const [categoryFilter, setCategoryFilter] = useState(filters.category_id ?? '');
     const [branchFilter, setBranchFilter] = useState(filters.branch_id ?? '');
     const [edit, setEdit] = useState<Row | null>(null);
@@ -81,6 +83,9 @@ export default function Records({
                           (f.key.includes('branch_id') && user.branch_id
                               ? user.branch_id
                               : ''));
+            if (f.type === 'time' && typeof values[f.key] === 'string') {
+                values[f.key] = values[f.key].slice(0, 5);
+            }
         });
         form.setData(values);
         setEdit(row ?? null);

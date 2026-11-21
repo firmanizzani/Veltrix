@@ -122,15 +122,21 @@ class ResourceController extends Controller
             }
         }
 
+        $sort = $request->input('sort') ?? 'id';
+        if ($sort === 'id') {
+            $sort = match ($resource) {
+                'orders' => 'completed_at',
+                'shifts' => 'opened_at',
+                'audit', 'movements', 'receipts' => 'created_at',
+                default => 'id',
+            };
+        }
         return Inertia::render('Records', [
             'definition' => collect($definition)
                 ->except(['model', 'relations'])
                 ->all(),
             'records' => $query
-                ->orderBy(
-                    $request->input('sort') ?? 'id',
-                    $request->input('direction') ?? 'desc',
-                )
+                ->orderBy($sort, $request->input('direction') ?? 'desc')
                 ->paginate(15)
                 ->withQueryString(),
             'options' =>
@@ -138,7 +144,7 @@ class ResourceController extends Controller
                     ? []
                     : $catalog->options($request->user()),
             'canWrite' => $catalog->allowed($request->user(), $definition['write']),
-            'filters' => $request->only(
+            'filters' => (object) $request->only(
                 'q',
                 'sort',
                 'direction',
