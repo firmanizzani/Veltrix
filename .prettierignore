@@ -1,0 +1,12 @@
+vendor
+node_modules
+.tools
+.git
+.taste-skill
+.impeccable
+public/build
+storage
+composer.lock
+package-lock.json
+build.md
+prd.md
