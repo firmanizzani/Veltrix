@@ -693,33 +693,55 @@ class ResourceCatalog
         };
     }
 
-    public function options(User $user): array
+    public function options(User $user, string $resource): array
     {
         $access = new BranchAccess();
         $pairs = fn($collection) => $collection
             ->map(fn($row) => ['value' => $row->id, 'label' => $row->name])
             ->values();
 
-        return [
-            'branches' => $pairs(
+        $definition = $this->definition($resource);
+        $sources = collect($definition['fields'])->pluck('source')->filter()->all();
+        if (
+            $user->isOwner() &&
+            in_array($resource, [
+                'branches',
+                'branch-prices',
+                'inventory',
+                'purchases',
+                'receipts',
+                'employees',
+                'expenses',
+                'payroll',
+                'orders',
+                'shifts',
+                'movements',
+                'refunds',
+                'schedules',
+            ])
+        ) {
+            $sources[] = 'branches';
+        }
+        $loaders = [
+            'branches' => fn() => $pairs(
                 $user->isOwner()
                     ? Branch::all()
                     : Branch::whereKey($user->branch_id)->get(),
             ),
-            'all_branches' => $pairs(Branch::where('is_active', true)->get()),
-            'categories' => $pairs(Category::all()),
-            'products' => $pairs(Product::all()),
-            'ingredients' => Ingredient::all()->map(
+            'all_branches' => fn() => $pairs(Branch::where('is_active', true)->get()),
+            'categories' => fn() => $pairs(Category::all()),
+            'products' => fn() => $pairs(Product::all()),
+            'ingredients' => fn() => Ingredient::all()->map(
                 fn($row) => [
                     'value' => $row->id,
                     'label' => $row->name . ' (' . $row->unit . ')',
                 ],
             ),
-            'suppliers' => $pairs(Supplier::where('is_active', true)->get()),
-            'employees' => $pairs(
+            'suppliers' => fn() => $pairs(Supplier::where('is_active', true)->get()),
+            'employees' => fn() => $pairs(
                 $access->scope(Employee::query(), $user)->where('is_active', true)->get(),
             ),
-            'branch_products' => $access
+            'branch_products' => fn() => $access
                 ->scope(BranchProduct::with('branch', 'product'), $user)
                 ->get()
                 ->map(
@@ -728,14 +750,14 @@ class ResourceCatalog
                         'label' => $row->product->name . ' / ' . $row->branch->city,
                     ],
                 ),
-            'roles' => [
+            'roles' => fn() => [
                 ['value' => 'manager', 'label' => 'Branch Manager'],
                 ['value' => 'cashier', 'label' => 'Kasir'],
             ],
-            'units' => collect(['g', 'ml', 'pcs'])->map(
+            'units' => fn() => collect(['g', 'ml', 'pcs'])->map(
                 fn($v) => ['value' => $v, 'label' => $v],
             ),
-            'expense_categories' => collect([
+            'expense_categories' => fn() => collect([
                 'Sewa',
                 'Listrik',
                 'Air',
@@ -747,5 +769,9 @@ class ResourceCatalog
                 'Lainnya',
             ])->map(fn($v) => ['value' => $v, 'label' => $v]),
         ];
+        return collect($sources)
+            ->unique()
+            ->mapWithKeys(fn($source) => [$source => $loaders[$source]()])
+            ->all();
     }
 }

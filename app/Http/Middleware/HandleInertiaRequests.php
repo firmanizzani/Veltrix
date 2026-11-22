@@ -14,7 +14,7 @@ class HandleInertiaRequests extends Middleware
         return [
             'business' => fn() => $request->user() ? \App\Models\Setting::business() : [],
             ...parent::share($request),
-            'auth' => ['user' => $request->user()?->load('branch')],
+            'auth' => ['user' => $request->user()?->loadMissing('branch')],
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),
                 'status' => fn() => $request->session()->get('status'),

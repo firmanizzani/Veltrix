@@ -305,13 +305,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         className="main-sheet"
                         aria-busy={loading}
                     >
-                        {loading && (
-                            <div
-                                className="navigation-progress"
-                                role="progressbar"
-                                aria-label="Memuat halaman"
-                            />
-                        )}
                         {children}
                     </main>
                 </div>

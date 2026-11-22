@@ -175,6 +175,9 @@ Corners follow component purpose: compact rounded controls, slightly softer prod
 
 **Navigation.** Use consistent line icons, regular casing, and muted group labels. Selected items have a pale emerald surface and darker green text; hover changes the background. Keep `aria-current` and named menu controls. Desktop navigation remains an ordinary sidebar. At the drawer breakpoint, reuse the installed Radix Dialog primitive with a named trigger, portaled overlay and modal content, a screen-reader title, and an explicit close control. The closed drawer is unmounted. Preserve the primitive's focus trap, Escape dismissal, trigger focus return, and background isolation. The close icon occupies (32px) at top (17px), right (8px).
 
+**Navigation feedback.** Do not show a global progress bar during page navigation.
+Preserve `aria-busy`, form processing labels, and disabled submission buttons.
+
 **Status chips.** Use the shared Status component and label mapping. Chips use small text (11px), a minimum height of (22px), and semantic color pairs. These are state labels, not primary actions.
 
 **Tables.** Fine bottom rules separate rows; hover is nearly white. Identity cells carry stronger text, secondary details sit below, and row actions align right. Preserve pagination, empty states, and search controls instead of substituting decorative summary cards.

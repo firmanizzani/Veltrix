@@ -374,13 +374,8 @@ textarea {
     padding: 28px 28px 36px;
     overflow: hidden;
 }
-.navigation-progress {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #238460;
+#nprogress {
+    display: none;
 }
 .mobile-menu,
 .nav-backdrop {

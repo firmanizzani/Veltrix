@@ -174,7 +174,7 @@ class ResourceController extends Controller
             'options' =>
                 $request->user()->role === Role::Cashier
                     ? []
-                    : $catalog->options($request->user()),
+                    : $catalog->options($request->user(), $resource),
             'canWrite' => $catalog->allowed($request->user(), $definition['write']),
             'filters' => (object) $request->only(
                 'q',

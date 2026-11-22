@@ -45,7 +45,7 @@ class DashboardController extends Controller
             ]);
         }
         $branchId = $access->selected($request);
-        $report = $analytics->report($start, $end, $branchId);
+        $report = $analytics->report($start, $end, $branchId, $request->is('reports'));
         if (!$request->user()->isOwner()) {
             unset($report['metrics']['payroll'], $report['metrics']['profit']);
             $report['branches'] = $report['branches']->map(

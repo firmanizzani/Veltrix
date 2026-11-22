@@ -124,6 +124,103 @@ class OperationsTest extends TestCase
             ->assertSessionHasNoErrors();
     }
 
+    public function test_readonly_records_do_not_load_unrelated_form_options(): void
+    {
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        \Illuminate\Support\Facades\DB::flushQueryLog();
+        try {
+            $options = app(\App\Services\ResourceCatalog::class)->options(
+                $this->owner,
+                'orders',
+            );
+            $queries = \Illuminate\Support\Facades\DB::getQueryLog();
+            $this->assertLessThanOrEqual(
+                1,
+                count($queries),
+                'Unrelated option queries: ' . count($queries),
+            );
+            $this->assertSame(['branches'], array_keys($options));
+        } finally {
+            \Illuminate\Support\Facades\DB::disableQueryLog();
+        }
+    }
+
+    public function test_dashboard_summary_skips_report_queries_without_changing_metrics(): void
+    {
+        $this->openShift();
+        $this->post('/pos/checkout', $this->payload())->assertSessionHasNoErrors();
+        $analytics = app(Analytics::class);
+        $day = now()->toDateString();
+        Inventory::where('branch_id', $this->branch->id)->update(['minimum' => 100]);
+        \Illuminate\Support\Facades\DB::enableQueryLog();
+        try {
+            \Illuminate\Support\Facades\DB::flushQueryLog();
+            $report = $analytics->report($day, $day, $this->branch->id);
+            $reportQueries = count(\Illuminate\Support\Facades\DB::getQueryLog());
+            \Illuminate\Support\Facades\DB::flushQueryLog();
+            $summary = $analytics->report($day, $day, $this->branch->id, false);
+            $summaryQueries = count(\Illuminate\Support\Facades\DB::getQueryLog());
+            $this->assertGreaterThanOrEqual(10, $reportQueries - $summaryQueries);
+            $this->assertSame($report['metrics'], $summary['metrics']);
+            $this->assertSame($report['trend'], $summary['trend']);
+            $this->assertSame(
+                $report['topProducts']->toJson(),
+                $summary['topProducts']->toJson(),
+            );
+            $this->assertSame(
+                $report['branches']->first()['amount'],
+                $summary['branches']->first()['amount'],
+            );
+            $this->assertSame([], $summary['inventory']);
+            $this->assertSame([], $summary['payments']);
+            $this->assertSame(
+                $this->cashier->name,
+                $summary['recentOrders']->first()['cashier']['name'],
+            );
+            $this->assertSame(
+                'cash',
+                $summary['recentOrders']->first()['payment']['method'],
+            );
+            $this->assertSame(
+                $this->ingredient->name,
+                $summary['lowStock']->first()['ingredient']['name'],
+            );
+        } finally {
+            \Illuminate\Support\Facades\DB::disableQueryLog();
+        }
+    }
+
+    public function test_form_options_keep_required_sources_and_branch_isolation(): void
+    {
+        $catalog = app(\App\Services\ResourceCatalog::class);
+        foreach (
+            [
+                'recipes',
+                'purchases',
+                'transfers',
+                'employees',
+                'schedules',
+                'payroll',
+                'price-requests',
+            ]
+            as $resource
+        ) {
+            $fields = $catalog->definition($resource)['fields'];
+            $options = $catalog->options($this->manager, $resource);
+            foreach ($fields as $field) {
+                if ($field['source']) {
+                    $this->assertArrayHasKey($field['source'], $options);
+                }
+            }
+            if (isset($options['branches'])) {
+                $this->assertSame(
+                    [$this->branch->id],
+                    $options['branches']->pluck('value')->all(),
+                );
+            }
+        }
+    }
+
     public function test_all_protected_pages_require_authentication(): void
     {
         foreach (
