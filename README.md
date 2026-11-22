@@ -43,6 +43,15 @@ This Windows workspace also has a local portable PHP installation, which Git ign
 & .\.tools\php\php.exe .tools\composer.phar install
 ```
 
+The application uses client-side React rendering. SSR is disabled until a real
+SSR service is configured. Automatic Boost browser-log posting is also disabled
+by default to avoid additional development-server requests.
+
+The local portable PHP runtime enables OPcache for CLI with timestamp validation
+and `opcache.revalidate_freq=0`. Restart PHP after changing `php.ini`. Vite still
+provides live frontend updates. Warm navigation differs from an initial visit,
+which must also load the development modules.
+
 ## Initial setup and demo data
 
 For a normal installation, seed the three initial branches and create the first owner. This does not add sample transactions or a default production password.

@@ -145,6 +145,18 @@ class OperationsTest extends TestCase
         }
     }
 
+    public function test_inertia_does_not_contact_an_unconfigured_render_server(): void
+    {
+        \Illuminate\Support\Facades\Http::fake();
+        config(['inertia.ssr.ensure_bundle_exists' => false]);
+        $result = app(\Inertia\Ssr\Gateway::class)->dispatch([
+            'component' => 'Auth',
+            'props' => [],
+        ]);
+        $this->assertNull($result);
+        \Illuminate\Support\Facades\Http::assertNothingSent();
+    }
+
     public function test_dashboard_summary_skips_report_queries_without_changing_metrics(): void
     {
         $this->openShift();

@@ -156,8 +156,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         }
     }, [flash]);
     useEffect(() => {
-        const a = router.on('start', () => setLoading(true));
-        const b = router.on('finish', () => setLoading(false));
+        const a = router.on('start', (event) => {
+            if (event.detail.visit.method !== 'get') {
+                router.flushAll();
+            }
+            if (!event.detail.visit.prefetch) {
+                setLoading(true);
+            }
+        });
+        const b = router.on('finish', (event) => {
+            if (!event.detail.visit.prefetch) {
+                setLoading(false);
+            }
+        });
         const c = router.on('navigate', () => setMenu(false));
         return () => {
             a();
@@ -173,8 +184,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     function navigationLink([title, href, Icon]: NavItem) {
         return (
             <Link
-                key={href}
+                key={`navigation:${href}`}
                 href={href}
+                prefetch={['hover', 'click']}
+                cacheFor="3s"
                 className={`nav-item ${isItemActive(href) ? 'nav-active' : ''}`}
                 aria-current={isItemActive(href) ? 'page' : undefined}
             >

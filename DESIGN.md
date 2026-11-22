@@ -175,8 +175,12 @@ Corners follow component purpose: compact rounded controls, slightly softer prod
 
 **Navigation.** Use consistent line icons, regular casing, and muted group labels. Selected items have a pale emerald surface and darker green text; hover changes the background. Keep `aria-current` and named menu controls. Desktop navigation remains an ordinary sidebar. At the drawer breakpoint, reuse the installed Radix Dialog primitive with a named trigger, portaled overlay and modal content, a screen-reader title, and an explicit close control. The closed drawer is unmounted. Preserve the primitive's focus trap, Escape dismissal, trigger focus return, and background isolation. The close icon occupies (32px) at top (17px), right (8px).
 
-**Navigation feedback.** Do not show a global progress bar during page navigation.
-Preserve `aria-busy`, form processing labels, and disabled submission buttons.
+**Navigation feedback.** Skip progress feedback for requests completed within
+700ms. Longer navigation shows one thin emerald line without a glowing peg or
+spinner. Preserve `aria-busy`, form processing labels, and disabled submission
+buttons. Menu links prefetch on hover or press with a three-second response
+lifetime; writes clear this cache. Background prefetch does not mark the current
+page busy.
 
 **Role navigation.** Owner shortcuts are Ringkasan, Laporan bisnis, and Transaksi.
 Manager shortcuts are Ringkasan, Persediaan cabang, and Laporan bisnis. Remaining

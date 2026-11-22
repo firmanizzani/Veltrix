@@ -85,8 +85,8 @@ Browser checks cover POS payment/receipt/shift, management forms, owner and mana
 dashboards, responsive navigation and report tables. Local screenshots belong in
 ignored `.tasteskill/screenshots/`, never in docs or Git history.
 
-Latest verification: 44 PostgreSQL tests passed with 307 assertions. The fast
-suite passed 43 tests with 296 assertions and skipped the two PostgreSQL-only
+Latest verification: 45 PostgreSQL tests passed with 309 assertions. The fast
+suite passed 44 tests with 298 assertions and skipped the two PostgreSQL-only
 concurrency cases. TypeScript/Vite production build and format checks passed.
 The PDF export test also passed after vertically formatting its Blade template.
 
@@ -99,10 +99,15 @@ visual refinements, not claims of a fresh full-surface approval after the fix.
 The automatic design detector could not run because its engine cache was
 unavailable; visual assessment was manual.
 
-Navigation performance was optimized without caching transactional data:
+Navigation performance was optimized through selective data loading:
 dashboard requests skip full report breakdown queries, management pages load
 only required option sources, and small dashboard lists use scoped joins.
 Tests reconcile summary/report metrics and enforce a reduction of at least ten
 queries for summary mode. Read-only owner transaction options require one query.
-The global progress bar is disabled by user preference; form submission feedback
-and accessible busy state remain available.
+Menu responses prefetch on hover/press for up to three seconds. Every write visit
+clears this client cache. Checkout prices, availability and stock are still
+validated server-side. Background prefetch does not mark the page busy. One plain
+progress line appears only after 700ms; quick requests skip it entirely.
+Unconfigured SSR attempts and automatic Boost browser-log posting are disabled
+by default. Local PHP OPcache was enabled with timestamp validation for immediate
+source updates. Temporary request profiling was removed after diagnosis.
