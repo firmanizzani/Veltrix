@@ -26,13 +26,11 @@ import {
     BadgePercent,
     ChevronRight,
     PackagePlus,
-    CircleHelp,
     CheckCheck,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Toaster, toast } from 'sonner';
 import { labels, type Shared } from '../lib/utils';
-import { Button } from '../components/ui/button';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 
 type NavItem = [string, string, typeof Coffee, string[]];
@@ -41,9 +39,15 @@ const ops = ['owner', 'manager'];
 const owner = ['owner'];
 const groups: { title: string; items: NavItem[] }[] = [
     {
-        title: 'Penjualan',
+        title: 'Ringkasan & laporan',
         items: [
             ['Ringkasan', '/dashboard', LayoutDashboard, ops],
+            ['Laporan bisnis', '/reports', ChartNoAxesCombined, ops],
+        ],
+    },
+    {
+        title: 'Penjualan',
+        items: [
             ['Point of Sale', '/pos', ShoppingBag, all],
             ['Transaksi', '/manage/orders', ReceiptText, all],
             ['Sesi kasir', '/manage/shifts', History, all],
@@ -79,13 +83,8 @@ const groups: { title: string; items: NavItem[] }[] = [
         items: [
             ['Pengeluaran', '/manage/expenses', Wallet, ops],
             ['Payroll', '/manage/payroll', Banknote, owner],
-            ['Laporan bisnis', '/reports', ChartNoAxesCombined, ops],
             ['Persetujuan harga', '/manage/price-requests', CheckCheck, ops],
         ],
-    },
-    {
-        title: 'Intelligence',
-        items: [['AI & insight bisnis', '/intelligence', Sparkles, owner]],
     },
     {
         title: 'Administrasi',
@@ -96,17 +95,52 @@ const groups: { title: string; items: NavItem[] }[] = [
             ['Pengaturan bisnis', '/settings', Settings2, owner],
         ],
     },
+    {
+        title: 'Intelligence',
+        items: [['AI & insight bisnis', '/intelligence', Sparkles, owner]],
+    },
 ];
 
 export default function AppLayout({ children }: { children: ReactNode }) {
     const { auth, flash, business } = usePage<Shared>().props;
     const { user } = auth;
     const { url } = usePage();
+    const currentPath = url.split('?')[0];
+    const primaryPaths =
+        user.role === 'owner'
+            ? ['/dashboard', '/reports', '/manage/orders']
+            : user.role === 'manager'
+              ? ['/dashboard', '/manage/inventory', '/reports']
+              : ['/pos', '/manage/orders', '/manage/shifts', '/manage/refunds'];
+    const allItems = groups.flatMap((group) => group.items);
+    const primaryItems = primaryPaths.flatMap((href) =>
+        allItems.filter((item) => item[1] === href && item[3].includes(user.role)),
+    );
+    const visibleGroups = groups
+        .map((group) => ({
+            ...group,
+            items: group.items.filter(
+                ([, href, , roles]) =>
+                    roles.includes(user.role) && !primaryPaths.includes(href),
+            ),
+        }))
+        .filter((group) => group.items.length);
+    const isItemActive = (href: string) =>
+        currentPath === href ||
+        (href === '/manage/orders' && currentPath.startsWith('/orders/'));
+    const activeGroup = visibleGroups.find(
+        (group) =>
+            group.items.length > 1 && group.items.some(([, href]) => isItemActive(href)),
+    )?.title;
+    const [openGroup, setOpenGroup] = useState<string | null>(activeGroup ?? null);
     const [menu, setMenu] = useState(false);
     const [mobile, setMobile] = useState(
         () => window.matchMedia('(max-width: 1100px)').matches,
     );
     const [loading, setLoading] = useState(false);
+    useEffect(() => {
+        setOpenGroup(activeGroup ?? null);
+    }, [currentPath, activeGroup]);
     useEffect(() => {
         const media = window.matchMedia('(max-width: 1100px)');
         const update = () => {
@@ -136,6 +170,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             .flatMap((g) => g.items)
             .find((item) => url.split('?')[0] === item[1])?.[0] ??
         (url.startsWith('/orders/') ? 'Detail transaksi' : 'Profil saya');
+    function navigationLink([title, href, Icon]: NavItem) {
+        return (
+            <Link
+                key={href}
+                href={href}
+                className={`nav-item ${isItemActive(href) ? 'nav-active' : ''}`}
+                aria-current={isItemActive(href) ? 'page' : undefined}
+            >
+                <Icon
+                    size={17}
+                    strokeWidth={1.6}
+                />
+                <span>{title}</span>
+            </Link>
+        );
+    }
     const navigation = (
         <aside
             className={`sidebar ${menu ? 'sidebar-open' : ''}`}
@@ -176,35 +226,42 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     <span>{user.branch?.city ?? 'Seluruh cabang'}</span>
                 </div>
             </div>
-            <nav>
-                {groups.map((group) => {
-                    const items = group.items.filter((item) =>
-                        item[3].includes(user.role),
-                    );
-                    return items.length ? (
+            <nav aria-label="Menu aplikasi">
+                <div className="nav-primary">{primaryItems.map(navigationLink)}</div>
+                {visibleGroups.map((group, index) => {
+                    const expanded = openGroup === group.title;
+                    const panelId = `navigation-group-${index}`;
+                    return group.items.length === 1 ? (
+                        navigationLink(group.items[0])
+                    ) : (
                         <div
                             className="nav-group"
                             key={group.title}
                         >
-                            <p>{group.title}</p>
-                            {items.map(([title, href, Icon]) => (
-                                <Link
-                                    key={href}
-                                    href={href}
-                                    className={`nav-item ${url.split('?')[0] === href ? 'nav-active' : ''}`}
-                                    aria-current={
-                                        url.split('?')[0] === href ? 'page' : undefined
-                                    }
-                                >
-                                    <Icon
-                                        size={17}
-                                        strokeWidth={1.6}
-                                    />
-                                    <span>{title}</span>
-                                </Link>
-                            ))}
+                            <button
+                                type="button"
+                                className={`nav-group-toggle ${activeGroup === group.title ? 'nav-group-current' : ''}`}
+                                aria-expanded={expanded}
+                                aria-controls={panelId}
+                                onClick={() =>
+                                    setOpenGroup(expanded ? null : group.title)
+                                }
+                            >
+                                <span>{group.title}</span>
+                                <ChevronRight
+                                    size={15}
+                                    aria-hidden="true"
+                                />
+                            </button>
+                            <div
+                                id={panelId}
+                                className="nav-group-items"
+                                hidden={!expanded}
+                            >
+                                {group.items.map(navigationLink)}
+                            </div>
                         </div>
-                    ) : null;
+                    );
                 })}
             </nav>
             <div className="sidebar-bottom">

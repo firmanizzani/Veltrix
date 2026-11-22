@@ -3,6 +3,12 @@
   "generatedAt": "2026-11-21T00:00:00+07:00",
   "title": "Design System: VELTRIX",
   "extensions": {
+    "navigation": {
+      "pattern": "single-open inline accordion",
+      "ownerPrimary": ["/dashboard", "/reports", "/manage/orders"],
+      "managerPrimary": ["/dashboard", "/manage/inventory", "/reports"],
+      "aiPlacement": "after Administrasi in the main menu list"
+    },
     "colorMeta": {
       "primary": {
         "role": "primary",

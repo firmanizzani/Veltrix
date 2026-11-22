@@ -178,6 +178,15 @@ Corners follow component purpose: compact rounded controls, slightly softer prod
 **Navigation feedback.** Do not show a global progress bar during page navigation.
 Preserve `aria-busy`, form processing labels, and disabled submission buttons.
 
+**Role navigation.** Owner shortcuts are Ringkasan, Laporan bisnis, and Transaksi.
+Manager shortcuts are Ringkasan, Persediaan cabang, and Laporan bisnis. Remaining
+menus use an inline accordion with one group open at a time; clicking its header
+again closes it. AI & insight bisnis follows Administrasi in the owner's menu
+list. Preserve access to long lists through scrolling when an expanded group
+cannot fit the available height. Compact laptop spacing keeps ordinary closed
+and short-group navigation within the viewport without reducing body text below
+13px; drawer controls retain a 44px minimum height.
+
 **Status chips.** Use the shared Status component and label mapping. Chips use small text (11px), a minimum height of (22px), and semantic color pairs. These are state labels, not primary actions.
 
 **Tables.** Fine bottom rules separate rows; hover is nearly white. Identity cells carry stronger text, secondary details sit below, and row actions align right. Preserve pagination, empty states, and search controls instead of substituting decorative summary cards.

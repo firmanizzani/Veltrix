@@ -249,17 +249,111 @@ textarea {
 }
 .sidebar nav {
     overflow: auto;
+    min-height: 0;
     flex: 1;
-    padding-bottom: 16px;
+    padding-bottom: 12px;
+}
+.nav-primary {
+    padding-bottom: 12px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
 }
 .nav-group {
-    margin-top: 21px;
+    margin-top: 4px;
 }
-.nav-group > p {
-    font-size: 12px;
-    color: #6a756d;
-    padding: 0 12px;
-    margin-bottom: 7px;
+.nav-group-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 550;
+    text-align: left;
+    cursor: pointer;
+}
+.nav-group-toggle:hover {
+    background: #e9efeb;
+}
+.nav-group-current {
+    color: var(--primary);
+}
+.nav-group-toggle[aria-expanded='true'] > svg {
+    transform: rotate(90deg);
+}
+.nav-group-items {
+    padding-left: 10px;
+}
+.nav-group-items[hidden] {
+    display: none;
+}
+@media (max-height: 760px) {
+    .sidebar {
+        padding-top: 14px;
+    }
+    .sidebar .brand {
+        font-size: 21px;
+    }
+    .sidebar .brand svg {
+        width: 24px;
+        height: 26px;
+    }
+    .sidebar .workspace {
+        margin: 8px 8px 4px;
+        padding: 4px 2px;
+    }
+    .sidebar nav {
+        padding-bottom: 8px;
+    }
+    .sidebar .nav-primary {
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+    }
+    .sidebar .nav-item,
+    .sidebar .nav-group-toggle {
+        min-height: 34px;
+        margin-block: 0;
+        padding-block: 6px;
+        font-size: 13px;
+    }
+    .sidebar .sidebar-bottom {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-block: 6px;
+    }
+    .sidebar-bottom .user-link {
+        flex: 1;
+        min-width: 0;
+    }
+    .sidebar-bottom .user-link > svg {
+        display: none;
+    }
+    .sidebar .logout {
+        flex-shrink: 0;
+        min-height: 40px;
+        gap: 4px;
+        padding: 8px 4px;
+    }
+}
+@media (max-width: 1100px) {
+    .sidebar .nav-item,
+    .sidebar .nav-group-toggle {
+        min-height: 44px;
+    }
+}
+@media (max-width: 1100px) and (max-height: 760px) {
+    .sidebar .workspace {
+        display: none;
+    }
+    .sidebar .brand {
+        margin-bottom: 16px;
+    }
 }
 .nav-item {
     display: flex;
@@ -272,6 +366,7 @@ textarea {
     color: #58665d;
     font-size: 13px;
     line-height: 18px;
+    flex-shrink: 0;
 }
 .nav-item:hover {
     background: #e9efeb;
@@ -285,6 +380,7 @@ textarea {
     white-space: nowrap;
 }
 .sidebar-bottom {
+    flex-shrink: 0;
     padding: 12px 4px 10px;
     border-top: 1px solid #dfe6e1;
 }
