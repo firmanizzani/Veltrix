@@ -22,6 +22,7 @@ import {
 import { useState, type FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Empty, PageTitle, Status } from '../components/common';
+import { ReportDetails } from '../components/report-details';
 import { date, labels, money, number, type Row, type Shared } from '../lib/utils';
 
 export default function Dashboard({
@@ -66,6 +67,30 @@ export default function Dashboard({
             value: money(m.gross_profit),
             note: 'Penjualan bersih − biaya bahan',
         },
+        ...(user.role === 'owner'
+            ? [
+                  {
+                      name: 'Penjualan kotor',
+                      value: money(m.gross),
+                      note: 'Sebelum pengurangan refund',
+                  },
+                  {
+                      name: 'Pengeluaran operasional',
+                      value: money(m.expenses),
+                      note: 'Pengeluaran yang telah disetujui',
+                  },
+                  {
+                      name: 'Estimasi laba operasional',
+                      value: money(m.profit),
+                      note: 'Laba kotor − pengeluaran − payroll',
+                  },
+                  {
+                      name: 'Cabang aktif',
+                      value: number(m.active_branches),
+                      note: 'Dalam cakupan laporan',
+                  },
+              ]
+            : []),
     ];
     return (
         <>
@@ -548,6 +573,12 @@ export default function Dashboard({
                     )}
                 </div>
             </section>
+            {isReport && (
+                <ReportDetails
+                    report={report}
+                    owner={user.role === 'owner'}
+                />
+            )}
             {user.role === 'owner' && (
                 <div className="intelligence-strip">
                     <Sparkles size={18} />

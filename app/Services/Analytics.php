@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\Inventory;
+use App\Models\InventoryMovement;
 use App\Models\Order;
 use App\Models\Payroll;
 use App\Models\Refund;
@@ -131,7 +132,7 @@ class Analytics
             ->values();
         $branchSales = (clone $orders)
             ->selectRaw(
-                'branch_id, SUM(total_amount) AS amount, COUNT(*) AS transactions',
+                'branch_id, SUM(total_amount) AS amount, SUM(cost_amount) AS cost, COUNT(*) AS transactions',
             )
             ->groupBy('branch_id')
             ->get()
@@ -141,20 +142,92 @@ class Analytics
             ->selectRaw('orders.branch_id, SUM(refunds.amount) AS amount')
             ->groupBy('orders.branch_id')
             ->pluck('amount', 'branch_id');
+        $days = (int) $from->diffInDays($until->startOfDay()) + 1;
+        $previousFrom = $from->subDays($days);
+        $previousUntil = $from->subSecond();
+        $previousSales = Order::whereBetween('completed_at', [
+            $previousFrom,
+            $previousUntil,
+        ])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->selectRaw('branch_id, SUM(total_amount) AS amount')
+            ->groupBy('branch_id')
+            ->pluck('amount', 'branch_id');
+        $previousRefunds = Refund::where('refunds.status', 'approved')
+            ->whereBetween('processed_at', [$previousFrom, $previousUntil])
+            ->join('orders', 'orders.id', '=', 'refunds.order_id')
+            ->when($branchId, fn($q) => $q->where('orders.branch_id', $branchId))
+            ->selectRaw('orders.branch_id, SUM(refunds.amount) AS amount')
+            ->groupBy('orders.branch_id')
+            ->pluck('amount', 'branch_id');
+        $branchUnits = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->whereBetween('orders.completed_at', [$from, $until])
+            ->when($branchId, fn($q) => $q->where('orders.branch_id', $branchId))
+            ->selectRaw('orders.branch_id, SUM(quantity) AS quantity')
+            ->groupBy('orders.branch_id')
+            ->pluck('quantity', 'branch_id');
+        $refundedUnits = (clone $refunds)
+            ->join('orders', 'orders.id', '=', 'refunds.order_id')
+            ->join('order_items', 'order_items.order_id', '=', 'orders.id')
+            ->selectRaw('orders.branch_id, SUM(quantity) AS quantity')
+            ->groupBy('orders.branch_id')
+            ->pluck('quantity', 'branch_id');
+        $branchExpenses = (clone $expenses)
+            ->selectRaw('branch_id, SUM(amount) AS amount')
+            ->groupBy('branch_id')
+            ->pluck('amount', 'branch_id');
+        $branchPayroll = Payroll::whereIn('status', ['approved', 'paid'])
+            ->whereBetween('period', [$start, $end])
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->selectRaw('branch_id, SUM(net_pay) AS amount')
+            ->groupBy('branch_id')
+            ->pluck('amount', 'branch_id');
         $branches = Branch::when($branchId, fn($q) => $q->whereKey($branchId))
             ->get()
-            ->map(
-                fn($b) => [
+            ->map(function ($b) use (
+                $branchSales,
+                $branchRefunds,
+                $previousSales,
+                $previousRefunds,
+                $branchUnits,
+                $refundedUnits,
+                $branchExpenses,
+                $branchPayroll,
+            ) {
+                $amount =
+                    (int) ($branchSales[$b->id]->amount ?? 0) -
+                    (int) ($branchRefunds[$b->id] ?? 0);
+                $previous =
+                    (int) ($previousSales[$b->id] ?? 0) -
+                    (int) ($previousRefunds[$b->id] ?? 0);
+                $count = (int) ($branchSales[$b->id]->transactions ?? 0);
+                $cost = (int) ($branchSales[$b->id]->cost ?? 0);
+                $expense = (int) ($branchExpenses[$b->id] ?? 0);
+                $payroll = (int) ($branchPayroll[$b->id] ?? 0);
+                return [
                     'id' => $b->id,
                     'name' => $b->name,
                     'city' => $b->city,
                     'is_active' => $b->is_active,
-                    'amount' =>
-                        (int) ($branchSales[$b->id]->amount ?? 0) -
-                        (int) ($branchRefunds[$b->id] ?? 0),
-                    'transactions' => (int) ($branchSales[$b->id]->transactions ?? 0),
-                ],
-            );
+                    'amount' => $amount,
+                    'transactions' => $count,
+                    'average' => $count ? (int) round($amount / $count) : 0,
+                    'units' =>
+                        (int) ($branchUnits[$b->id] ?? 0) -
+                        (int) ($refundedUnits[$b->id] ?? 0),
+                    'cogs' => $cost,
+                    'expenses' => $expense,
+                    'payroll' => $payroll,
+                    'gross_profit' => $amount - $cost,
+                    'profit' => $amount - $cost - $expense - $payroll,
+                    'previous_sales' => $previous,
+                    'growth' =>
+                        $previous > 0
+                            ? round((($amount - $previous) / $previous) * 100, 1)
+                            : null,
+                ];
+            });
         $net = (int) $totals->gross - $refundAmount;
         $payments = (clone $orders)
             ->join('payments', 'payments.order_id', '=', 'orders.id')
@@ -169,6 +242,44 @@ class Analytics
             ->get();
 
         return [
+            'comparison' => [
+                'start' => $previousFrom->toDateString(),
+                'end' => $previousUntil->toDateString(),
+            ],
+            'expenseCategories' => (clone $expenses)
+                ->selectRaw('category AS name, SUM(amount) AS amount')
+                ->groupBy('category')
+                ->orderByDesc('amount')
+                ->get(),
+            'inventory' => Inventory::with('ingredient', 'branch')
+                ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+                ->orderBy('branch_id')
+                ->orderBy('ingredient_id')
+                ->get()
+                ->map(
+                    fn($stock) => [
+                        'id' => $stock->id,
+                        'branch' => $stock->branch->city,
+                        'ingredient' => $stock->ingredient->name,
+                        'unit' => $stock->ingredient->unit,
+                        'quantity' => (float) $stock->quantity,
+                        'value' => (int) round(
+                            $stock->quantity * $stock->average_unit_cost,
+                        ),
+                    ],
+                ),
+            'movements' => InventoryMovement::whereBetween('created_at', [$from, $until])
+                ->when(
+                    $branchId,
+                    fn($q) => $q->whereHas(
+                        'inventory',
+                        fn($q) => $q->where('branch_id', $branchId),
+                    ),
+                )
+                ->selectRaw('type, COUNT(*) AS movements')
+                ->groupBy('type')
+                ->orderBy('type')
+                ->get(),
             'granularity' => $start === $end ? 'hour' : 'day',
             'metrics' => [
                 'gross' => (int) $totals->gross,

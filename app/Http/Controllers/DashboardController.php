@@ -48,6 +48,11 @@ class DashboardController extends Controller
         $report = $analytics->report($start, $end, $branchId);
         if (!$request->user()->isOwner()) {
             unset($report['metrics']['payroll'], $report['metrics']['profit']);
+            $report['branches'] = $report['branches']->map(
+                fn($branch) => collect($branch)
+                    ->except(['payroll', 'profit'])
+                    ->all(),
+            );
             $report['tasks'] = [
                 [
                     'label' => 'Pembelian menunggu bahan',
@@ -104,6 +109,11 @@ class DashboardController extends Controller
         );
         if (!$request->user()->isOwner()) {
             unset($report['metrics']['payroll'], $report['metrics']['profit']);
+            $report['branches'] = $report['branches']->map(
+                fn($branch) => collect($branch)
+                    ->except(['payroll', 'profit'])
+                    ->all(),
+            );
         }
 
         return response()->streamDownload(
@@ -117,6 +127,31 @@ class DashboardController extends Controller
                 fputcsv($handle, ['Tanggal', 'Penjualan bersih (IDR)'], ',', '"', '');
                 foreach ($report['trend'] as $row) {
                     fputcsv($handle, [$row['date'], $row['amount']], ',', '"', '');
+                }
+                foreach (
+                    ['branches', 'expenseCategories', 'inventory', 'movements']
+                    as $section
+                ) {
+                    fputcsv($handle, [$section], ',', '"', '');
+                    $rows = collect($report[$section])->map(
+                        fn($row) => $row instanceof
+                        \Illuminate\Contracts\Support\Arrayable
+                            ? $row->toArray()
+                            : (array) $row,
+                    );
+                    if ($rows->isNotEmpty()) {
+                        fputcsv($handle, array_keys($rows->first()), ',', '"', '');
+                        foreach ($rows as $row) {
+                            $safe = array_map(
+                                fn($value) => is_string($value) &&
+                                preg_match('/^[=+@\-\t\r]/', $value)
+                                    ? "'" . $value
+                                    : $value,
+                                $row,
+                            );
+                            fputcsv($handle, $safe, ',', '"', '');
+                        }
+                    }
                 }
                 fclose($handle);
             },
@@ -144,6 +179,11 @@ class DashboardController extends Controller
         $report = $analytics->report($filters['start'], $filters['end'], $branchId);
         if (!$request->user()->isOwner()) {
             unset($report['metrics']['payroll'], $report['metrics']['profit']);
+            $report['branches'] = $report['branches']->map(
+                fn($branch) => collect($branch)
+                    ->except(['payroll', 'profit'])
+                    ->all(),
+            );
         }
         $pdf = new \Dompdf\Dompdf();
         $pdf->setPaper('A4');

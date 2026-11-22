@@ -197,7 +197,9 @@ class OperationsTest extends TestCase
                 fn(Assert $page) => $page
                     ->component('Dashboard', false)
                     ->missing('report.metrics.payroll')
-                    ->missing('report.metrics.profit'),
+                    ->missing('report.metrics.profit')
+                    ->missing('report.branches.0.payroll')
+                    ->missing('report.branches.0.profit'),
             );
     }
 
@@ -525,6 +527,102 @@ class OperationsTest extends TestCase
         $this->assertSame(50000, $report['metrics']['net']);
         $this->assertSame(36400, $report['metrics']['profit']);
         $this->assertSame(50000, array_sum(array_column($report['trend'], 'amount')));
+        $branch = $report['branches']->first();
+        $this->assertSame(36400, $branch['profit']);
+        $this->assertSame(50000, $branch['average']);
+        $this->assertSame(2, $branch['units']);
+        $this->assertNull($branch['growth']);
+        $this->assertSame(10000, (int) $report['expenseCategories']->first()->amount);
+        $this->assertSame(6400, $report['inventory']->first()['value']);
+    }
+
+    public function test_branch_growth_compares_equal_periods_and_excludes_other_branches(): void
+    {
+        $this->openShift();
+        $payload = $this->payload();
+        $payload['items'][0]['quantity'] = 1;
+        $this->post('/pos/checkout', $payload)->assertSessionHasNoErrors();
+        Order::firstOrFail()->update(['completed_at' => now()->subDay()]);
+        $this->post('/pos/checkout', $this->payload())->assertSessionHasNoErrors();
+        $report = app(Analytics::class)->report(
+            now()->toDateString(),
+            now()->toDateString(),
+            $this->branch->id,
+        );
+        $this->assertSame(100.0, $report['branches']->first()['growth']);
+        $this->assertSame(25000, $report['branches']->first()['previous_sales']);
+        $this->assertCount(1, $report['branches']);
+        $this->assertSame(
+            now()->subDay()->toDateString(),
+            $report['comparison']['start'],
+        );
+    }
+
+    public function test_csv_breakdowns_export_scalar_values_and_escape_spreadsheet_formulas(): void
+    {
+        Expense::create([
+            'branch_id' => $this->branch->id,
+            'created_by' => $this->manager->id,
+            'category' => '=SUM(1,2)',
+            'amount' => 10000,
+            'expense_date' => now()->toDateString(),
+            'description' => 'Tagihan',
+            'approval_status' => 'approved',
+        ]);
+        $response = $this->actingAs($this->manager)
+            ->get(
+                '/reports/export?' .
+                    http_build_query([
+                        'start' => now()->toDateString(),
+                        'end' => now()->toDateString(),
+                    ]),
+            )
+            ->assertOk();
+        $csv = $response->streamedContent();
+        $this->assertStringContainsString("'=SUM(1,2)", $csv);
+        $this->assertStringContainsString('10000', $csv);
+        $this->assertStringNotContainsString('Array', $csv);
+        $this->assertStringNotContainsString('payroll', $csv);
+        $this->assertStringNotContainsString('veltrix_test', $csv);
+    }
+
+    public function test_expense_history_filters_dates_category_and_authorized_branch(): void
+    {
+        foreach (
+            [
+                ['Listrik', now()->toDateString()],
+                ['Air', now()->toDateString()],
+                ['Listrik', now()->subDay()->toDateString()],
+            ]
+            as [$category, $date]
+        ) {
+            Expense::create([
+                'branch_id' => $this->branch->id,
+                'created_by' => $this->manager->id,
+                'category' => $category,
+                'amount' => 10000,
+                'expense_date' => $date,
+                'description' => 'Tagihan',
+            ]);
+        }
+        $this->actingAs($this->manager)
+            ->get(
+                '/manage/expenses?' .
+                    http_build_query([
+                        'start' => now()->toDateString(),
+                        'end' => now()->toDateString(),
+                        'category' => 'Listrik',
+                    ]),
+            )
+            ->assertInertia(
+                fn(Assert $page) => $page
+                    ->component('Records', false)
+                    ->has('records.data', 1)
+                    ->where('records.data.0.category', 'Listrik'),
+            );
+        $this->get(
+            '/manage/expenses?branch_id=' . $this->otherBranch->id,
+        )->assertForbidden();
     }
 
     public function test_replayed_partial_receipt_does_not_duplicate_stock(): void

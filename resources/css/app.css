@@ -386,6 +386,18 @@ textarea {
 .nav-backdrop {
     display: none;
 }
+.navigation-close {
+    position: absolute;
+    top: 17px;
+    right: 8px;
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+}
 .page-title,
 .pos-heading {
     display: flex;
@@ -814,6 +826,7 @@ legend {
 .kpi-strip {
     display: grid;
     grid-template-columns: 1.2fr 1fr 1fr 1fr;
+    row-gap: 24px;
     padding: 22px 0;
     border-block: 1px solid var(--border);
     margin-bottom: 22px;
@@ -823,10 +836,10 @@ legend {
     border-right: 1px solid var(--border);
     font-variant-numeric: tabular-nums;
 }
-.kpi:first-child {
+.kpi:nth-child(4n + 1) {
     padding-left: 0;
 }
-.kpi:last-child {
+.kpi:nth-child(4n) {
     border: 0;
     padding-right: 0;
 }
@@ -2111,11 +2124,11 @@ legend {
     .kpi {
         padding: 0 14px;
     }
-    .kpi:nth-child(2) {
+    .kpi:nth-child(even) {
         border: 0;
         padding-right: 0;
     }
-    .kpi:nth-child(3) {
+    .kpi:nth-child(odd) {
         padding-left: 0;
     }
     .kpi-lead > strong {
@@ -2459,6 +2472,11 @@ legend {
     height: 36px;
     font-size: 12px;
 }
+.list-toolbar > input {
+    width: 150px;
+    height: 36px;
+    font-size: 12px;
+}
 @media (max-width: 700px) {
     .list-toolbar > .search-box {
         flex-basis: 100%;
@@ -2466,6 +2484,11 @@ legend {
     .list-toolbar > select {
         flex: 1;
         max-width: none;
+        min-width: 120px;
+        height: 44px;
+    }
+    .list-toolbar > input {
+        flex: 1;
         min-width: 120px;
         height: 44px;
     }

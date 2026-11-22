@@ -50,6 +50,9 @@ export default function Records({
     );
     const [categoryFilter, setCategoryFilter] = useState(filters.category_id ?? '');
     const [branchFilter, setBranchFilter] = useState(filters.branch_id ?? '');
+    const [start, setStart] = useState(filters.start ?? '');
+    const [end, setEnd] = useState(filters.end ?? '');
+    const [expenseCategory, setExpenseCategory] = useState(filters.category ?? '');
     const [edit, setEdit] = useState<Row | null>(null);
     const [creating, setCreating] = useState(false);
     const [detail, setDetail] = useState<Row | null>(null);
@@ -327,6 +330,9 @@ export default function Records({
                             direction: sort === 'id' ? 'desc' : 'asc',
                             ...(categoryFilter ? { category_id: categoryFilter } : {}),
                             ...(branchFilter ? { branch_id: branchFilter } : {}),
+                            ...(start ? { start } : {}),
+                            ...(end ? { end } : {}),
+                            ...(expenseCategory ? { category: expenseCategory } : {}),
                         },
                         { preserveState: true, preserveScroll: true },
                     );
@@ -337,6 +343,42 @@ export default function Records({
                     onChange={setQ}
                     placeholder={`Cari ${d.title.toLowerCase()}…`}
                 />
+                {[
+                    'orders',
+                    'shifts',
+                    'expenses',
+                    'payroll',
+                    'schedules',
+                    'purchases',
+                    'receipts',
+                    'movements',
+                    'refunds',
+                    'audit',
+                ].includes(d.key) && (
+                    <>
+                        <input
+                            type="date"
+                            aria-label="Filter tanggal mulai"
+                            value={start}
+                            onChange={(e) => setStart(e.target.value)}
+                        />
+                        <input
+                            type="date"
+                            aria-label="Filter tanggal selesai"
+                            value={end}
+                            min={start || undefined}
+                            onChange={(e) => setEnd(e.target.value)}
+                        />
+                    </>
+                )}
+                {d.key === 'expenses' && (
+                    <input
+                        aria-label="Filter kategori pengeluaran"
+                        placeholder="Kategori pengeluaran"
+                        value={expenseCategory}
+                        onChange={(e) => setExpenseCategory(e.target.value)}
+                    />
+                )}
                 {d.key === 'products' && (
                     <select
                         aria-label="Filter kategori produk"

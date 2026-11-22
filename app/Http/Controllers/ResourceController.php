@@ -39,6 +39,9 @@ class ResourceController extends Controller
             'q' => 'nullable|string|max:100',
             'direction' => 'nullable|in:asc,desc',
             'category_id' => 'nullable|integer|exists:categories,id',
+            'start' => 'nullable|date_format:Y-m-d',
+            'end' => 'nullable|date_format:Y-m-d|after_or_equal:start',
+            'category' => 'nullable|string|max:100',
         ]);
         $directColumns = array_filter(
             array_keys($definition['columns']),
@@ -86,6 +89,35 @@ class ResourceController extends Controller
         }
         if ($resource === 'products' && $request->filled('category_id')) {
             $query->where('category_id', $request->integer('category_id'));
+        }
+        $dateColumn = match ($resource) {
+            'orders' => 'completed_at',
+            'shifts' => 'opened_at',
+            'expenses' => 'expense_date',
+            'payroll' => 'period',
+            'schedules' => 'work_date',
+            'purchases', 'receipts', 'movements', 'refunds', 'audit' => 'created_at',
+            default => null,
+        };
+        if ($dateColumn) {
+            $dateOnly = in_array($dateColumn, ['expense_date', 'period', 'work_date']);
+            if ($request->filled('start')) {
+                $query->where(
+                    $dateColumn,
+                    '>=',
+                    $request->input('start') . ($dateOnly ? '' : ' 00:00:00'),
+                );
+            }
+            if ($request->filled('end')) {
+                $query->where(
+                    $dateColumn,
+                    '<=',
+                    $request->input('end') . ($dateOnly ? '' : ' 23:59:59.999999'),
+                );
+            }
+        }
+        if ($resource === 'expenses' && $request->filled('category')) {
+            $query->where('category', $request->input('category'));
         }
         if ($request->filled('q')) {
             $searchable = array_filter(
@@ -150,6 +182,9 @@ class ResourceController extends Controller
                 'direction',
                 'category_id',
                 'branch_id',
+                'start',
+                'end',
+                'category',
             ),
         ]);
     }
