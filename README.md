@@ -1,27 +1,137 @@
 # VELTRIX
 
-Multi-branch coffee shop operations built with Laravel 13, PHP 8.4+, React 19, TypeScript, Inertia 3, Tailwind 4, shadcn/ui and PostgreSQL.
+VELTRIX is a multi-branch coffee shop operations application for owners, branch managers, and cashiers. Laravel and React communicate through Inertia in one modular monolith. The application interface is in Indonesian, with IDR amounts and the Asia/Jakarta business timezone.
 
-Implementation follows build.md and prd.md. See docs/IMPLEMENTATION.md for the phased roadmap. This is an active implementation; the initial backend checkpoint is not a finished product.
+## Stack
 
-## Local development
+Laravel 13 · PHP 8.4 · React 19 · TypeScript · Inertia 3 · Tailwind 4 · shadcn/ui · Lucide · Recharts · PostgreSQL / Neon · Dompdf.
 
-No XAMPP or Docker is required. Install PHP 8.4+ with curl, fileinfo, mbstring, openssl, pdo_pgsql, pgsql, zip and intl, Composer, and Node.js 22+.
+PostgreSQL is the only operational database. XAMPP, Apache, MySQL, and Docker are not required. PHP can run directly from a terminal, including the VS Code terminal.
 
-1. Run `composer install` and `npm ci`.
-2. Copy `.env.example` to `.env`, then configure PostgreSQL credentials privately.
-3. Run `php artisan key:generate` and `php artisan migrate`.
-4. Run `npm run dev` and `php artisan serve` in separate terminals.
-5. Run `php artisan test` for isolated tests and `npm run build` for frontend validation.
+## Local setup
 
-On this Windows workspace, a project-local PHP runtime exists at `.tools/php/php.exe` and Composer at `.tools/composer.phar`; both are ignored by Git. They can be invoked from the VS Code terminal directly.
+Requirements: PHP 8.4+, Composer, Node.js 22.12+, and PostgreSQL. Enable the PHP extensions curl, fileinfo, mbstring, openssl, pdo_pgsql, pgsql, zip, intl, and dom. The fast test suite also requires pdo_sqlite.
 
-Neon uses TLS. The PostgreSQL connection enables emulated prepared statements for transaction-pooler compatibility. Tests default to SQLite memory and must never reset the supplied Neon database.
+```sh
+composer install
+npm ci
+```
 
-Public registration is disabled. Initial owner provisioning and demonstration seeders are separate from production setup. Gemini integration is deferred; there are no fabricated AI replies.
+Copy `.env.example` to `.env` and configure your PostgreSQL credentials locally. Neon connections use `DB_SSLMODE=require` and `PGCHANNELBINDING=require`. Keep private credentials out of the repository.
 
-## Operations
+```sh
+php artisan key:generate
+php artisan migrate
+```
 
-Run `php artisan queue:work --tries=3 --timeout=90` for background work, and schedule `php artisan schedule:run` every minute on the deployment host. Production requires HTTPS, `APP_DEBUG=false`, secure cookies, a real mail transport, supervised workers and database backups. Deployment is not performed by this repository checkpoint.
+Run Laravel and Vite in separate terminals:
 
-Never commit `.env`, credentials, database dumps, dependency directories or local runtimes.
+```sh
+php artisan serve
+```
+
+```sh
+npm run dev
+```
+
+Open [the local application](http://127.0.0.1:8000). To use compiled assets without a Vite development server, run `npm run build`, then run only the Laravel server.
+
+This Windows workspace also has a local portable PHP installation, which Git ignores:
+
+```powershell
+& .\.tools\php\php.exe artisan serve
+& .\.tools\php\php.exe .tools\composer.phar install
+```
+
+## Initial setup and demo data
+
+For a normal installation, seed the three initial branches and create the first owner. This does not add sample transactions or a default production password.
+
+```sh
+php artisan db:seed
+php artisan veltrix:owner owner@example.com --name=Owner
+```
+
+The owner command prompts for a hidden password and refuses to create a second owner.
+
+For an empty development database, use the separate demo seeder instead of creating the initial owner:
+
+```sh
+php artisan db:seed --class=DemoSeeder
+```
+
+The demo seeder runs only in local/testing environments. It stops without overwriting data if users or products already exist. It supplies three branches, ten accounts, twenty menu items, recipes, stock ledger entries, suppliers, employees, schedules, draft payroll, and approximately three months of transactions.
+
+| Role | Demo email |
+| --- | --- |
+| Owner | owner@veltrix.test |
+| Depok manager | depok.manager@veltrix.test |
+| Depok cashier | depok.kasir1@veltrix.test |
+
+Development demo password: `VeltrixDemo2026!`. Jakarta and Bogor manager/cashier accounts follow the same email pattern. Demo menu photos are representative Unsplash images; replace them with the shop's product photos for a real catalog.
+
+## Available workflows
+
+- Login, logout, password recovery, profiles, account activation, role and branch assignment, and change auditing.
+- Branches, users, categories, products, branch-specific pricing and availability, and price change approvals.
+- POS search and categories, cart quantities, manually recorded payments, tendered cash and change, cashier shifts, transaction history, printable receipts, and full refund requests and approvals.
+- Ingredients, versioned recipes, branch inventory, adjustments, stock counts, stock ledger, suppliers, purchasing, partial receiving, and stock transfers with approval, dispatch, and receipt stages.
+- Employees separate from login accounts, work schedules, expenses with private evidence and approval, and draft → approved → paid payroll with printable payslips.
+- Owner and manager dashboards, daily and hourly trends, equal-duration branch growth comparisons, bestselling products, management financial reports, expense category breakdowns, current inventory valuation, stock movement counts, and CSV/PDF exports. Owners see eight overview metrics; managers see four. Inventory valuation reflects current balances, not historical balances at the report's end date.
+- Stock notifications, per-user read status, business settings, and receipt footer configuration.
+
+Gemini, AI chat, and automated AI business insights are explicitly deferred and are not implemented or enabled. The Intelligence page explains this status without generating simulated answers or insights. See [the implementation record](docs/IMPLEMENTATION.md) for scope and limitations.
+
+## Data integrity and accounting conventions
+
+The backend determines checkout prices. Idempotency keys prevent repeated checkout and receiving operations. Ingredient deductions, orders, items, payments, ledger entries, and audit records are written within database transactions. Row locks protect concurrent access to the last available stock.
+
+Inventory valuation uses a weighted average for each ingredient and branch. Sales item costs are frozen at checkout, so later ingredient price changes do not rewrite history. A purchase does not immediately become cost of goods sold or add stock before receipt. Transfers preserve a snapshot of the source cost.
+
+Refunds in this release are always full refunds and do not return consumed ingredients to stock. Non-cash payments and refunds are recorded manually; there is no payment gateway. Approved/paid payroll is recognized on the first date of its monthly period. Profit reports are management estimates, not statutory accounting statements.
+
+## Tests and formatting
+
+```sh
+php artisan test
+php vendor/bin/phpunit -c phpunit.pgsql.xml
+npm run build
+npm run format:check
+```
+
+The test runner rejects the operational database. The fast suite uses an isolated in-memory SQLite database; the PostgreSQL suite uses the local `veltrix_test` database on `127.0.0.1:55432`. Concurrency tests run two PHP processes to exercise last-stock contention and checkout replay. Tests do not reset the application's Neon database.
+
+The PostgreSQL suite requires a running local test cluster. In this workspace it resides at `.tools/pgsql-test`. TLS and channel binding are disabled only for that local suite; Neon connections retain TLS and channel binding.
+
+```powershell
+$postgresControl = 'C:/Program Files/PostgreSQL/18/bin/pg_ctl.exe'
+& $postgresControl `
+    -D .tools/pgsql-test `
+    -l .tools/pgsql-test/server.log `
+    -o '-p 55432 -h 127.0.0.1' `
+    -w start
+
+& ./.tools/php/php.exe vendor/bin/phpunit -c phpunit.pgsql.xml
+```
+
+Source uses vertical formatting with Prettier, a print width of 90, and the PHP plugin. Run `npm run format` to format source. Laravel Pint is also available for PHP style checks; the project's final formatting pass uses Prettier to wrap long lines.
+
+Local browser QA screenshots belong in `.tasteskill/screenshots/`, which Git ignores. Do not store them in `docs/screenshots/`.
+
+## Queue, scheduler, and email
+
+```sh
+php artisan queue:work --tries=3 --timeout=90
+php artisan schedule:run
+php artisan veltrix:notifications
+```
+
+Run the scheduler every minute. The stock notification job is scheduled hourly and avoids duplicate notifications. `MAIL_MAILER=log` is for development: password reset links will not reach inboxes until a real mail transport is configured.
+
+## Deployment
+
+Production hosting is not configured in this workspace. Point the web document root to `public/`. Configure HTTPS, `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, a production `APP_URL`, SMTP, and private PostgreSQL credentials. Install production dependencies, build Vite assets, run migrations, and run `php artisan optimize`. Do not run DemoSeeder in production. Manage the queue worker through a process supervisor and the scheduler through cron or an equivalent service.
+
+Keep encrypted PostgreSQL backups outside the web root and repository. Test `pg_dump` and `pg_restore` against a separate recovery database before going live. Backup execution, a restore drill, public deployment, uptime monitoring, and production load testing have not been completed in this workspace.
+
+Never commit `.env`, API keys, database dumps, dependencies, or local runtime directories. Keep Neon and Gemini credentials out of frontend source and Git.

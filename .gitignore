@@ -1,6 +1,8 @@
 *.log
 .DS_Store
 .env
+.env.*
+!.env.example
 .env.backup
 .env.production
 .phpactor.json
@@ -24,7 +26,10 @@
 /.tools
 /.scaffold
 /.taste-skill
+/.tasteskill
 /.impeccable/review
+/.impeccable/reference
+/backups
 /.env.testing
 _ide_helper.php
 Homestead.json

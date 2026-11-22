@@ -1,34 +1,100 @@
-# Implementation plan
+# Implementation status
 
-The project follows build.md and prd.md. Work is delivered as vertical modules; an unfinished module must never be presented as working.
+Updated: 22 November 2026. This document records implemented behavior and explicit
+boundaries against build.md and prd.md.
 
-## 1. Foundation — in progress
-Laravel + Inertia React, PostgreSQL, secure sessions, three roles, active-account enforcement, branch management, account management, password recovery, profile, audit trail, shared design system. Verify authentication, owner-only actions, branch isolation and account deactivation.
+## Operational application
 
-## 2. Products and POS — pending
-Categories, catalog, branch price/availability, cashier shifts, idempotent checkout, manual payments, receipt and refund approval.
+| Area | Implemented behavior |
+| --- | --- |
+| Foundation | Laravel 13, React TypeScript, Inertia 3, Neon PostgreSQL, three roles, branch isolation, active accounts, session invalidation, recovery and profile. |
+| Administration | Branches, staff accounts, business settings, receipt footer and redacted audit history. |
+| Catalog | Categories, products, branch prices/availability, price approval, ingredients and immutable recipe versions. |
+| POS | Search/category filters, cart, manual payments, change, shifts, receipts, history and full-refund approval. |
+| Inventory | Recipe consumption, branch stock, adjustments, counts, weighted costs, ledger and low-stock notifications. |
+| Purchasing | Suppliers, orders, pre-receipt cancellation, partial receiving, receipt records and idempotent receiving. |
+| Transfers | Request, owner approval/shipment, destination receipt, source cost snapshot and both branch ledgers. |
+| People | Employees separate from accounts, branch assignments, daily schedules, monthly payroll components, approval, payment recording and payslips. |
+| Expenses | Categories, branch, private documents, approval/rejection, audit, and date/category/branch filters. |
+| Analytics | Gross/net sales, refunds, count, average order value, net units, COGS, gross/operating profit, expenses, payroll and active branches. |
+| Reports | Daily/hourly trends, top products, payment composition, branch revenue/units/average/profit/growth, expense categories, current stock valuation, movement counts, CSV and PDF. |
+| Interface | Grouped navigation for each role, desktop/tablet/mobile layouts, validation and loading/empty/error states. |
 
-## 3. Inventory and purchasing — pending
-Ingredient units, versioned recipes, branch stock ledger, locks, adjustments, suppliers, purchase orders, partial receiving and transfers. Integrate recipe consumption atomically with checkout.
+## Integrity and access
 
-## 4. Business operations — pending
-Employees separate from login accounts, schedules, operational expenses and payroll approval/payment lifecycle.
+- The application uses Neon PostgreSQL. SQLite exists only in the temporary,
+  isolated in-memory test configuration.
+- Checkout locks actor, shift and stock, validates server prices, snapshots cost,
+  and commits sale/payment/ledger/audit together. Replayed keys cannot duplicate
+  sales or change the original payload.
+- Receipt keys are bound to the original purchase and quantities.
+- Stock cannot become negative and all changes create ledger entries.
+- Ingredient units cannot change after operational use. New recipe versions and
+  later prices do not change historical sales costs.
+- Backend branch isolation covers manipulated parameters, direct URLs and exports.
+  Managers do not receive payroll or operating-profit data in payloads or exports.
+- Cashiers access their own sales/shifts, with no business reports, payroll or
+  account administration. Expense documents require authorized downloads.
+- Tests reject the operational database before reset traits execute.
 
-## 5. Analytics — pending
-One analytics module calculates sales, refunds, COGS snapshots, expenses and payroll. All charts, exports and later AI tools consume these definitions.
+## Workflow boundaries
 
-## 6–7. AI — deferred configuration
-Laravel AI SDK + Gemini, authorized read-only analytics tools, stored conversations, provider usage and failure handling, deterministic insight detection and scheduled jobs. No mock AI responses.
+- Refunds cover the full order; item-level partial refunds are not supported.
+  Consumed ingredients are not automatically returned to stock.
+- Non-cash payment records are manual. There is no payment gateway or offline POS.
+- Purchases are ordered on save; a separate draft purchase editor is not provided.
+- Transfers contain one ingredient and are received in full after shipment.
+- Schedules represent one same-day shift per employee/date, without attendance or
+  overnight shift calculation.
+- Expense categories are text on expense records. All expenses need owner
+  approval; a configurable automatic approval threshold is not implemented.
+- Payroll is entered per employee/month using base pay, allowance, bonus and
+  deduction, without automatic attendance or statutory tax calculation. Approved
+  or paid payroll is recognized on the first date of its monthly period.
+- Inventory report valuation is the current stock snapshot, clearly labeled as
+  such. The report date range filters business activity, not this snapshot.
+- Growth compares the preceding period of equal duration; a zero or negative
+  baseline produces no percentage. It is not a forecasting model.
+- Profit is a managerial estimate excluding depreciation, financing and tax.
+- The demo seeder runs only in local/testing and refuses existing users/products.
+  Reports query persisted records, not hardcoded frontend numbers.
 
-## 8. Quality and deployment — ongoing / pending production
-Feature and permission tests per vertical module, PostgreSQL concurrency checks for stock/checkout, browser verification, production worker/scheduler configuration, backup/restore rehearsal.
+## Deferred by the user
 
-## Module structure
-Controllers adapt HTTP/Inertia requests. Form Requests validate and authorize writes. Models represent persistence. Policies enforce resource access. Modules under app/Services own transactional business behavior. Analytics and AI will have separate modules when implemented; do not create pass-through abstractions in advance.
+Gemini integration remains deferred. The Laravel AI SDK, authorized AI tool
+calling, stored chat, API usage monitoring, generated insights and AI evaluation
+are not implemented. Intelligence discloses this status. Core operations remain
+independent of an AI provider.
 
-## Database design
-Foundation: branches, users, password_reset_tokens, sessions, jobs, cache, audit_logs. Non-owner users require a branch. Branch codes and emails are unique. Branches/users are deactivated rather than deleted. Audit changes exclude secrets. Owner cannot deactivate or demote themselves through account management.
+## Deployment boundary
 
-Next: categories → products → branch_products → recipe_versions → recipe_items; ingredients → inventories → inventory_movements; cashier_shifts → orders → order_items → payments → refunds/refund_items; suppliers → purchase_orders → purchase_order_items → stock_receipts/items; stock_transfers/items; employees → schedules/compensations → payroll_periods/items/adjustments; expense_categories → expenses; AI conversations/messages/tool executions, business_insights, notifications and settings.
+Local build and verification are complete for the implemented operational scope.
+Public hosting, production SMTP, managed worker/scheduler installation, backup
+retention, production-like restore rehearsal, load testing and uptime monitoring
+have not been performed. README.md contains setup and deployment instructions.
+This is not a claim of production availability or acceptance of deferred AI scope.
 
-Use foreign keys with restricted destructive cascades, unique branch/product and branch/ingredient pairs, integer rupiah money, decimal stock with consistent base units, immutable historical snapshots, ledger references and unique idempotency keys. Migrations are additive; never reset the supplied Neon database.
+## Verification
+
+The fast suite uses an isolated temporary database. PostgreSQL integration tests
+also run two independent PHP processes to race last-stock checkout and same-key
+replay. Coverage includes permissions, branch isolation, finance reconciliation,
+stock costing, receiving, payroll, notifications and audit redaction.
+
+Browser checks cover POS payment/receipt/shift, management forms, owner and manager
+dashboards, responsive navigation and report tables. Local screenshots belong in
+ignored `.tasteskill/screenshots/`, never in docs or Git history.
+
+Latest verification: 41 PostgreSQL tests passed with 276 assertions. The fast
+suite passed 40 tests with 265 assertions and skipped the two PostgreSQL-only
+concurrency cases. TypeScript/Vite production build and format checks passed.
+The PDF export test also passed after vertically formatting its Blade template.
+
+An independent visual review inspected 13 desktop/tablet/mobile captures. Its
+required keyboard-navigation correction was implemented with Radix modal
+navigation and verified with bidirectional Tab wrapping, Escape dismissal and
+focus restoration. The reviewer returned `ship` for that required correction.
+Owner mobile metric density and representative demo photography remain optional
+visual refinements, not claims of a fresh full-surface approval after the fix.
+The automatic design detector could not run because its engine cache was
+unavailable; visual assessment was manual.
