@@ -928,7 +928,7 @@ legend {
 }
 .kpi-strip {
     display: grid;
-    grid-template-columns: 1.2fr 1fr 1fr 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: 24px;
     padding: 22px 0;
     border-block: 1px solid var(--border);
@@ -939,16 +939,16 @@ legend {
     border-right: 1px solid var(--border);
     font-variant-numeric: tabular-nums;
 }
-.kpi:nth-child(4n + 1) {
+.kpi:first-child {
     padding-left: 0;
 }
-.kpi:nth-child(4n) {
+.kpi:last-child {
     border: 0;
     padding-right: 0;
 }
 .kpi > span {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 14px;
 }
 .kpi > strong {
     display: block;
@@ -965,9 +965,118 @@ legend {
     font-weight: 600;
 }
 .kpi > p {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--muted);
     margin-top: 3px;
+}
+.supporting-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin: 0;
+    padding-bottom: 20px;
+}
+.supporting-metrics > div {
+    padding: 0 20px;
+    border-right: 1px solid var(--border);
+}
+.supporting-metrics > div:first-child {
+    padding-left: 0;
+}
+.supporting-metrics > div:last-child {
+    border: 0;
+    padding-right: 0;
+}
+.supporting-metrics dt {
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+.supporting-metrics dd {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 550;
+    font-variant-numeric: tabular-nums;
+}
+.profit-details {
+    border-block: 1px solid var(--border);
+    margin-bottom: 24px;
+}
+.profit-details > summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    padding: 14px 0;
+    font-size: 13px;
+    font-weight: 500;
+    list-style: none;
+}
+.profit-details > summary::-webkit-details-marker {
+    display: none;
+}
+.profit-details > summary:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 4px;
+}
+.profit-disclosure-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    white-space: nowrap;
+}
+.profit-open-label {
+    display: none;
+}
+.profit-details[open] .profit-open-label {
+    display: inline;
+}
+.profit-details[open] .profit-closed-label {
+    display: none;
+}
+.profit-details[open] .profit-disclosure-action svg {
+    transform: rotate(180deg);
+}
+.profit-breakdown {
+    padding: 4px 0 20px;
+}
+.profit-explanation {
+    padding-top: 16px;
+}
+.profit-explanation p {
+    font-size: 12px;
+    line-height: 1.65;
+    color: var(--muted);
+    margin-top: 6px;
+    max-width: 75ch;
+}
+.profit-explanation .profit-cost-note {
+    color: var(--text);
+}
+.profit-calculation {
+    margin: 0;
+}
+.profit-calculation > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 24px;
+    padding: 10px 12px;
+    font-size: 13px;
+}
+.profit-calculation dd {
+    margin: 0;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.profit-calculation .profit-subtotal {
+    border-top: 1px solid var(--border);
+    font-weight: 600;
+}
+.profit-calculation .profit-subtotal:last-child {
+    color: var(--primary);
+    background: var(--raised);
 }
 .dashboard-grid {
     display: grid;
@@ -2220,28 +2329,41 @@ legend {
         height: 36px;
     }
     .kpi-strip {
-        grid-template-columns: 1fr 1fr;
-        row-gap: 20px;
+        grid-template-columns: 1fr;
+        gap: 20px;
         padding: 20px 0;
     }
     .kpi {
-        padding: 0 14px;
-    }
-    .kpi:nth-child(even) {
+        padding: 0;
         border: 0;
-        padding-right: 0;
-    }
-    .kpi:nth-child(odd) {
-        padding-left: 0;
-    }
-    .kpi-lead > strong {
-        font-size: 25px;
     }
     .kpi > strong {
-        font-size: 22px;
+        font-size: 26px;
+        white-space: normal;
+        overflow-wrap: anywhere;
     }
-    .kpi > p {
-        font-size: 11px;
+    .supporting-metrics {
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    .supporting-metrics > div {
+        padding: 0;
+        border: 0;
+    }
+    .supporting-metrics dt {
+        font-size: 12px;
+    }
+    .supporting-metrics dd {
+        font-size: 18px;
+    }
+    .profit-details > summary {
+        font-size: 12px;
+    }
+    .profit-calculation > div {
+        padding-inline: 0;
+    }
+    .profit-calculation > div {
+        gap: 12px;
     }
     .dashboard-grid {
         grid-template-columns: 1fr;

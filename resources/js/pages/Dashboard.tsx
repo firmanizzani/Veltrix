@@ -23,6 +23,7 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Empty, PageTitle, Status } from '../components/common';
 import { ReportDetails } from '../components/report-details';
+import { FinancialSummary } from '../components/financial-summary';
 import { date, labels, money, number, type Row, type Shared } from '../lib/utils';
 
 export default function Dashboard({
@@ -45,53 +46,6 @@ export default function Dashboard({
         e.preventDefault();
         router.get(isReport ? '/reports' : '/dashboard', range, { preserveState: true });
     };
-    const stats = [
-        {
-            name: 'Penjualan bersih',
-            value: money(m.net),
-            note: `Refund ${money(m.refunds)}`,
-            lead: true,
-        },
-        {
-            name: 'Transaksi',
-            value: number(m.transactions),
-            note: `${number(m.units)} produk bersih terjual`,
-        },
-        {
-            name: 'Rata-rata transaksi',
-            value: money(m.average),
-            note: 'Penjualan bersih per transaksi',
-        },
-        {
-            name: 'Estimasi laba kotor',
-            value: money(m.gross_profit),
-            note: 'Penjualan bersih − biaya bahan',
-        },
-        ...(user.role === 'owner'
-            ? [
-                  {
-                      name: 'Penjualan kotor',
-                      value: money(m.gross),
-                      note: 'Sebelum pengurangan refund',
-                  },
-                  {
-                      name: 'Pengeluaran operasional',
-                      value: money(m.expenses),
-                      note: 'Pengeluaran yang telah disetujui',
-                  },
-                  {
-                      name: 'Estimasi laba operasional',
-                      value: money(m.profit),
-                      note: 'Laba kotor − pengeluaran − payroll',
-                  },
-                  {
-                      name: 'Cabang aktif',
-                      value: number(m.active_branches),
-                      note: 'Dalam cakupan laporan',
-                  },
-              ]
-            : []),
-    ];
     return (
         <>
             <Head title={isReport ? 'Laporan bisnis' : 'Ringkasan'} />
@@ -206,18 +160,10 @@ export default function Dashboard({
                     <RefreshCw size={16} />
                 </button>
             </form>
-            <div className="kpi-strip">
-                {stats.map((stat) => (
-                    <div
-                        key={stat.name}
-                        className={`kpi ${stat.lead ? 'kpi-lead' : ''}`}
-                    >
-                        <span>{stat.name}</span>
-                        <strong>{stat.value}</strong>
-                        <p>{stat.note}</p>
-                    </div>
-                ))}
-            </div>
+            <FinancialSummary
+                metrics={m}
+                owner={user.role === 'owner'}
+            />
             <div className="dashboard-grid">
                 <section className="panel revenue-panel">
                     <div className="panel-header">
@@ -453,56 +399,6 @@ export default function Dashboard({
             </div>
             {isReport && (
                 <section className="finance-report">
-                    <div className="section-heading">
-                        <h2>Ringkasan keuangan</h2>
-                        <p>
-                            Biaya bahan mengikuti snapshot penjualan. Payroll diakui pada
-                            tanggal awal periode bulanan.
-                        </p>
-                    </div>
-                    <div className="financial-columns">
-                        <div>
-                            {[
-                                ['Penjualan kotor', m.gross],
-                                ['Refund diproses', -m.refunds],
-                                ['Penjualan bersih', m.net],
-                                ['Biaya bahan terjual', -m.cogs],
-                                ['Estimasi laba kotor', m.gross_profit],
-                            ].map(([name, value]) => (
-                                <div
-                                    className="key-value"
-                                    key={name}
-                                >
-                                    <span>{name}</span>
-                                    <strong>{money(value)}</strong>
-                                </div>
-                            ))}
-                        </div>
-                        <div>
-                            {[
-                                ['Pengeluaran disetujui', m.expenses],
-                                ...(user.role === 'owner'
-                                    ? [
-                                          ['Payroll disetujui / dibayar', m.payroll],
-                                          ['Estimasi laba operasional', m.profit],
-                                      ]
-                                    : []),
-                            ].map(([name, value]) => (
-                                <div
-                                    className="key-value"
-                                    key={name}
-                                >
-                                    <span>{name}</span>
-                                    <strong>{money(value)}</strong>
-                                </div>
-                            ))}
-                            <p className="report-caveat">
-                                Estimasi belum mencakup depresiasi, pajak, dan penyesuaian
-                                akuntansi lainnya. Refund tidak memulihkan bahan yang
-                                telah terpakai.
-                            </p>
-                        </div>
-                    </div>
                     <div className="payment-breakdown">
                         <h3>Komposisi pembayaran kotor</h3>
                         {report.payments.length ? (

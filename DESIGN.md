@@ -133,7 +133,7 @@ Local Inter Variable supplies the entire interface through `@fontsource-variable
 
 Page headlines tighten tracking and reduce to (22px) on small screens. Dialog titles use (19px), weight (650). Table content uses (13px), navigation uses (14px), and supporting annotations range from (11px) to (12px). Product names and prices use (14px).
 
-The leading metric uses (30px), weight (600); ordinary metrics use the metric role. Numeric table cells align right and use tabular numerals. Keep formatters shared for currency, counts, and dates rather than manually formatting labels.
+The three primary summary metrics use the metric role with (14px) labels and (12px) supporting text. Numeric table cells align right and use tabular numerals. Keep formatters shared for currency, counts, and dates rather than manually formatting labels.
 
 **The Comparable Figures Rule.** Numeric alignment and consistent formatting take priority over decorative number treatments.
 
@@ -143,7 +143,7 @@ The desktop shell has a fixed sidebar (228px), a topbar (56px), and a white inse
 
 Sidebar groups are Penjualan, Inventori, Operasional, Keuangan, Intelligence, and Administrasi. Empty role-filtered groups disappear. Owner sees cross-branch tools; manager sees branch operations; cashier sees sales tools. Preserve the workspace and user context at the top and bottom of the sidebar.
 
-The dashboard has a ruled metric strip and a two-column content grid, with a wider revenue area. Owners see eight metrics across two desktop rows; managers see four. Metric rows have a (24px) gap, with outer-edge padding and dividers reset per row. Mobile uses two columns with alternating edge resets. Management screens put title and action above a wrapping search/filter toolbar and horizontally scrollable table. Toolbar date inputs use (150px) width and (36px) height on desktop; select filters size automatically up to (200px) wide with the same height. Mobile inputs and selects flex with (120px) minimum width and (44px) height. Forms use two columns inside dialogs and one column on mobile.
+The dashboard has a ruled metric strip and a two-column content grid, with a wider revenue area. Both roles see three primary metrics in one desktop row: net sales, transactions, and operating profit for owners or gross profit for managers. Three supporting statistics align with the primary columns in a compact second row. A native disclosure below them reveals the sequential profit calculation and accounting caveats on demand; it starts closed to keep charts within reach. Manager views never expose payroll or operating profit. Mobile stacks the metrics and profit explanation in reading order. Management screens put title and action above a wrapping search/filter toolbar and horizontally scrollable table. Toolbar date inputs use (150px) width and (36px) height on desktop; select filters size automatically up to (200px) wide with the same height. Mobile inputs and selects flex with (120px) minimum width and (44px) height. Forms use two columns inside dialogs and one column on mobile.
 
 Checkout keeps catalog and active order side by side on desktop. The order column is sticky, aligns near the page heading, and has a bounded scrolling item list. Its default width is (348px); responsive overrides adapt it to the available space. Product cards use a three-column default grid. Mobile stacks catalog and order and exposes a fixed cart shortcut when appropriate.
 
@@ -153,7 +153,7 @@ Responsive behavior follows the existing cascade:
 - At (1250px) and below, sidebar narrows to (216px), catalog becomes two columns, and checkout order width becomes (320px).
 - At (1100px) and below, the sidebar becomes a (240px) off-canvas drawer with backdrop; main content takes full width. Catalog uses three columns and order width becomes (340px).
 - At (900px) and below, catalog returns to two columns and order width becomes (320px); secondary chrome is reduced.
-- At (700px) and below, the sheet loses its frame, topbar becomes (51px), padding becomes (23px 18px 36px), grids stack, metrics use two columns, and key controls reach at least (44px) touch height.
+- At (700px) and below, the sheet loses its frame, topbar becomes (51px), padding becomes (23px 18px 36px), grids stack, metrics stack in one column, and key controls reach at least (44px) touch height.
 
 There is also a desktop short-height adjustment at heights up to (820px), reducing cart item height so payment remains reachable. Preserve horizontal table scrolling and the sticky identity cell on mobile.
 
