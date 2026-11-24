@@ -1,13 +1,13 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowUpRight, Check, ChevronDown, Menu, Minus, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { money } from '../lib/utils';
+import { LandingPosPreview } from '../components/landing-pos-preview';
 import '../../css/landing.css';
 
 const roles = [
     {
         name: 'Owner',
-        title: 'Lihat bisnis secara utuh.',
+        title: 'Pantau bisnis lintas cabang',
         description:
             'Pahami penjualan dan biaya lintas cabang, tinjau persetujuan, ' +
             'lalu ambil keputusan dari catatan yang sama.',
@@ -19,7 +19,7 @@ const roles = [
     },
     {
         name: 'Manager',
-        title: 'Jaga ritme setiap hari.',
+        title: 'Atur operasional harian',
         description:
             'Pastikan bahan tersedia, pembelian diterima, dan pekerjaan tim ' +
             'berjalan di cabang yang Anda kelola.',
@@ -31,7 +31,7 @@ const roles = [
     },
     {
         name: 'Kasir',
-        title: 'Fokus melayani pelanggan.',
+        title: 'Layani pesanan pelanggan',
         description:
             'Pilih menu, catat pembayaran, dan tutup shift dengan perhitungan kas ' +
             'yang jelas. Pekerjaan di balik bar tetap mengalir.',
@@ -104,7 +104,6 @@ export default function Landing() {
     const action = auth.user ? 'Buka ruang kerja' : 'Masuk ke VELTRIX';
     const [navigationOpen, setNavigationOpen] = useState(false);
     const [role, setRole] = useState(0);
-    const [quantity, setQuantity] = useState(1);
     const page = useRef<HTMLDivElement>(null);
     const menuButton = useRef<HTMLButtonElement>(null);
     const roleButtons = useRef<(HTMLButtonElement | null)[]>([]);
@@ -191,7 +190,7 @@ export default function Landing() {
                     className="landing-navigation"
                     aria-label="Navigasi halaman publik"
                 >
-                    <a href="#alur">Cara kerja</a>
+                    <a href="#alur">Fitur</a>
                     <a href="#peran">Untuk tim Anda</a>
                     <a href="#pertanyaan">Pertanyaan umum</a>
                 </nav>
@@ -242,137 +241,56 @@ export default function Landing() {
                     className="landing-hero"
                     aria-labelledby="landing-title"
                 >
-                    <h1 id="landing-title">
-                        <span className="landing-title-line">
-                            Racikan{' '}
-                            <img
-                                className="landing-title-image"
-                                src="/images/menu/espresso.jpg"
-                                alt=""
-                                width={160}
-                                height={100}
-                            />{' '}
-                            beragam.
-                        </span>
-                        <span className="landing-title-line">Kendali seirama.</span>
-                    </h1>
-                    <div className="landing-hero-intro">
-                        <p>
-                            Di depan bar, kopi diracik. Di baliknya, VELTRIX menghubungkan
-                            penjualan, bahan, dan tim agar kedai berjalan seirama.
-                        </p>
-                        <div className="landing-hero-action">
-                            <Link
-                                className="landing-cta"
-                                href={destination}
-                            >
-                                {action}
-                                <ArrowUpRight size={20} />
-                            </Link>
+                    <div className="landing-hero-main">
+                        <div className="landing-hero-copy">
+                            <h1 id="landing-title">
+                                Satu aplikasi
+                                <br />
+                                untuk kedai Anda
+                            </h1>
+                            <p>
+                                Kelola penjualan, persediaan, dan pekerjaan tim dari satu
+                                ruang kerja.
+                            </p>
+                            <div className="landing-hero-actions">
+                                <Link
+                                    className="landing-cta landing-cta-light"
+                                    href={destination}
+                                >
+                                    {action}
+                                    <ArrowUpRight size={20} />
+                                </Link>
+                                <a
+                                    className="landing-hero-explore"
+                                    href="#alur"
+                                >
+                                    Jelajahi fitur
+                                </a>
+                            </div>
                             <span className="landing-access-note">
-                                Untuk owner, manager, dan kasir.
+                                Masuk dengan akun dari pengelola kedai.
                             </span>
                         </div>
+                        <LandingPosPreview />
                     </div>
-                    <div className="landing-preview">
-                        <figure className="landing-photograph">
-                            <img
-                                src="/images/landing/coffee-craft.jpg"
-                                alt="Barista menuangkan latte art ke cangkir di depan mesin espresso"
-                                width={1122}
-                                height={1402}
-                                fetchPriority="high"
-                            />
-                            <figcaption>
-                                Di balik setiap cangkir, ada alur yang saling terhubung.
-                            </figcaption>
-                        </figure>
-                        <div className="landing-preview-console">
-                            <div
-                                className="landing-order-demo"
-                                data-ui
-                                data-reveal
-                            >
-                                <div className="landing-demo-heading">
-                                    <strong>Di meja kasir</strong>
-                                    <span>Contoh alur pesanan</span>
-                                </div>
-                                <div className="landing-demo-product">
-                                    <img
-                                        src="/images/menu/kopi-susu-gula-aren.jpg"
-                                        alt="Kopi susu gula aren"
-                                        width={80}
-                                        height={80}
-                                        loading="lazy"
-                                    />
-                                    <div>
-                                        <strong>Kopi Susu Gula Aren</strong>
-                                        <span>{money(22000)}</span>
-                                    </div>
-                                    <div className="landing-quantity">
-                                        <button
-                                            aria-label="Kurangi jumlah kopi"
-                                            disabled={quantity === 1}
-                                            onClick={() =>
-                                                setQuantity((current) =>
-                                                    Math.max(1, current - 1),
-                                                )
-                                            }
-                                        >
-                                            <Minus size={15} />
-                                        </button>
-                                        <output aria-label="Jumlah kopi">
-                                            {quantity}
-                                        </output>
-                                        <button
-                                            aria-label="Tambah jumlah kopi"
-                                            disabled={quantity === 5}
-                                            onClick={() =>
-                                                setQuantity((current) =>
-                                                    Math.min(5, current + 1),
-                                                )
-                                            }
-                                        >
-                                            <Plus size={15} />
-                                        </button>
-                                    </div>
-                                </div>
-                                <div
-                                    className="landing-demo-total"
-                                    aria-live="polite"
-                                >
-                                    <span>Total pesanan</span>
-                                    <strong>{money(quantity * 22000)}</strong>
-                                </div>
-                                <div className="landing-demo-stock">
-                                    <Check size={18} />
-                                    <div>
-                                        <strong>Resep ikut menghitung bahan</strong>
-                                        <span>
-                                            Contoh resep: {quantity * 18} g kopi dan{' '}
-                                            {quantity * 120} ml susu untuk {quantity}{' '}
-                                            gelas.
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <p className="landing-demo-note">
-                                Coba tombol + dan −. Simulasi ini tidak membuat transaksi
-                                atau mengubah stok kedai.
-                            </p>
-                        </div>
-                    </div>
+                    <figure
+                        className="landing-cafe-atmosphere"
+                        aria-hidden="true"
+                    >
+                        <img
+                            src="/images/landing/coffee-craft.jpg"
+                            alt=""
+                            width={1122}
+                            height={1402}
+                        />
+                    </figure>
                 </section>
                 <section
                     id="alur"
                     className="landing-flow landing-section"
                 >
                     <div className="landing-flow-intro">
-                        <h2 data-reveal>
-                            Dari bar,
-                            <br />
-                            sampai laporan.
-                        </h2>
+                        <h2 data-reveal>Dari pesanan hingga laporan</h2>
                         <p data-reveal>
                             Satu pesanan tidak berhenti di struk. Bahan ikut terhitung,
                             persediaan terpantau, dan penjualan bisa ditelusuri.
@@ -407,12 +325,7 @@ export default function Landing() {
                     className="landing-roles landing-section"
                 >
                     <div className="landing-role-workspace">
-                        {' '}
-                        <h2 data-reveal>
-                            Satu kedai.
-                            <br />
-                            Banyak tangan baik.
-                        </h2>
+                        <h2 data-reveal>Ruang kerja untuk setiap peran</h2>
                         <p data-reveal>
                             Setiap orang punya fokusnya. Ruang kerja mengikuti peran dan
                             cabang, supaya tim melihat yang mereka perlukan.
@@ -460,7 +373,6 @@ export default function Landing() {
                         </div>
                     </div>
                     <div className="landing-role-images">
-                        {' '}
                         <div
                             className="landing-pair-photographs"
                             data-reveal
@@ -493,9 +405,7 @@ export default function Landing() {
                         id="landing-business-title"
                         data-reveal
                     >
-                        Kedai tumbuh.
-                        <br />
-                        Alur tetap utuh.
+                        Mulai kelola kedai Anda
                     </h2>
                     <div data-reveal>
                         <p>
@@ -518,7 +428,7 @@ export default function Landing() {
                     className="landing-faq"
                 >
                     <div>
-                        <h2 data-reveal>Sebelum mulai.</h2>
+                        <h2 data-reveal>Pertanyaan umum</h2>
                         <p data-reveal>
                             Beberapa hal yang perlu Anda tahu tentang ruang kerja VELTRIX.
                         </p>
@@ -540,11 +450,7 @@ export default function Landing() {
             <footer className="landing-footer">
                 <div>
                     <Brand />
-                    <p>
-                        Kopi punya cerita.
-                        <br />
-                        Bisnis punya arah.
-                    </p>
+                    <p>Ruang kerja untuk keseharian kedai kopi Anda</p>
                 </div>
                 <div className="landing-footer-links">
                     <a href="#alur">Cara kerja</a>
