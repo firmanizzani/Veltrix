@@ -1,4 +1,3 @@
-import { ChevronDown } from 'lucide-react';
 import { money, number, type Row } from '../lib/utils';
 
 export function FinancialSummary({ metrics, owner }: { metrics: Row; owner: boolean }) {
@@ -19,25 +18,6 @@ export function FinancialSummary({ metrics, owner }: { metrics: Row; owner: bool
             note: owner ? 'Setelah seluruh biaya tercatat' : 'Setelah biaya bahan',
         },
     ];
-    const calculation = [
-        { label: 'Penjualan bersih', amount: metrics.net },
-        { label: 'Dikurangi biaya bahan', amount: -metrics.cogs },
-        { label: 'Estimasi laba kotor', amount: metrics.gross_profit, subtotal: true },
-        ...(owner
-            ? [
-                  { label: 'Dikurangi biaya operasional', amount: -metrics.expenses },
-                  { label: 'Dikurangi payroll', amount: -metrics.payroll },
-                  {
-                      label: 'Estimasi laba operasional',
-                      amount: metrics.profit,
-                      subtotal: true,
-                  },
-              ]
-            : []),
-    ];
-    const noRecognizedCosts =
-        Number(metrics.expenses) === 0 && Number(metrics.payroll) === 0;
-
     return (
         <section aria-label="Ringkasan kinerja">
             <div className="kpi-strip">
@@ -70,54 +50,64 @@ export function FinancialSummary({ metrics, owner }: { metrics: Row; owner: bool
                     </dd>
                 </div>
             </dl>
-            <details className="profit-details">
-                <summary>
-                    <span>Rincian perhitungan laba</span>
-                    <span className="profit-disclosure-action">
-                        <span className="profit-closed-label">Lihat rincian</span>
-                        <span className="profit-open-label">Tutup rincian</span>
-                        <ChevronDown size={16} />
-                    </span>
-                </summary>
-                <div className="profit-breakdown">
-                    <dl className="profit-calculation">
-                        {calculation.map((item) => (
-                            <div
-                                key={item.label}
-                                className={item.subtotal ? 'profit-subtotal' : undefined}
-                            >
-                                <dt>{item.label}</dt>
-                                <dd>{money(Number(item.amount) || 0)}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                    <div className="profit-explanation">
-                        <p>
-                            Penjualan kotor {money(metrics.gross)} − refund{' '}
-                            {money(metrics.refunds)} = penjualan bersih{' '}
-                            {money(metrics.net)}.
-                        </p>
-                        {owner && (
-                            <p className="profit-cost-note">
-                                {noRecognizedCosts
-                                    ? 'Biaya operasional dan payroll tercatat Rp0. Laba operasional sama dengan laba kotor.'
-                                    : 'Biaya operasional dihitung dari pengeluaran disetujui; payroll dari periode yang disetujui atau dibayar.'}
-                            </p>
-                        )}
-                        {!owner && (
-                            <p>
-                                Pengeluaran operasional belum dikurangkan dari laba kotor.
-                            </p>
-                        )}
-                        <p>
-                            Estimasi belum mencakup pajak, bunga, dan depresiasi. Biaya
-                            bahan mengikuti catatan penjualan dan tidak kembali saat
-                            refund.
-                            {owner && ' Payroll diakui pada awal periode bulanan.'}
-                        </p>
-                    </div>
-                </div>
-            </details>
         </section>
+    );
+}
+
+export function FinancialBreakdown({ metrics, owner }: { metrics: Row; owner: boolean }) {
+    const calculation = [
+        { label: 'Penjualan bersih', amount: metrics.net },
+        { label: 'Dikurangi biaya bahan', amount: -metrics.cogs },
+        { label: 'Estimasi laba kotor', amount: metrics.gross_profit, subtotal: true },
+        ...(owner
+            ? [
+                  { label: 'Dikurangi biaya operasional', amount: -metrics.expenses },
+                  { label: 'Dikurangi payroll', amount: -metrics.payroll },
+                  {
+                      label: 'Estimasi laba operasional',
+                      amount: metrics.profit,
+                      subtotal: true,
+                  },
+              ]
+            : []),
+    ];
+    const noRecognizedCosts =
+        Number(metrics.expenses) === 0 && Number(metrics.payroll) === 0;
+
+    return (
+        <div className="profit-breakdown">
+            <dl className="profit-calculation">
+                {calculation.map((item) => (
+                    <div
+                        key={item.label}
+                        className={item.subtotal ? 'profit-subtotal' : undefined}
+                    >
+                        <dt>{item.label}</dt>
+                        <dd>{money(Number(item.amount) || 0)}</dd>
+                    </div>
+                ))}
+            </dl>
+            <div className="profit-explanation">
+                <p>
+                    Penjualan kotor {money(metrics.gross)} − refund{' '}
+                    {money(metrics.refunds)} = penjualan bersih {money(metrics.net)}.
+                </p>
+                {owner && (
+                    <p className="profit-cost-note">
+                        {noRecognizedCosts
+                            ? 'Biaya operasional dan payroll tercatat Rp0. Laba operasional sama dengan laba kotor.'
+                            : 'Biaya operasional dihitung dari pengeluaran disetujui; payroll dari periode yang disetujui atau dibayar.'}
+                    </p>
+                )}
+                {!owner && (
+                    <p>Pengeluaran operasional belum dikurangkan dari laba kotor.</p>
+                )}
+                <p>
+                    Estimasi belum mencakup pajak, bunga, dan depresiasi. Biaya bahan
+                    mengikuti catatan penjualan dan tidak kembali saat refund.
+                    {owner && ' Payroll diakui pada awal periode bulanan.'}
+                </p>
+            </div>
+        </div>
     );
 }

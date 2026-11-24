@@ -304,12 +304,46 @@ class OperationsTest extends TestCase
             ->get('/reports')
             ->assertInertia(
                 fn(Assert $page) => $page
-                    ->component('Dashboard', false)
+                    ->component('Reports', false)
                     ->missing('report.metrics.payroll')
                     ->missing('report.metrics.profit')
                     ->missing('report.branches.0.payroll')
                     ->missing('report.branches.0.profit'),
             );
+    }
+
+    public function test_dashboard_tasks_follow_branch_scope_and_reports_use_a_separate_page(): void
+    {
+        foreach ([$this->branch, $this->otherBranch] as $branch) {
+            Expense::create([
+                'branch_id' => $branch->id,
+                'created_by' => $this->manager->id,
+                'category' => 'Operasional',
+                'amount' => 10000,
+                'expense_date' => now()->subMonth()->toDateString(),
+                'description' => 'Pengeluaran menunggu persetujuan',
+                'approval_status' => 'pending',
+            ]);
+        }
+
+        $this->actingAs($this->owner)
+            ->get('/dashboard')
+            ->assertInertia(
+                fn(Assert $page) => $page
+                    ->component('Dashboard', false)
+                    ->where('report.tasks.2.count', 2),
+            );
+        $this->get('/dashboard?branch_id=' . $this->branch->id)->assertInertia(
+            fn(Assert $page) => $page->where('report.tasks.2.count', 1),
+        );
+        $this->actingAs($this->manager)
+            ->get('/dashboard')
+            ->assertInertia(fn(Assert $page) => $page->where('report.tasks.2.count', 1));
+        $this->get('/reports')->assertInertia(
+            fn(Assert $page) => $page
+                ->component('Reports', false)
+                ->missing('report.tasks'),
+        );
     }
 
     public function test_cashier_is_restricted_to_pos_and_own_sales(): void

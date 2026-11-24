@@ -53,11 +53,14 @@ class DashboardController extends Controller
                     ->except(['payroll', 'profit'])
                     ->all(),
             );
+        }
+        if (!$request->is('reports')) {
             $report['tasks'] = [
                 [
                     'label' => 'Pembelian menunggu bahan',
                     'href' => '/manage/purchases',
-                    'count' => PurchaseOrder::where('branch_id', $branchId)
+                    'count' => PurchaseOrder::query()
+                        ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                         ->whereIn('status', ['ordered', 'partial'])
                         ->count(),
                 ],
@@ -65,20 +68,27 @@ class DashboardController extends Controller
                     'label' => 'Refund perlu ditinjau',
                     'href' => '/manage/refunds',
                     'count' => Refund::where('status', 'pending')
-                        ->whereHas('order', fn($q) => $q->where('branch_id', $branchId))
+                        ->when(
+                            $branchId,
+                            fn($q) => $q->whereHas(
+                                'order',
+                                fn($order) => $order->where('branch_id', $branchId),
+                            ),
+                        )
                         ->count(),
                 ],
                 [
                     'label' => 'Pengeluaran diajukan',
                     'href' => '/manage/expenses',
-                    'count' => \App\Models\Expense::where('branch_id', $branchId)
+                    'count' => \App\Models\Expense::query()
+                        ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
                         ->where('approval_status', 'pending')
                         ->count(),
                 ],
             ];
         }
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render($request->is('reports') ? 'Reports' : 'Dashboard', [
             'report' => $report,
             'filters' => [
                 'start' => $start,
@@ -86,7 +96,6 @@ class DashboardController extends Controller
                 'branch_id' => $branchId ?? '',
             ],
             'branches' => $request->user()->isOwner() ? Branch::all() : [],
-            'isReport' => $request->is('reports'),
         ]);
     }
 

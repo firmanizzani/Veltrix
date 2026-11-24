@@ -1,15 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import {
-    Download,
-    CalendarDays,
-    Coffee,
-    ArrowUpRight,
-    ClipboardCheck,
-    RefreshCw,
-    Sparkles,
-    Store,
-    ShoppingBag,
-} from 'lucide-react';
+import { CalendarDays, ClipboardCheck, RefreshCw, Sparkles } from 'lucide-react';
 import {
     ResponsiveContainer,
     LineChart,
@@ -22,7 +12,6 @@ import {
 import { useState, type FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Empty, PageTitle, Status } from '../components/common';
-import { ReportDetails } from '../components/report-details';
 import { FinancialSummary } from '../components/financial-summary';
 import { date, labels, money, number, type Row, type Shared } from '../lib/utils';
 
@@ -30,12 +19,10 @@ export default function Dashboard({
     report,
     filters,
     branches,
-    isReport,
 }: {
     report: Row;
     filters: Row;
     branches: Row[];
-    isReport: boolean;
 }) {
     const {
         auth: { user },
@@ -44,24 +31,18 @@ export default function Dashboard({
     const m = report.metrics;
     const apply = (e: FormEvent) => {
         e.preventDefault();
-        router.get(isReport ? '/reports' : '/dashboard', range, { preserveState: true });
+        router.get('/dashboard', range, { preserveState: true });
     };
     return (
         <>
-            <Head title={isReport ? 'Laporan bisnis' : 'Dashboard'} />
+            <Head title="Dashboard" />
             <PageTitle
                 title={
-                    isReport
-                        ? 'Laporan bisnis'
-                        : user.role === 'owner'
-                          ? 'Dashboard'
-                          : `Dashboard ${user.branch?.city ?? 'cabang'}`
+                    user.role === 'owner'
+                        ? 'Dashboard'
+                        : `Dashboard ${user.branch?.city ?? 'cabang'}`
                 }
-                description={
-                    isReport
-                        ? 'Penjualan, biaya, dan performa kedai dari catatan operasional.'
-                        : `${user.role === 'owner' ? 'Pantau ritme seluruh kedai' : 'Pantau operasional kedai Anda'}, dari penjualan hingga persediaan.`
-                }
+                description={`${user.role === 'owner' ? 'Pantau ritme seluruh kedai' : 'Pantau operasional kedai Anda'}, dari penjualan hingga persediaan.`}
                 action={
                     <>
                         {user.role === 'owner' && (
@@ -84,38 +65,16 @@ export default function Dashboard({
                                 ))}
                             </select>
                         )}
-                        {isReport ? (
-                            <div className="page-actions">
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                >
-                                    <a
-                                        href={`/reports/export?${new URLSearchParams(filters).toString()}`}
-                                    >
-                                        <Download size={16} />
-                                        Ekspor CSV
-                                    </a>
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    asChild
-                                >
-                                    <a
-                                        href={`/reports/pdf?${new URLSearchParams(filters).toString()}`}
-                                    >
-                                        Ekspor PDF
-                                    </a>
-                                </Button>
-                            </div>
-                        ) : (
-                            <Button
-                                asChild
-                                variant="outline"
+                        <Button
+                            asChild
+                            variant="outline"
+                        >
+                            <Link
+                                href={`/reports?${new URLSearchParams(filters).toString()}`}
                             >
-                                <Link href="/reports">Lihat laporan</Link>
-                            </Button>
-                        )}
+                                Lihat laporan
+                            </Link>
+                        </Button>
                     </>
                 }
             />
@@ -259,79 +218,34 @@ export default function Dashboard({
                         </p>
                     )}
                 </section>
-                {user.role === 'manager' ? (
-                    <section className="panel branch-panel">
-                        <div className="panel-header">
-                            <div>
-                                <h2>Tindak lanjut cabang</h2>
-                                <p>Pekerjaan yang masih menunggu</p>
-                            </div>
-                            <ClipboardCheck size={18} />
+                <section className="panel branch-panel">
+                    <div className="panel-header">
+                        <div>
+                            <h2>Perlu ditindaklanjuti</h2>
+                            <p>Status saat ini, di luar filter tanggal</p>
                         </div>
-                        <div className="manager-tasks">
-                            {(report.tasks ?? []).map((task: Row) => (
-                                <Link
-                                    key={task.href}
-                                    href={task.href}
-                                >
-                                    <span>{task.label}</span>
-                                    <strong>{task.count}</strong>
-                                </Link>
-                            ))}
-                        </div>
-                        <div className="panel-footer">
+                        <ClipboardCheck size={18} />
+                    </div>
+                    <div className="manager-tasks">
+                        {(report.tasks ?? []).map((task: Row) => (
                             <Link
-                                className="text-link"
-                                href="/alerts"
+                                key={task.href}
+                                href={`${task.href}${filters.branch_id ? `?branch_id=${filters.branch_id}` : ''}`}
                             >
-                                Buka notifikasi operasional
+                                <span>{task.label}</span>
+                                <strong>{task.count}</strong>
                             </Link>
-                        </div>
-                    </section>
-                ) : (
-                    <section className="panel branch-panel">
-                        <div className="panel-header">
-                            <div>
-                                <h2>Performa cabang</h2>
-                                <p>{report.branches.length} cabang dalam cakupan</p>
-                            </div>
-                            <Store size={18} />
-                        </div>
-                        <div className="branch-ranking">
-                            {[...report.branches]
-                                .sort((a: Row, b: Row) => b.amount - a.amount)
-                                .map((b: Row) => (
-                                    <div
-                                        className="branch-rank"
-                                        key={b.id}
-                                    >
-                                        <div>
-                                            <span className="branch-initial">
-                                                {b.city.slice(0, 2)}
-                                            </span>
-                                            <div>
-                                                <strong>{b.city}</strong>
-                                                <p>{number(b.transactions)} transaksi</p>
-                                            </div>
-                                            <strong className="num">
-                                                {money(b.amount)}
-                                            </strong>
-                                        </div>
-                                        <div className="thin-track">
-                                            <span
-                                                style={{
-                                                    width: `${(Math.max(0, b.amount) / Math.max(1, ...report.branches.map((v: Row) => v.amount))) * 100}%`,
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-                                ))}
-                        </div>
-                        <div className="panel-footer">
-                            {number(m.active_branches)} cabang aktif dalam cakupan
-                        </div>
-                    </section>
-                )}
+                        ))}
+                    </div>
+                    <div className="panel-footer">
+                        <Link
+                            className="text-link"
+                            href="/alerts"
+                        >
+                            Buka notifikasi operasional
+                        </Link>
+                    </div>
+                </section>
                 <section className="panel products-panel">
                     <div className="panel-header">
                         <div>
@@ -401,26 +315,6 @@ export default function Dashboard({
                     </div>
                 </section>
             </div>
-            {isReport && (
-                <section className="finance-report">
-                    <div className="payment-breakdown">
-                        <h3>Komposisi pembayaran kotor</h3>
-                        {report.payments.length ? (
-                            report.payments.map((p: Row) => (
-                                <div
-                                    className="key-value"
-                                    key={p.name}
-                                >
-                                    <span>{labels[p.name]}</span>
-                                    <strong>{money(p.amount)}</strong>
-                                </div>
-                            ))
-                        ) : (
-                            <p className="muted">Belum ada pembayaran.</p>
-                        )}
-                    </div>
-                </section>
-            )}
             <section className="recent-section">
                 <div className="section-heading">
                     <h2>Transaksi terbaru</h2>
@@ -473,12 +367,6 @@ export default function Dashboard({
                     )}
                 </div>
             </section>
-            {isReport && (
-                <ReportDetails
-                    report={report}
-                    owner={user.role === 'owner'}
-                />
-            )}
             {user.role === 'owner' && (
                 <div className="intelligence-strip">
                     <Sparkles size={18} />
