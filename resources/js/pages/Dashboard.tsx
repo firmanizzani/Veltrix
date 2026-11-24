@@ -48,14 +48,14 @@ export default function Dashboard({
     };
     return (
         <>
-            <Head title={isReport ? 'Laporan bisnis' : 'Ringkasan'} />
+            <Head title={isReport ? 'Laporan bisnis' : 'Dashboard'} />
             <PageTitle
                 title={
                     isReport
                         ? 'Laporan bisnis'
                         : user.role === 'owner'
-                          ? 'Ringkasan bisnis'
-                          : `Operasional ${user.branch?.city ?? 'cabang'}`
+                          ? 'Dashboard'
+                          : `Dashboard ${user.branch?.city ?? 'cabang'}`
                 }
                 description={
                     isReport
@@ -63,41 +63,64 @@ export default function Dashboard({
                         : `${user.role === 'owner' ? 'Pantau ritme seluruh kedai' : 'Pantau operasional kedai Anda'}, dari penjualan hingga persediaan.`
                 }
                 action={
-                    isReport ? (
-                        <div className="page-actions">
-                            <Button
-                                variant="outline"
-                                asChild
+                    <>
+                        {user.role === 'owner' && (
+                            <select
+                                aria-label="Filter cabang"
+                                form="report-filters"
+                                value={range.branch_id}
+                                onChange={(e) =>
+                                    setRange({ ...range, branch_id: e.target.value })
+                                }
                             >
-                                <a
-                                    href={`/reports/export?${new URLSearchParams(filters).toString()}`}
+                                <option value="">Seluruh cabang</option>
+                                {branches.map((b) => (
+                                    <option
+                                        value={b.id}
+                                        key={b.id}
+                                    >
+                                        {b.city}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                        {isReport ? (
+                            <div className="page-actions">
+                                <Button
+                                    variant="outline"
+                                    asChild
                                 >
-                                    <Download size={16} />
-                                    Ekspor CSV
-                                </a>
-                            </Button>
+                                    <a
+                                        href={`/reports/export?${new URLSearchParams(filters).toString()}`}
+                                    >
+                                        <Download size={16} />
+                                        Ekspor CSV
+                                    </a>
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    asChild
+                                >
+                                    <a
+                                        href={`/reports/pdf?${new URLSearchParams(filters).toString()}`}
+                                    >
+                                        Ekspor PDF
+                                    </a>
+                                </Button>
+                            </div>
+                        ) : (
                             <Button
-                                variant="outline"
                                 asChild
+                                variant="outline"
                             >
-                                <a
-                                    href={`/reports/pdf?${new URLSearchParams(filters).toString()}`}
-                                >
-                                    Ekspor PDF
-                                </a>
+                                <Link href="/reports">Lihat laporan</Link>
                             </Button>
-                        </div>
-                    ) : (
-                        <Button
-                            asChild
-                            variant="outline"
-                        >
-                            <Link href="/reports">Lihat laporan</Link>
-                        </Button>
-                    )
+                        )}
+                    </>
                 }
             />
             <form
+                id="report-filters"
                 className="report-toolbar"
                 onSubmit={apply}
             >
@@ -125,25 +148,6 @@ export default function Dashboard({
                         />
                     </label>
                 </div>
-                {user.role === 'owner' && (
-                    <select
-                        aria-label="Filter cabang"
-                        value={range.branch_id}
-                        onChange={(e) =>
-                            setRange({ ...range, branch_id: e.target.value })
-                        }
-                    >
-                        <option value="">Seluruh cabang</option>
-                        {branches.map((b) => (
-                            <option
-                                value={b.id}
-                                key={b.id}
-                            >
-                                {b.city}
-                            </option>
-                        ))}
-                    </select>
-                )}
                 <Button
                     type="submit"
                     variant="outline"
@@ -155,7 +159,7 @@ export default function Dashboard({
                     className="refresh-control"
                     type="button"
                     onClick={() => router.reload()}
-                    aria-label="Muat ulang ringkasan"
+                    aria-label="Muat ulang Dashboard"
                 >
                     <RefreshCw size={16} />
                 </button>

@@ -18,7 +18,7 @@ import {
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Dialog } from '../components/ui/dialog';
-import { Empty, Errors, ProductImage, SearchBox } from '../components/common';
+import { Empty, Errors, PageTitle, ProductImage, SearchBox } from '../components/common';
 import { date, money, number, type Row, type Shared } from '../lib/utils';
 
 type CartLine = { menu: Row; quantity: number };
@@ -150,34 +150,35 @@ export default function Pos({
     return (
         <>
             <Head title="Point of Sale" />
-            <div className="pos-heading">
-                <div>
-                    <h1>Point of Sale</h1>
-                    <p>{branch?.name ?? 'Belum ada cabang aktif'}</p>
-                </div>
-                <div className="pos-shift">
-                    <Clock3 size={16} />
-                    <span>
-                        {shift
-                            ? `Shift dibuka ${date(shift.opened_at)}`
-                            : canOperate
-                              ? 'Shift belum dibuka'
-                              : 'Mode pengawasan'}
-                    </span>
-                    {canOperate && (
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                shiftForm.clearErrors();
-                                setShiftDialog(shift ? 'close' : 'open');
-                            }}
-                        >
-                            {shift ? 'Tutup shift' : 'Buka shift'}
-                        </Button>
-                    )}
-                </div>
-            </div>
+            <PageTitle
+                className="pos-heading"
+                title="Point of Sale"
+                description={branch?.name ?? 'Belum ada cabang aktif'}
+                action={
+                    <div className="pos-shift">
+                        <Clock3 size={16} />
+                        <span>
+                            {shift
+                                ? `Shift dibuka ${date(shift.opened_at)}`
+                                : canOperate
+                                  ? 'Shift belum dibuka'
+                                  : 'Mode pengawasan'}
+                        </span>
+                        {canOperate && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                    shiftForm.clearErrors();
+                                    setShiftDialog(shift ? 'close' : 'open');
+                                }}
+                            >
+                                {shift ? 'Tutup shift' : 'Buka shift'}
+                            </Button>
+                        )}
+                    </div>
+                }
+            />
             {!canOperate && (
                 <div className="notice">
                     <LockKeyhole size={16} />

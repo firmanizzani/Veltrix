@@ -21,7 +21,6 @@ import {
     Bell,
     Sparkles,
     LogOut,
-    Menu,
     X,
     BadgePercent,
     ChevronRight,
@@ -39,9 +38,9 @@ const ops = ['owner', 'manager'];
 const owner = ['owner'];
 const groups: { title: string; items: NavItem[] }[] = [
     {
-        title: 'Ringkasan & laporan',
+        title: 'Dashboard & laporan',
         items: [
-            ['Ringkasan', '/dashboard', LayoutDashboard, ops],
+            ['Dashboard', '/dashboard', LayoutDashboard, ops],
             ['Laporan bisnis', '/reports', ChartNoAxesCombined, ops],
         ],
     },
@@ -176,11 +175,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             c();
         };
     }, []);
-    const current =
-        groups
-            .flatMap((g) => g.items)
-            .find((item) => url.split('?')[0] === item[1])?.[0] ??
-        (url.startsWith('/orders/') ? 'Detail transaksi' : 'Profil saya');
     function navigationLink([title, href, Icon]: NavItem) {
         return (
             <Link
@@ -332,44 +326,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     navigation
                 )}
                 <div className="app-main">
-                    <header className="topbar">
-                        <div className="breadcrumbs">
-                            <DialogPrimitive.Trigger asChild>
-                                <button
-                                    className="mobile-menu"
-                                    aria-label="Buka navigasi"
-                                    aria-expanded={menu}
-                                    onClick={() => setMenu(!menu)}
-                                >
-                                    {menu ? <X size={20} /> : <Menu size={20} />}
-                                </button>
-                            </DialogPrimitive.Trigger>
-                            <span>Ruang kerja</span>
-                            <ChevronRight size={13} />
-                            <strong>{current}</strong>
-                        </div>
-                        <div className="topbar-right">
-                            <span className="role-context">
-                                {user.branch?.name ?? 'Seluruh cabang'}
-                            </span>
-                            {user.role !== 'cashier' && (
-                                <Link
-                                    href="/alerts"
-                                    aria-label="Buka notifikasi"
-                                    className="button button-ghost button-icon"
-                                >
-                                    <Bell size={18} />
-                                </Link>
-                            )}
-                            <Link
-                                href="/profile"
-                                aria-label="Buka profil"
-                                className="top-avatar"
-                            >
-                                {user.name[0]}
-                            </Link>
-                        </div>
-                    </header>
                     <main
                         id="main-content"
                         className="main-sheet"

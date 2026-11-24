@@ -1,6 +1,7 @@
-import { Link } from '@inertiajs/react';
-import { Search, Coffee, ChevronLeft, ChevronRight } from 'lucide-react';
-import { date, labels, money, number, type Row } from '../lib/utils';
+import { Link, usePage } from '@inertiajs/react';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { Search, Coffee, ChevronLeft, ChevronRight, Menu, Bell } from 'lucide-react';
+import { date, labels, money, number, type Row, type Shared } from '../lib/utils';
 import { Button } from './ui/button';
 import { useState, useEffect, useRef } from 'react';
 
@@ -52,19 +53,43 @@ export function PageTitle({
     title,
     description,
     action,
+    className = '',
 }: {
     title: string;
     description: string;
     action?: React.ReactNode;
+    className?: string;
 }) {
+    const { auth } = usePage<Shared>().props;
     return (
-        <div className="page-title">
-            <div>
-                <h1>{title}</h1>
-                <p>{description}</p>
+        <header className={`page-title ${className}`}>
+            <div className="page-heading">
+                <DialogPrimitive.Trigger asChild>
+                    <button
+                        className="mobile-menu"
+                        aria-label="Buka navigasi"
+                    >
+                        <Menu size={20} />
+                    </button>
+                </DialogPrimitive.Trigger>
+                <div>
+                    <h1>{title}</h1>
+                    <p>{description}</p>
+                </div>
             </div>
-            {action}
-        </div>
+            <div className="page-header-actions">
+                {action}
+                {auth.user.role !== 'cashier' && (
+                    <Link
+                        href="/alerts"
+                        aria-label="Buka notifikasi"
+                        className="button button-ghost button-icon header-notifications"
+                    >
+                        <Bell size={18} />
+                    </Link>
+                )}
+            </div>
+        </header>
     );
 }
 export function SearchBox({

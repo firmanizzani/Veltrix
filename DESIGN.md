@@ -139,13 +139,13 @@ The three primary summary metrics use the metric role with (14px) labels and (12
 
 ## Layout
 
-The desktop shell has a fixed sidebar (228px), a topbar (56px), and a white inset sheet with a thin border. The main sheet uses (28px 28px 36px) padding. The content area flexes with the viewport rather than imposing a marketing-page maximum width.
+The desktop shell has a fixed sidebar (228px) beside an open white workspace, separated by a fine vertical rule. A single page header carries the title, relevant actions, and a discreet notification link. Do not restore the redundant breadcrumb, top avatar, or rounded outer sheet. The main content uses (32px 32px 40px) padding. Dashboard branch selection sits beside the report action; date filters remain in the toolbar below. The content area flexes with the viewport rather than imposing a marketing-page maximum width.
 
 Sidebar groups are Penjualan, Inventori, Operasional, Keuangan, Intelligence, and Administrasi. Empty role-filtered groups disappear. Owner sees cross-branch tools; manager sees branch operations; cashier sees sales tools. Preserve the workspace and user context at the top and bottom of the sidebar.
 
 The dashboard has a ruled metric strip and a two-column content grid, with a wider revenue area. Both roles see three primary metrics in one desktop row: net sales, transactions, and operating profit for owners or gross profit for managers. Three supporting statistics align with the primary columns in a compact second row. A native disclosure below them reveals the sequential profit calculation and accounting caveats on demand; it starts closed to keep charts within reach. Manager views never expose payroll or operating profit. Mobile stacks the metrics and profit explanation in reading order. Management screens put title and action above a wrapping search/filter toolbar and horizontally scrollable table. Toolbar date inputs use (150px) width and (36px) height on desktop; select filters size automatically up to (200px) wide with the same height. Mobile inputs and selects flex with (120px) minimum width and (44px) height. Forms use two columns inside dialogs and one column on mobile.
 
-Checkout keeps catalog and active order side by side on desktop. The order column is sticky, aligns near the page heading, and has a bounded scrolling item list. Its default width is (348px); responsive overrides adapt it to the available space. Product cards use a three-column default grid. Mobile stacks catalog and order and exposes a fixed cart shortcut when appropriate.
+Checkout keeps catalog and active order side by side on desktop. The order column is sticky, aligns with the catalog, and has a bounded scrolling item list. Its default width is (348px); responsive overrides adapt it to the available space. Product cards use a three-column default grid. Mobile stacks catalog and order and exposes a fixed cart shortcut when appropriate.
 
 Responsive behavior follows the existing cascade:
 
@@ -153,7 +153,7 @@ Responsive behavior follows the existing cascade:
 - At (1250px) and below, sidebar narrows to (216px), catalog becomes two columns, and checkout order width becomes (320px).
 - At (1100px) and below, the sidebar becomes a (240px) off-canvas drawer with backdrop; main content takes full width. Catalog uses three columns and order width becomes (340px).
 - At (900px) and below, catalog returns to two columns and order width becomes (320px); secondary chrome is reduced.
-- At (700px) and below, the sheet loses its frame, topbar becomes (51px), padding becomes (23px 18px 36px), grids stack, metrics stack in one column, and key controls reach at least (44px) touch height.
+- At (700px) and below, the sheet loses its frame, the navigation trigger moves beside the page title, padding becomes (23px 18px 36px), grids stack, metrics stack in one column, and key controls reach at least (44px) touch height.
 
 There is also a desktop short-height adjustment at heights up to (820px), reducing cart item height so payment remains reachable. Preserve horizontal table scrolling and the sticky identity cell on mobile.
 
@@ -165,7 +165,7 @@ State transitions are brief: button background/border changes use (0.13s), produ
 
 ## Shapes
 
-Corners follow component purpose: compact rounded controls, slightly softer products and panels, and a broader sheet frame. Status chips are compact rounded rectangles. Avatars alone use circular silhouettes. Fine borders and clipping preserve the clean sheet edge; do not turn every row or metric into an isolated card.
+Corners follow component purpose: compact rounded controls, slightly softer products and panels, with an unframed main workspace. Status chips are compact rounded rectangles. Avatars alone use circular silhouettes. Fine borders and clipping preserve the clean sheet edge; do not turn every row or metric into an isolated card.
 
 ## Components
 
