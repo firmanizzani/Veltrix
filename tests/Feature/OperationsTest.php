@@ -243,6 +243,60 @@ class OperationsTest extends TestCase
         }
     }
 
+    public function test_owner_can_save_product_photos_from_local_catalog_or_https(): void
+    {
+        $product = $this->menu->product;
+
+        foreach (
+            ['/images/menu/americano.jpg', 'https://example.com/coffee.jpg']
+            as $imageUrl
+        ) {
+            $this->actingAs($this->owner)
+                ->put('/manage/products/' . $product->id, [
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'category_id' => $product->category_id,
+                    'base_price' => 23000,
+                    'is_active' => true,
+                    'image_url' => $imageUrl,
+                ])
+                ->assertSessionHasNoErrors();
+
+            $this->assertDatabaseHas('products', [
+                'id' => $product->id,
+                'base_price' => 23000,
+                'image_url' => $imageUrl,
+            ]);
+        }
+    }
+
+    public function test_product_photos_reject_missing_local_files_and_unsafe_urls(): void
+    {
+        $product = $this->menu->product;
+
+        foreach (
+            [
+                '/images/menu/missing-menu-photo.jpg',
+                '/images/menu/../../../.env',
+                '//example.com/coffee.jpg',
+                'http://example.com/coffee.jpg',
+                'javascript:alert(1)',
+            ]
+            as $imageUrl
+        ) {
+            $this->actingAs($this->owner)
+                ->put('/manage/products/' . $product->id, [
+                    'name' => $product->name,
+                    'sku' => $product->sku,
+                    'category_id' => $product->category_id,
+                    'base_price' => $product->base_price,
+                    'is_active' => true,
+                    'image_url' => $imageUrl,
+                ])
+                ->assertSessionHasErrors('image_url');
+        }
+    }
+
     public function test_owner_can_render_every_implemented_resource(): void
     {
         foreach (

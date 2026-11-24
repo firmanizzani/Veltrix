@@ -73,52 +73,36 @@ class DemoSeeder extends Seeder
                     'unit_cost' => $row[2],
                 ]),
             );
-            $coffee =
-                'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=500&q=80';
-            $latte =
-                'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=500&q=80';
-            $tea =
-                'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=500&q=80';
-            $pastry =
-                'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=500&q=80';
-            $food =
-                'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?auto=format&fit=crop&w=500&q=80';
             $menu = [
-                [
-                    'Kopi Susu Gula Aren',
-                    'Coffee',
-                    22000,
-                    [0 => 18, 1 => 150, 2 => 20],
-                    $latte,
-                ],
-                ['Americano', 'Coffee', 20000, [0 => 18], $coffee],
-                ['Caffè Latte', 'Coffee', 26000, [0 => 18, 1 => 180], $latte],
-                ['Cappuccino', 'Coffee', 26000, [0 => 18, 1 => 120], $coffee],
-                ['Espresso', 'Coffee', 18000, [0 => 18], $coffee],
-                ['Vanilla Latte', 'Coffee', 29000, [0 => 18, 1 => 160, 6 => 15], $latte],
-                ['Mocha', 'Coffee', 30000, [0 => 18, 1 => 150, 4 => 20], $coffee],
-                ['Flat White', 'Coffee', 27000, [0 => 18, 1 => 100], $latte],
-                ['Matcha Latte', 'Non-Coffee', 30000, [1 => 180, 3 => 5], $tea],
-                ['Chocolate', 'Non-Coffee', 27000, [1 => 180, 4 => 30], $latte],
-                ['Vanilla Milk', 'Non-Coffee', 24000, [1 => 200, 6 => 20], $latte],
-                ['Matcha Aren', 'Non-Coffee', 32000, [1 => 160, 3 => 5, 2 => 15], $tea],
-                ['Original Tea', 'Tea', 16000, [5 => 4], $tea],
-                ['Milk Tea', 'Tea', 22000, [5 => 4, 1 => 120], $tea],
-                ['Vanilla Tea', 'Tea', 22000, [5 => 4, 6 => 15], $tea],
-                ['Chicken Sandwich', 'Food', 35000, [8 => 1], $food],
-                ['Rice Bowl', 'Food', 38000, [9 => 1], $food],
-                ['Toast', 'Food', 28000, [8 => 1], $food],
-                ['Butter Croissant', 'Pastry', 24000, [7 => 1], $pastry],
-                ['Chocolate Croissant', 'Pastry', 28000, [7 => 1, 4 => 10], $pastry],
+                ['Kopi Susu Gula Aren', 'Coffee', 22000, [0 => 18, 1 => 150, 2 => 20]],
+                ['Americano', 'Coffee', 20000, [0 => 18]],
+                ['Caffè Latte', 'Coffee', 26000, [0 => 18, 1 => 180]],
+                ['Cappuccino', 'Coffee', 26000, [0 => 18, 1 => 120]],
+                ['Espresso', 'Coffee', 18000, [0 => 18]],
+                ['Vanilla Latte', 'Coffee', 29000, [0 => 18, 1 => 160, 6 => 15]],
+                ['Mocha', 'Coffee', 30000, [0 => 18, 1 => 150, 4 => 20]],
+                ['Flat White', 'Coffee', 27000, [0 => 18, 1 => 100]],
+                ['Matcha Latte', 'Non-Coffee', 30000, [1 => 180, 3 => 5]],
+                ['Chocolate', 'Non-Coffee', 27000, [1 => 180, 4 => 30]],
+                ['Vanilla Milk', 'Non-Coffee', 24000, [1 => 200, 6 => 20]],
+                ['Matcha Aren', 'Non-Coffee', 32000, [1 => 160, 3 => 5, 2 => 15]],
+                ['Original Tea', 'Tea', 16000, [5 => 4]],
+                ['Milk Tea', 'Tea', 22000, [5 => 4, 1 => 120]],
+                ['Vanilla Tea', 'Tea', 22000, [5 => 4, 6 => 15]],
+                ['Chicken Sandwich', 'Food', 35000, [8 => 1]],
+                ['Rice Bowl', 'Food', 38000, [9 => 1]],
+                ['Toast', 'Food', 28000, [8 => 1]],
+                ['Butter Croissant', 'Pastry', 24000, [7 => 1]],
+                ['Chocolate Croissant', 'Pastry', 28000, [7 => 1, 4 => 10]],
             ];
-            foreach ($menu as $index => [$name, $category, $price, $recipe, $image]) {
+            foreach ($menu as $index => [$name, $category, $price, $recipe]) {
                 $product = Product::create([
                     'name' => $name,
                     'sku' =>
                         'VTX-' . str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT),
                     'category_id' => $categories[$category]->id,
                     'base_price' => $price,
-                    'image_url' => $image,
+                    'image_url' => ProductImageSeeder::IMAGES[$name],
                     'description' => 'Menu demonstrasi Veltrix Coffee',
                 ]);
                 $version = RecipeVersion::create([

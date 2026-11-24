@@ -158,8 +158,8 @@ class ResourceCatalog
                     ),
                     $f(
                         'image_url',
-                        'URL foto produk (HTTPS)',
-                        'url',
+                        'Foto produk (path lokal atau URL HTTPS)',
+                        'text',
                         'nullable|url:https|max:255',
                     ),
                     $active,

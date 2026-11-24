@@ -61,6 +61,16 @@ class ResourceRequest extends FormRequest
         if ($key === 'users' && !$id) {
             $rules['password'] = 'required|string|min:12|confirmed';
         }
+        if ($key === 'products') {
+            $imageUrl = $this->input('image_url');
+            if (
+                is_string($imageUrl) &&
+                preg_match('#\A/images/menu/[a-z0-9-]+\.jpg\z#', $imageUrl) === 1 &&
+                is_file(public_path(ltrim($imageUrl, '/')))
+            ) {
+                $rules['image_url'] = 'nullable|string|max:255';
+            }
+        }
         if (in_array($key, ['recipes', 'purchases'])) {
             $rules['items.*.ingredient_id'] =
                 'required|integer|distinct|exists:ingredients,id';
