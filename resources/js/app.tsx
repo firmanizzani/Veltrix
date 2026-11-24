@@ -12,7 +12,7 @@ createInertiaApp({
         const page = (await pages[`./pages/${name}.tsx`]()) as {
             default: ComponentType<any> & { layout?: (page: ReactNode) => ReactNode };
         };
-        if (name !== 'Auth' && name !== 'Error') {
+        if (name !== 'Auth' && name !== 'Error' && name !== 'Landing') {
             page.default.layout =
                 page.default.layout ?? ((page) => <AppLayout>{page}</AppLayout>);
         }

@@ -205,6 +205,15 @@ and short-group navigation within the viewport without reducing body text below
 
 **Dialogs and receipts.** Dialogs are centered, scroll within the viewport, and constrain width to (640px) or viewport minus (32px). Mobile padding reduces to (20px). Receipt printing removes shell, actions, overlays, and mobile cart chrome; preserve the narrow receipt hierarchy.
 
+
+## Public landing page
+
+The public root route is a separate presentation surface and does not inherit the application sidebar or workspace frame. Its split-stage composition keeps the craft of coffee visible beside a readable operational story. Use Inter Variable, emerald ink (#173f32), a quiet light ground (#f7f8f4), and a pale green field (#e8ede5). A sticky photograph occupies 45% of the desktop stage; the reading column carries a two-line title, an illustrative order interaction, and an accessible role selector. A full-width emerald statement breaks the split before the FAQ and footer.
+
+At 800px the plain header switches to a disclosure menu. At 600px the photograph becomes a short opening image and the story follows in document order. Keep all headings within two lines, body copy at least 16px, and motion disabled under reduced-motion preferences. Content must remain visible when reveal animations do not run. The order illustration is local state only: its totals and sample recipe quantities never create operational transactions. Menu choices and role tabs work with keyboard input, including Escape for the header menu and arrow/Home/End keys for the role selector.
+
+Primary actions lead to login for guests and the existing workspace for authenticated users. Accounts remain assigned by the business, with no public registration. The original generated coffee photograph is stored locally with provenance in public/images/landing/provenance.json; reused menu images remain covered by their existing asset records. Landing styles are isolated under .landing and must not restyle operational pages.
+
 ## Do's and Don'ts
 
 - Do reuse the shared tokens and existing components before introducing variants.

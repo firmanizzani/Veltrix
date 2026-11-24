@@ -1849,6 +1849,13 @@ legend {
     place-items: center;
     padding: 40px 30px;
 }
+.auth-home-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-bottom: 16px;
+    font-size: 13px;
+}
 .auth-form {
     width: 360px;
     max-width: 100%;

@@ -44,7 +44,11 @@ export default function Auth({
         <div className="auth-page">
             <Head title={title} />
             <section className="auth-story">
-                <div className="brand">
+                <Link
+                    href="/"
+                    className="brand"
+                    aria-label="VELTRIX, kembali ke beranda"
+                >
                     <svg
                         viewBox="0 0 32 32"
                         aria-hidden="true"
@@ -55,7 +59,7 @@ export default function Auth({
                         />
                     </svg>
                     VELTRIX
-                </div>
+                </Link>
                 <div className="auth-story-main">
                     <Coffee
                         size={44}
@@ -80,6 +84,12 @@ export default function Auth({
             </section>
             <section className="auth-form-area">
                 <div className="auth-form">
+                    <Link
+                        href="/"
+                        className="text-link auth-home-link"
+                    >
+                        Kembali ke beranda
+                    </Link>
                     <span className="auth-lock">
                         <LockKeyhole size={24} />
                     </span>

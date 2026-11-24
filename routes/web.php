@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', fn() => redirect('/dashboard'));
+Route::get('/', fn() => Inertia::render('Landing'))->name('home');
 Route::middleware('auth')->group(function () {
     Route::get('/settings', [\App\Http\Controllers\SettingsController::class, 'edit']);
     Route::put('/settings', [\App\Http\Controllers\SettingsController::class, 'update']);
