@@ -7,7 +7,7 @@ import type { ComponentType, ReactNode } from 'react';
 
 const pages = import.meta.glob('./pages/*.tsx');
 createInertiaApp({
-    title: (title) => `${title} · VELTRIX`,
+    title: () => 'VELTRIX',
     resolve: async (name) => {
         const page = (await pages[`./pages/${name}.tsx`]()) as {
             default: ComponentType<any> & { layout?: (page: ReactNode) => ReactNode };
