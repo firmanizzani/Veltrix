@@ -98,65 +98,84 @@
 .landing-mobile-navigation {
     display: none;
 }
-.landing-stage {
-    display: grid;
-    grid-template-columns: 45% 55%;
-    align-items: start;
-}
 .landing-photograph {
-    position: sticky;
-    top: 88px;
-    height: calc(100svh - 88px);
+    position: relative;
+    margin: 0;
+    min-width: 0;
+    height: 430px;
     overflow: hidden;
     background: var(--landing-ink);
 }
 .landing-photograph > img {
     display: block;
     width: 100%;
-    height: 100%;
+    height: calc(100% - 48px);
     object-fit: cover;
-    object-position: 50% 62%;
-    animation: landing-photo-breathe 24s ease-in-out infinite alternate;
-}
-.landing-photo-caption {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    flex-direction: column;
-    padding: 48px 40px 32px;
-    background: rgb(0 0 0 / 45%);
-    color: white;
-    font-size: 16px;
-    line-height: 1.55;
-}
-.landing-story {
-    min-width: 0;
+    object-position: 50% 75%;
 }
 .landing-hero {
+    padding: 48px 48px 64px;
+}
+.landing-title-line {
+    display: flex;
+    align-items: center;
+    gap: 0.14em;
+}
+.landing-title-image {
+    display: inline-block;
+    width: 1.55em;
+    height: 0.8em;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+.landing-hero-intro {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 48px;
+    margin-top: 32px;
+}
+.landing-hero-intro > p {
+    max-width: 47ch;
+    font-size: 18px;
+}
+.landing-preview {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 24px;
+    margin-top: 40px;
+}
+.landing-photograph figcaption {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding-top: 8px;
+    background: var(--landing-paper);
+    font-size: 13px;
+}
+.landing-preview-console {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: calc(100svh - 88px);
-    padding: 72px 64px 32px;
+    min-width: 0;
+    padding: 32px;
+    background: var(--landing-field);
 }
-.landing-hero-copy {
-    margin-block: auto;
-    padding-bottom: 40px;
+.landing-preview-console .landing-order-demo {
+    margin-top: 0;
+}
+.landing-preview-console .landing-demo-note {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 16px;
 }
 .landing h1 {
-    font-size: clamp(40px, 5.2vw, 80px);
+    font-size: clamp(40px, 8vw, 110px);
     font-weight: 550;
     line-height: 1.04;
     letter-spacing: -0.04em;
     text-wrap: initial;
-}
-.landing-hero-copy > p {
-    margin: 32px 0;
-    max-width: 38ch;
-    font-size: 18px;
-    line-height: 1.65;
 }
 .landing-cta {
     display: inline-flex;
@@ -187,17 +206,8 @@
     font-size: 13px;
     color: var(--landing-muted);
 }
-.landing-discover {
-    display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    width: 100%;
-    min-height: 44px;
-    font-size: 14px;
-}
 .landing-section {
-    padding: 96px 64px;
+    padding: 88px 48px;
 }
 .landing h2 {
     font-size: clamp(30px, 3.1vw, 46px);
@@ -205,12 +215,45 @@
     font-weight: 550;
     letter-spacing: -0.035em;
 }
-.landing-section > p {
-    margin-top: 24px;
-    max-width: 46ch;
-}
 .landing-flow {
     background: var(--landing-field);
+}
+.landing-flow-intro {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 64px;
+}
+.landing-flow-intro > p {
+    max-width: 45ch;
+}
+.landing-flow .landing-process-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 48px;
+    margin-top: 48px;
+}
+.landing-roles {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 72px;
+}
+.landing-role-workspace > p {
+    max-width: 46ch;
+    margin-top: 24px;
+}
+.landing-role-images {
+    align-self: center;
+    min-width: 0;
+}
+.landing-role-images .landing-pair-photographs {
+    margin-top: 0;
+}
+.landing-role-images .landing-pair-photographs img {
+    height: 340px;
+}
+.landing-role-images .landing-photo-note {
+    margin-top: 20px;
+    font-size: 13px;
 }
 .landing-order-demo {
     margin-top: 36px;
@@ -312,11 +355,6 @@
     margin-top: 5px;
     line-height: 1.6;
 }
-.landing-section > .landing-demo-note {
-    font-size: 13px;
-    line-height: 1.6;
-    margin-top: 16px;
-}
 .landing-process-list {
     display: grid;
     gap: 28px;
@@ -397,10 +435,6 @@
 }
 .landing-pair-photographs img:last-child {
     margin-top: 48px;
-}
-.landing-section > .landing-photo-note {
-    font-size: 13px;
-    margin-top: 20px;
 }
 .landing-full-width {
     display: grid;
@@ -502,14 +536,6 @@
         transform: translateY(0);
     }
 }
-@keyframes landing-photo-breathe {
-    from {
-        transform: scale(1);
-    }
-    to {
-        transform: scale(1.035);
-    }
-}
 @media (min-width: 1600px) {
     .landing-hero,
     .landing-section {
@@ -533,9 +559,6 @@
     .landing-quantity {
         margin-left: auto;
     }
-    .landing-photo-caption {
-        padding-inline: 28px;
-    }
     .landing-full-width,
     .landing-faq,
     .landing-footer {
@@ -547,6 +570,20 @@
     }
     .landing-footer-links {
         gap: 16px;
+    }
+}
+@media (max-width: 1000px) {
+    .landing-preview {
+        grid-template-columns: 1fr 1fr;
+    }
+    .landing-preview-console {
+        padding: 20px;
+    }
+    .landing-roles {
+        gap: 40px;
+    }
+    .landing-role-images .landing-pair-photographs img {
+        height: 280px;
     }
 }
 @media (max-width: 800px) {
@@ -591,26 +628,14 @@
         padding-block: 10px;
         font-size: 16px;
     }
-    .landing-stage {
-        grid-template-columns: 43% 57%;
-    }
     .landing-photograph {
-        top: 72px;
-        height: calc(100svh - 72px);
+        height: 360px;
     }
     .landing-hero {
-        min-height: calc(100svh - 72px);
-        padding: 48px 28px 24px;
+        padding: 40px 28px;
     }
     .landing-section {
         padding: 72px 28px;
-    }
-    .landing-hero-copy > p {
-        font-size: 16px;
-    }
-    .landing-photo-caption {
-        font-size: 14px;
-        padding-inline: 24px;
     }
     .landing-full-width,
     .landing-faq {
@@ -626,6 +651,29 @@
         padding: 40px 28px;
     }
 }
+@media (max-width: 800px) {
+    .landing-preview {
+        grid-template-columns: 1fr;
+    }
+    .landing-flow-intro {
+        grid-template-columns: 1fr;
+        gap: 24px;
+    }
+    .landing-flow .landing-process-list {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+    .landing-roles {
+        grid-template-columns: 1fr;
+    }
+    .landing-role-images .landing-pair-photographs img {
+        height: 300px;
+    }
+    .landing-hero-intro {
+        flex-direction: column;
+        gap: 24px;
+    }
+}
 @media (max-width: 600px) {
     .landing {
         font-size: 16px;
@@ -638,45 +686,15 @@
         font-size: 13px;
         gap: 6px;
     }
-    .landing-stage {
-        display: flex;
-        flex-direction: column;
-    }
     .landing-photograph {
-        position: relative;
-        top: auto;
         width: 100%;
-        height: 36svh;
-        min-height: 240px;
-        max-height: 340px;
-    }
-    .landing-photograph > img {
-        object-position: 50% 65%;
-    }
-    .landing-photo-caption {
-        padding: 36px 24px 20px;
-        font-size: 13px;
-    }
-    .landing-story {
-        width: 100%;
+        height: 300px;
     }
     .landing-hero {
-        min-height: auto;
-        padding: 40px 24px 24px;
+        padding: 32px 24px 48px;
     }
     .landing h1 {
-        font-size: clamp(36px, 10.5vw, 56px);
-    }
-    .landing-hero-copy {
-        margin: 0;
-        padding-bottom: 20px;
-    }
-    .landing-hero-copy > p {
-        margin-block: 24px;
-        max-width: 36ch;
-    }
-    .landing-discover {
-        margin-top: 20px;
+        font-size: clamp(28px, 8.8vw, 56px);
     }
     .landing-section {
         padding: 64px 24px;

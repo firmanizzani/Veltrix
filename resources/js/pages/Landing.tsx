@@ -1,14 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import {
-    ArrowDown,
-    ArrowUpRight,
-    Check,
-    ChevronDown,
-    Menu,
-    Minus,
-    Plus,
-    X,
-} from 'lucide-react';
+import { ArrowUpRight, Check, ChevronDown, Menu, Minus, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { money } from '../lib/utils';
 import '../../css/landing.css';
@@ -118,6 +109,17 @@ export default function Landing() {
     const menuButton = useRef<HTMLButtonElement>(null);
     const roleButtons = useRef<(HTMLButtonElement | null)[]>([]);
     const currentRole = roles[role];
+
+    useEffect(() => {
+        const target = window.location.hash.slice(1);
+        if (!target) {
+            return;
+        }
+        const frame = requestAnimationFrame(() => {
+            document.getElementById(target)?.scrollIntoView({ block: 'start' });
+        });
+        return () => cancelAnimationFrame(frame);
+    }, []);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -236,74 +238,56 @@ export default function Landing() {
             </header>
 
             <main id="landing-content">
-                <div className="landing-stage">
-                    <aside
-                        className="landing-photograph"
-                        aria-label="Proses meracik kopi"
-                    >
-                        <img
-                            src="/images/landing/coffee-craft.jpg"
-                            alt="Barista menuangkan latte art ke cangkir di depan mesin espresso"
-                            width={1122}
-                            height={1402}
-                            fetchPriority="high"
-                        />
-                        <div className="landing-photo-caption">
-                            <span>Perhatian untuk setiap cangkir.</span>
-                            <span>Kendali untuk seluruh kedai.</span>
-                        </div>
-                    </aside>
-
-                    <div className="landing-story">
-                        <section
-                            className="landing-hero"
-                            aria-labelledby="landing-title"
-                        >
-                            <div className="landing-hero-copy">
-                                <h1 id="landing-title">
-                                    Kedai tertata.
-                                    <br />
-                                    Bisnis terjaga.
-                                </h1>
-                                <p>
-                                    Sajikan kopi terbaik Anda. VELTRIX menghubungkan
-                                    penjualan, persediaan, dan tim dalam satu ruang kerja.
-                                </p>
-                                <Link
-                                    className="landing-cta"
-                                    href={destination}
-                                >
-                                    {action}
-                                    <ArrowUpRight size={20} />
-                                </Link>
-                                <span className="landing-access-note">
-                                    Untuk owner, manager, dan kasir.
-                                </span>
-                            </div>
-                            <a
-                                className="landing-discover"
-                                href="#alur"
+                <section
+                    className="landing-hero"
+                    aria-labelledby="landing-title"
+                >
+                    <h1 id="landing-title">
+                        <span className="landing-title-line">
+                            Racikan{' '}
+                            <img
+                                className="landing-title-image"
+                                src="/images/menu/espresso.jpg"
+                                alt=""
+                                width={160}
+                                height={100}
+                            />{' '}
+                            beragam.
+                        </span>
+                        <span className="landing-title-line">Kendali seirama.</span>
+                    </h1>
+                    <div className="landing-hero-intro">
+                        <p>
+                            Di depan bar, kopi diracik. Di baliknya, VELTRIX menghubungkan
+                            penjualan, bahan, dan tim agar kedai berjalan seirama.
+                        </p>
+                        <div className="landing-hero-action">
+                            <Link
+                                className="landing-cta"
+                                href={destination}
                             >
-                                Kenali cara kerjanya
-                                <ArrowDown size={18} />
-                            </a>
-                        </section>
-
-                        <section
-                            id="alur"
-                            className="landing-flow landing-section"
-                        >
-                            <h2 data-reveal>
-                                Satu pesanan.
-                                <br />
-                                Semua ikut tercatat.
-                            </h2>
-                            <p data-reveal>
-                                Dari menu yang dipilih pelanggan hingga bahan yang
-                                terpakai, setiap langkah punya catatan yang saling
-                                terhubung.
-                            </p>
-
+                                {action}
+                                <ArrowUpRight size={20} />
+                            </Link>
+                            <span className="landing-access-note">
+                                Untuk owner, manager, dan kasir.
+                            </span>
+                        </div>
+                    </div>
+                    <div className="landing-preview">
+                        <figure className="landing-photograph">
+                            <img
+                                src="/images/landing/coffee-craft.jpg"
+                                alt="Barista menuangkan latte art ke cangkir di depan mesin espresso"
+                                width={1122}
+                                height={1402}
+                                fetchPriority="high"
+                            />
+                            <figcaption>
+                                Di balik setiap cangkir, ada alur yang saling terhubung.
+                            </figcaption>
+                        </figure>
+                        <div className="landing-preview-console">
                             <div
                                 className="landing-order-demo"
                                 data-ui
@@ -376,111 +360,131 @@ export default function Landing() {
                                 Coba tombol + dan −. Simulasi ini tidak membuat transaksi
                                 atau mengubah stok kedai.
                             </p>
-                            <div className="landing-process-list">
-                                <div data-reveal>
-                                    <h3>Pesanan tercatat</h3>
-                                    <p>
-                                        Kasir memilih menu dan mencatat pembayaran. Struk
-                                        dan riwayat transaksi tersimpan.
-                                    </p>
-                                </div>
-                                <div data-reveal>
-                                    <h3>Bahan terpantau</h3>
-                                    <p>
-                                        Persediaan mengikuti resep. Tim bisa meninjau stok
-                                        minimum dan kebutuhan pembelian.
-                                    </p>
-                                </div>
-                                <div data-reveal>
-                                    <h3>Angka bisa ditelusuri</h3>
-                                    <p>
-                                        Penjualan, biaya bahan, dan pengeluaran masuk ke
-                                        laporan untuk ditinjau pengelola.
-                                    </p>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section
-                            id="peran"
-                            className="landing-roles landing-section"
-                        >
-                            <h2 data-reveal>
-                                Satu kedai.
-                                <br />
-                                Banyak tangan baik.
-                            </h2>
-                            <p data-reveal>
-                                Setiap orang punya fokusnya. Ruang kerja mengikuti peran
-                                dan cabang, supaya tim melihat yang mereka perlukan.
-                            </p>
-                            <div
-                                className="landing-role-tabs"
-                                role="tablist"
-                                aria-label="Pilih peran tim"
-                            >
-                                {roles.map((entry, index) => (
-                                    <button
-                                        key={entry.name}
-                                        id={`role-tab-${index}`}
-                                        ref={(element) => {
-                                            roleButtons.current[index] = element;
-                                        }}
-                                        role="tab"
-                                        aria-selected={role === index}
-                                        aria-controls="landing-role-content"
-                                        tabIndex={role === index ? 0 : -1}
-                                        onClick={() => setRole(index)}
-                                        onKeyDown={(event) => changeRole(event, index)}
-                                    >
-                                        {entry.name}
-                                    </button>
-                                ))}
-                            </div>
-                            <div
-                                className="landing-role-content"
-                                id="landing-role-content"
-                                role="tabpanel"
-                                aria-labelledby={`role-tab-${role}`}
-                                tabIndex={0}
-                            >
-                                <h3>{currentRole.title}</h3>
-                                <p>{currentRole.description}</p>
-                                <ul>
-                                    {currentRole.tasks.map((task) => (
-                                        <li key={task}>
-                                            <Check size={18} />
-                                            {task}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
-                            <div
-                                className="landing-pair-photographs"
-                                data-reveal
-                            >
-                                <img
-                                    src="/images/menu/espresso.jpg"
-                                    alt="Secangkir espresso"
-                                    width={400}
-                                    height={400}
-                                    loading="lazy"
-                                />
-                                <img
-                                    src="/images/menu/butter-croissant.jpg"
-                                    alt="Croissant berlapis untuk menemani kopi"
-                                    width={400}
-                                    height={400}
-                                    loading="lazy"
-                                />
-                            </div>
-                            <p className="landing-photo-note">
-                                Dari bar kopi sampai dapur, tetap dalam satu alur.
-                            </p>
-                        </section>
+                        </div>
                     </div>
-                </div>
-
+                </section>
+                <section
+                    id="alur"
+                    className="landing-flow landing-section"
+                >
+                    <div className="landing-flow-intro">
+                        <h2 data-reveal>
+                            Dari bar,
+                            <br />
+                            sampai laporan.
+                        </h2>
+                        <p data-reveal>
+                            Satu pesanan tidak berhenti di struk. Bahan ikut terhitung,
+                            persediaan terpantau, dan penjualan bisa ditelusuri.
+                        </p>
+                    </div>
+                    <div className="landing-process-list">
+                        <div data-reveal>
+                            <h3>Pesanan tercatat</h3>
+                            <p>
+                                Kasir memilih menu dan mencatat pembayaran. Struk dan
+                                riwayat transaksi tersimpan.
+                            </p>
+                        </div>
+                        <div data-reveal>
+                            <h3>Bahan terpantau</h3>
+                            <p>
+                                Persediaan mengikuti resep. Tim bisa meninjau stok minimum
+                                dan kebutuhan pembelian.
+                            </p>
+                        </div>
+                        <div data-reveal>
+                            <h3>Angka bisa ditelusuri</h3>
+                            <p>
+                                Penjualan, biaya bahan, dan pengeluaran masuk ke laporan
+                                untuk ditinjau pengelola.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+                <section
+                    id="peran"
+                    className="landing-roles landing-section"
+                >
+                    <div className="landing-role-workspace">
+                        {' '}
+                        <h2 data-reveal>
+                            Satu kedai.
+                            <br />
+                            Banyak tangan baik.
+                        </h2>
+                        <p data-reveal>
+                            Setiap orang punya fokusnya. Ruang kerja mengikuti peran dan
+                            cabang, supaya tim melihat yang mereka perlukan.
+                        </p>
+                        <div
+                            className="landing-role-tabs"
+                            role="tablist"
+                            aria-label="Pilih peran tim"
+                        >
+                            {roles.map((entry, index) => (
+                                <button
+                                    key={entry.name}
+                                    id={`role-tab-${index}`}
+                                    ref={(element) => {
+                                        roleButtons.current[index] = element;
+                                    }}
+                                    role="tab"
+                                    aria-selected={role === index}
+                                    aria-controls="landing-role-content"
+                                    tabIndex={role === index ? 0 : -1}
+                                    onClick={() => setRole(index)}
+                                    onKeyDown={(event) => changeRole(event, index)}
+                                >
+                                    {entry.name}
+                                </button>
+                            ))}
+                        </div>
+                        <div
+                            className="landing-role-content"
+                            id="landing-role-content"
+                            role="tabpanel"
+                            aria-labelledby={`role-tab-${role}`}
+                            tabIndex={0}
+                        >
+                            <h3>{currentRole.title}</h3>
+                            <p>{currentRole.description}</p>
+                            <ul>
+                                {currentRole.tasks.map((task) => (
+                                    <li key={task}>
+                                        <Check size={18} />
+                                        {task}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    </div>
+                    <div className="landing-role-images">
+                        {' '}
+                        <div
+                            className="landing-pair-photographs"
+                            data-reveal
+                        >
+                            <img
+                                src="/images/menu/espresso.jpg"
+                                alt="Secangkir espresso"
+                                width={400}
+                                height={400}
+                                loading="lazy"
+                            />
+                            <img
+                                src="/images/menu/butter-croissant.jpg"
+                                alt="Croissant berlapis untuk menemani kopi"
+                                width={400}
+                                height={400}
+                                loading="lazy"
+                            />
+                        </div>
+                        <p className="landing-photo-note">
+                            Dari bar kopi sampai dapur, tetap dalam satu alur.
+                        </p>
+                    </div>
+                </section>
                 <section
                     className="landing-full-width"
                     aria-labelledby="landing-business-title"
@@ -489,9 +493,9 @@ export default function Landing() {
                         id="landing-business-title"
                         data-reveal
                     >
-                        Racikan Anda.
+                        Kedai tumbuh.
                         <br />
-                        Ruang tumbuh.
+                        Alur tetap utuh.
                     </h2>
                     <div data-reveal>
                         <p>
