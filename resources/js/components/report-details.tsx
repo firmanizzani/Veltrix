@@ -5,10 +5,68 @@ import { date, labels, money, number, type Row } from '../lib/utils';
 export function ReportDetails({ report, owner }: { report: Row; owner: boolean }) {
     return (
         <>
-            <section
-                id="report-expenses"
-                className="finance-report"
-            >
+            <section className="recent-section">
+                <div className="section-heading">
+                    <div>
+                        <h2>Perbandingan cabang</h2>
+                        <p>
+                            Pertumbuhan dibandingkan {date(report.comparison.start)}{' '}
+                            sampai {date(report.comparison.end)}, dengan durasi yang sama.
+                            Tanpa penjualan pembanding positif, persentase tidak dihitung.
+                        </p>
+                    </div>
+                </div>
+                <div className="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cabang</th>
+                                <th className="num">Penjualan bersih</th>
+                                <th className="num">Transaksi</th>
+                                <th className="num">Rata-rata</th>
+                                <th className="num">Unit bersih</th>
+                                <th className="num">Laba kotor</th>
+                                <th className="num">Pengeluaran</th>
+                                {owner && <th className="num">Payroll</th>}
+                                {owner && <th className="num">Laba operasional</th>}
+                                <th className="num">Pertumbuhan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {report.branches.map((branch: Row) => (
+                                <tr key={branch.id}>
+                                    <td>
+                                        <Link
+                                            className="identity-link"
+                                            href={`/manage/orders?branch_id=${branch.id}`}
+                                        >
+                                            {branch.city}
+                                        </Link>
+                                    </td>
+                                    <td className="num">{money(branch.amount)}</td>
+                                    <td className="num">{number(branch.transactions)}</td>
+                                    <td className="num">{money(branch.average)}</td>
+                                    <td className="num">{number(branch.units)}</td>
+                                    <td className="num">{money(branch.gross_profit)}</td>
+                                    <td className="num">{money(branch.expenses)}</td>
+                                    {owner && (
+                                        <td className="num">{money(branch.payroll)}</td>
+                                    )}
+                                    {owner && (
+                                        <td className="num">{money(branch.profit)}</td>
+                                    )}
+                                    <td className="num">
+                                        {branch.growth === null
+                                            ? 'Belum ada pembanding'
+                                            : `${number(branch.growth)}%`}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <section className="finance-report">
                 <div className="section-heading">
                     <h2>Pengeluaran per kategori</h2>
                     <Link
@@ -32,10 +90,7 @@ export function ReportDetails({ report, owner }: { report: Row; owner: boolean }
                     <Empty>Belum ada pengeluaran disetujui pada periode ini.</Empty>
                 )}
             </section>
-            <section
-                id="report-inventory"
-                className="recent-section"
-            >
+            <section className="recent-section">
                 <div className="section-heading">
                     <div>
                         <h2>Nilai persediaan saat ini</h2>
@@ -111,72 +166,5 @@ export function ReportDetails({ report, owner }: { report: Row; owner: boolean }
                 </div>
             </section>
         </>
-    );
-}
-
-export function BranchComparison({ report, owner }: { report: Row; owner: boolean }) {
-    return (
-        <section
-            id="report-branches"
-            className="recent-section"
-        >
-            <div className="section-heading">
-                <div>
-                    <h2>Perbandingan cabang</h2>
-                    <p>
-                        Pertumbuhan dibandingkan {date(report.comparison.start)} sampai{' '}
-                        {date(report.comparison.end)}, dengan durasi yang sama. Tanpa
-                        penjualan pembanding positif, persentase tidak dihitung.
-                    </p>
-                </div>
-            </div>
-            <div className="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Cabang</th>
-                            <th className="num">Penjualan bersih</th>
-                            <th className="num">Transaksi</th>
-                            <th className="num">Rata-rata</th>
-                            <th className="num">Unit bersih</th>
-                            <th className="num">Laba kotor</th>
-                            <th className="num">Pengeluaran</th>
-                            {owner && <th className="num">Payroll</th>}
-                            {owner && <th className="num">Laba operasional</th>}
-                            <th className="num">Pertumbuhan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {report.branches.map((branch: Row) => (
-                            <tr key={branch.id}>
-                                <td>
-                                    <Link
-                                        className="identity-link"
-                                        href={`/manage/orders?branch_id=${branch.id}`}
-                                    >
-                                        {branch.city}
-                                    </Link>
-                                </td>
-                                <td className="num">{money(branch.amount)}</td>
-                                <td className="num">{number(branch.transactions)}</td>
-                                <td className="num">{money(branch.average)}</td>
-                                <td className="num">{number(branch.units)}</td>
-                                <td className="num">{money(branch.gross_profit)}</td>
-                                <td className="num">{money(branch.expenses)}</td>
-                                {owner && (
-                                    <td className="num">{money(branch.payroll)}</td>
-                                )}
-                                {owner && <td className="num">{money(branch.profit)}</td>}
-                                <td className="num">
-                                    {branch.growth === null
-                                        ? 'Belum ada pembanding'
-                                        : `${number(branch.growth)}%`}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </section>
     );
 }

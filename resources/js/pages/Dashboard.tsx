@@ -1,14 +1,6 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { CalendarDays, ClipboardCheck, RefreshCw, Sparkles } from 'lucide-react';
-import {
-    ResponsiveContainer,
-    LineChart,
-    Line,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip,
-} from 'recharts';
+import { CalendarDays, ClipboardCheck, RefreshCw } from 'lucide-react';
+import { SalesTrend } from '../components/sales-trend';
 import { useState, type FormEvent } from 'react';
 import { Button } from '../components/ui/button';
 import { Empty, PageTitle, Status } from '../components/common';
@@ -34,7 +26,7 @@ export default function Dashboard({
         router.get('/dashboard', range, { preserveState: true });
     };
     return (
-        <>
+        <div className="dashboard-page">
             <Head title="Dashboard" />
             <PageTitle
                 title={
@@ -128,96 +120,7 @@ export default function Dashboard({
                 owner={user.role === 'owner'}
             />
             <div className="dashboard-grid">
-                <section className="panel revenue-panel">
-                    <div className="panel-header">
-                        <div>
-                            <h2>Tren penjualan</h2>
-                            <p>
-                                Penjualan bersih per{' '}
-                                {report.granularity === 'hour' ? 'jam' : 'hari'}, dalam
-                                Rupiah
-                            </p>
-                        </div>
-                        <span className="series-key">Periode terpilih</span>
-                    </div>
-                    <div className="revenue-chart">
-                        <ResponsiveContainer
-                            width="100%"
-                            height="100%"
-                        >
-                            <LineChart
-                                data={report.trend}
-                                margin={{ top: 12, right: 12, bottom: 8, left: 0 }}
-                            >
-                                <CartesianGrid
-                                    vertical={false}
-                                    stroke="#edf0ee"
-                                />
-                                <XAxis
-                                    dataKey="date"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    minTickGap={40}
-                                    tick={{ fill: '#626b65', fontSize: 12 }}
-                                    tickFormatter={(v) =>
-                                        report.granularity === 'hour'
-                                            ? new Date(v).toLocaleTimeString('id-ID', {
-                                                  hour: '2-digit',
-                                                  minute: '2-digit',
-                                                  timeZone: 'Asia/Jakarta',
-                                              })
-                                            : new Date(
-                                                  v + 'T12:00:00',
-                                              ).toLocaleDateString('id-ID', {
-                                                  day: 'numeric',
-                                                  month: 'short',
-                                              })
-                                    }
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    width={58}
-                                    tick={{ fill: '#626b65', fontSize: 12 }}
-                                    tickFormatter={(v) =>
-                                        Math.abs(v) >= 1000000
-                                            ? `${v / 1000000} jt`
-                                            : Math.abs(v) >= 1000
-                                              ? `${v / 1000} rb`
-                                              : v
-                                    }
-                                    domain={
-                                        m.transactions ? ['auto', 'auto'] : [0, 100000]
-                                    }
-                                />
-                                <Tooltip
-                                    formatter={(v) => money(Number(v))}
-                                    labelFormatter={(v) => date(String(v))}
-                                    contentStyle={{
-                                        border: '1px solid #e4e9e6',
-                                        borderRadius: 8,
-                                    }}
-                                />
-                                <Line
-                                    dataKey="amount"
-                                    name="Penjualan bersih"
-                                    type="linear"
-                                    stroke="#166348"
-                                    strokeWidth={2}
-                                    dot={false}
-                                    activeDot={{ r: 4 }}
-                                    isAnimationActive={false}
-                                />
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                    {!m.transactions && (
-                        <p className="chart-caption">
-                            Belum ada transaksi pada periode ini. Nilai ditampilkan
-                            sebagai nol.
-                        </p>
-                    )}
-                </section>
+                <SalesTrend report={report} />
                 <section className="panel branch-panel">
                     <div className="panel-header">
                         <div>
@@ -250,7 +153,7 @@ export default function Dashboard({
                     <div className="panel-header">
                         <div>
                             <h2>Menu terlaris</h2>
-                            <p>Diurutkan dari unit bersih terjual</p>
+                            <p>3 menu dengan unit bersih terbanyak</p>
                         </div>
                         <Link
                             href="/manage/products"
@@ -261,7 +164,7 @@ export default function Dashboard({
                     </div>
                     {report.topProducts.length ? (
                         <div className="top-products">
-                            {report.topProducts.map((p: Row, i: number) => (
+                            {report.topProducts.slice(0, 3).map((p: Row, i: number) => (
                                 <div key={p.product_id}>
                                     <span className="ranking-position">{i + 1}</span>
                                     <div>
@@ -288,7 +191,7 @@ export default function Dashboard({
                     </div>
                     {report.lowStock.length ? (
                         <div className="stock-alerts">
-                            {report.lowStock.map((stock: Row) => (
+                            {report.lowStock.slice(0, 3).map((stock: Row) => (
                                 <div key={stock.id}>
                                     <div>
                                         <strong>{stock.ingredient.name}</strong>
@@ -338,7 +241,7 @@ export default function Dashboard({
                             </tr>
                         </thead>
                         <tbody>
-                            {report.recentOrders.map((order: Row) => (
+                            {report.recentOrders.slice(0, 3).map((order: Row) => (
                                 <tr key={order.id}>
                                     <td>
                                         <Link
@@ -367,21 +270,6 @@ export default function Dashboard({
                     )}
                 </div>
             </section>
-            {user.role === 'owner' && (
-                <div className="intelligence-strip">
-                    <Sparkles size={18} />
-                    <div>
-                        <strong>AI Business Intelligence</strong>
-                        <span>Integrasi Gemini belum diaktifkan.</span>
-                    </div>
-                    <Link
-                        href="/intelligence"
-                        className="text-link"
-                    >
-                        Lihat status integrasi
-                    </Link>
-                </div>
-            )}
-        </>
+        </div>
     );
 }

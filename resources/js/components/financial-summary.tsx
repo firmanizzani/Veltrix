@@ -1,3 +1,4 @@
+import { ChevronDown } from 'lucide-react';
 import { money, number, type Row } from '../lib/utils';
 
 export function FinancialSummary({ metrics, owner }: { metrics: Row; owner: boolean }) {
@@ -109,5 +110,30 @@ export function FinancialBreakdown({ metrics, owner }: { metrics: Row; owner: bo
                 </p>
             </div>
         </div>
+    );
+}
+
+export function ReportSummary({ metrics, owner }: { metrics: Row; owner: boolean }) {
+    return (
+        <>
+            <FinancialSummary
+                metrics={metrics}
+                owner={owner}
+            />
+            <details className="profit-details">
+                <summary>
+                    <span>Rincian perhitungan laba</span>
+                    <span className="profit-disclosure-action">
+                        <span className="profit-closed-label">Lihat rincian</span>
+                        <span className="profit-open-label">Tutup rincian</span>
+                        <ChevronDown size={16} />
+                    </span>
+                </summary>
+                <FinancialBreakdown
+                    metrics={metrics}
+                    owner={owner}
+                />
+            </details>
+        </>
     );
 }

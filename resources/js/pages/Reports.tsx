@@ -1,10 +1,11 @@
-import { Head, router, usePage } from '@inertiajs/react';
-import { Download } from 'lucide-react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Download, CalendarDays, ClipboardCheck, RefreshCw, Store } from 'lucide-react';
+import { SalesTrend } from '../components/sales-trend';
 import { useState, type FormEvent } from 'react';
-import { Empty, PageTitle } from '../components/common';
-import { FinancialBreakdown } from '../components/financial-summary';
-import { BranchComparison, ReportDetails } from '../components/report-details';
 import { Button } from '../components/ui/button';
+import { Empty, PageTitle, Status } from '../components/common';
+import { ReportDetails } from '../components/report-details';
+import { ReportSummary } from '../components/financial-summary';
 import { date, labels, money, number, type Row, type Shared } from '../lib/utils';
 
 export default function Reports({
@@ -16,260 +17,303 @@ export default function Reports({
     filters: Row;
     branches: Row[];
 }) {
-    const { auth } = usePage<Shared>().props;
-    const owner = auth.user.role === 'owner';
+    const {
+        auth: { user },
+    } = usePage<Shared>().props;
     const [range, setRange] = useState(filters);
-    const query = new URLSearchParams(filters).toString();
-    const previousSales = report.branches.reduce(
-        (total: number, branch: Row) => total + Number(branch.previous_sales),
-        0,
-    );
-    const growth =
-        previousSales > 0
-            ? ((report.metrics.net - previousSales) / previousSales) * 100
-            : null;
-
-    function apply(event: FormEvent) {
-        event.preventDefault();
+    const m = report.metrics;
+    const apply = (e: FormEvent) => {
+        e.preventDefault();
         router.get('/reports', range, { preserveState: true });
-    }
-
+    };
     return (
         <>
             <Head title="Laporan bisnis" />
             <PageTitle
                 title="Laporan bisnis"
-                description="Analisis keuangan, pertumbuhan, dan kontribusi penjualan pada periode terpilih."
+                description="Penjualan, biaya, dan performa kedai dari catatan operasional."
                 action={
-                    <div className="page-actions">
-                        <Button
-                            asChild
-                            variant="outline"
-                        >
-                            <a href={`/reports/export?${query}`}>
-                                <Download size={16} />
-                                Ekspor CSV
-                            </a>
-                        </Button>
-                        <Button
-                            asChild
-                            variant="outline"
-                        >
-                            <a href={`/reports/pdf?${query}`}>
-                                <Download size={16} />
-                                Ekspor PDF
-                            </a>
-                        </Button>
-                    </div>
+                    <>
+                        {user.role === 'owner' && (
+                            <select
+                                aria-label="Filter cabang"
+                                form="report-filters"
+                                value={range.branch_id}
+                                onChange={(e) =>
+                                    setRange({ ...range, branch_id: e.target.value })
+                                }
+                            >
+                                <option value="">Seluruh cabang</option>
+                                {branches.map((b) => (
+                                    <option
+                                        value={b.id}
+                                        key={b.id}
+                                    >
+                                        {b.city}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+
+                        <div className="page-actions">
+                            <Button
+                                variant="outline"
+                                asChild
+                            >
+                                <a
+                                    href={`/reports/export?${new URLSearchParams(filters).toString()}`}
+                                >
+                                    <Download size={16} />
+                                    Ekspor CSV
+                                </a>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                asChild
+                            >
+                                <a
+                                    href={`/reports/pdf?${new URLSearchParams(filters).toString()}`}
+                                >
+                                    Ekspor PDF
+                                </a>
+                            </Button>
+                        </div>
+                    </>
                 }
             />
             <form
-                className="analysis-filters"
+                id="report-filters"
+                className="report-toolbar"
                 onSubmit={apply}
             >
-                <label>
-                    Tanggal mulai
-                    <input
-                        type="date"
-                        value={range.start}
-                        onChange={(event) =>
-                            setRange({ ...range, start: event.target.value })
-                        }
-                        required
-                    />
-                </label>
-                <label>
-                    Tanggal selesai
-                    <input
-                        type="date"
-                        value={range.end}
-                        onChange={(event) =>
-                            setRange({ ...range, end: event.target.value })
-                        }
-                        required
-                    />
-                </label>
-                {owner && (
+                <div className="date-range">
+                    <CalendarDays size={16} />
                     <label>
-                        Cakupan cabang
-                        <select
-                            value={range.branch_id}
-                            onChange={(event) =>
-                                setRange({ ...range, branch_id: event.target.value })
+                        <span className="sr-only">Tanggal mulai</span>
+                        <input
+                            type="date"
+                            value={range.start}
+                            onChange={(e) =>
+                                setRange({ ...range, start: e.target.value })
                             }
-                        >
-                            <option value="">Seluruh cabang</option>
-                            {branches.map((branch) => (
-                                <option
-                                    key={branch.id}
-                                    value={branch.id}
-                                >
-                                    {branch.city}
-                                </option>
-                            ))}
-                        </select>
+                            required
+                        />
                     </label>
-                )}
+                    <span>—</span>
+                    <label>
+                        <span className="sr-only">Tanggal selesai</span>
+                        <input
+                            type="date"
+                            value={range.end}
+                            onChange={(e) => setRange({ ...range, end: e.target.value })}
+                            required
+                        />
+                    </label>
+                </div>
                 <Button
                     type="submit"
                     variant="outline"
+                    size="sm"
                 >
-                    Tampilkan laporan
+                    Terapkan
                 </Button>
+                <button
+                    className="refresh-control"
+                    type="button"
+                    onClick={() => router.reload()}
+                    aria-label="Muat ulang laporan"
+                >
+                    <RefreshCw size={16} />
+                </button>
             </form>
-            <nav
-                className="analysis-index"
-                aria-label="Bagian laporan"
-            >
-                <a href="#report-finance">Keuangan</a>
-                <a href="#report-branches">Perbandingan cabang</a>
-                <a href="#report-sales">Penjualan</a>
-                <a href="#report-expenses">Pengeluaran</a>
-                <a href="#report-inventory">Persediaan</a>
-            </nav>
-            <div className="analysis-opening">
-                <section
-                    id="report-finance"
-                    className="analysis-ledger"
-                >
-                    <div className="section-heading">
+            <ReportSummary
+                metrics={m}
+                owner={user.role === 'owner'}
+            />
+            <div className="dashboard-grid">
+                <SalesTrend report={report} />
+                <section className="panel branch-panel">
+                    <div className="panel-header">
                         <div>
-                            <h2>Laporan laba & biaya</h2>
-                            <p>
-                                {date(filters.start)} — {date(filters.end)}
-                            </p>
+                            <h2>Performa cabang</h2>
+                            <p>{report.branches.length} cabang dalam cakupan</p>
                         </div>
+                        <Store size={18} />
                     </div>
-                    <FinancialBreakdown
-                        metrics={report.metrics}
-                        owner={owner}
-                    />
+                    <div className="branch-ranking">
+                        {[...report.branches]
+                            .sort((a: Row, b: Row) => b.amount - a.amount)
+                            .map((b: Row) => (
+                                <div
+                                    className="branch-rank"
+                                    key={b.id}
+                                >
+                                    <div>
+                                        <span className="branch-initial">
+                                            {b.city.slice(0, 2)}
+                                        </span>
+                                        <div>
+                                            <strong>{b.city}</strong>
+                                            <p>{number(b.transactions)} transaksi</p>
+                                        </div>
+                                        <strong className="num">{money(b.amount)}</strong>
+                                    </div>
+                                    <div className="thin-track">
+                                        <span
+                                            style={{
+                                                width: `${(Math.max(0, b.amount) / Math.max(1, ...report.branches.map((v: Row) => v.amount))) * 100}%`,
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                    </div>
+                    <div className="panel-footer">
+                        {number(m.active_branches)} cabang aktif dalam cakupan
+                    </div>
                 </section>
-                <aside
-                    className="analysis-context"
-                    aria-label="Konteks periode laporan"
-                >
-                    <h2>Perubahan penjualan bersih</h2>
-                    <strong className="analysis-growth">
-                        {growth === null
-                            ? 'Belum ada pembanding'
-                            : `${growth > 0 ? '+' : ''}${number(Math.round(growth * 10) / 10)}%`}
-                    </strong>
-                    <p>
-                        Dibandingkan {date(report.comparison.start)} —{' '}
-                        {date(report.comparison.end)}, dengan durasi yang sama.
-                        {growth === null &&
-                            ' Persentase memerlukan penjualan pembanding positif.'}
-                    </p>
-                    <dl className="analysis-facts">
+                <section className="panel products-panel">
+                    <div className="panel-header">
                         <div>
-                            <dt>Penjualan periode sebelumnya</dt>
-                            <dd>{money(previousSales)}</dd>
+                            <h2>Menu terlaris</h2>
+                            <p>Diurutkan dari unit bersih terjual</p>
                         </div>
+                        <Link
+                            href="/manage/products"
+                            className="text-link"
+                        >
+                            Katalog
+                        </Link>
+                    </div>
+                    {report.topProducts.length ? (
+                        <div className="top-products">
+                            {report.topProducts.map((p: Row, i: number) => (
+                                <div key={p.product_id}>
+                                    <span className="ranking-position">{i + 1}</span>
+                                    <div>
+                                        <strong>{p.name}</strong>
+                                        <p>{number(p.quantity)} produk</p>
+                                    </div>
+                                    <strong className="num">{money(p.amount)}</strong>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <Empty>
+                            Menu terlaris akan muncul setelah transaksi tercatat.
+                        </Empty>
+                    )}
+                </section>
+                <section className="panel stock-panel">
+                    <div className="panel-header">
                         <div>
-                            <dt>Penjualan periode ini</dt>
-                            <dd>{money(report.metrics.net)}</dd>
+                            <h2>Perlu perhatian</h2>
+                            <p>Persediaan mencapai batas minimum</p>
                         </div>
-                        <div>
-                            <dt>Transaksi</dt>
-                            <dd>{number(report.metrics.transactions)}</dd>
+                        <ClipboardCheck size={18} />
+                    </div>
+                    {report.lowStock.length ? (
+                        <div className="stock-alerts">
+                            {report.lowStock.map((stock: Row) => (
+                                <div key={stock.id}>
+                                    <div>
+                                        <strong>{stock.ingredient.name}</strong>
+                                        <p>{stock.branch.city}</p>
+                                    </div>
+                                    <span
+                                        className={`stock-quantity ${Number(stock.quantity) === 0 ? 'out-of-stock' : ''}`}
+                                    >
+                                        {number(stock.quantity)} {stock.ingredient.unit}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
-                        <div>
-                            <dt>Rata-rata transaksi</dt>
-                            <dd>{money(report.metrics.average)}</dd>
-                        </div>
-                        <div>
-                            <dt>Produk bersih terjual</dt>
-                            <dd>{number(report.metrics.units)}</dd>
-                        </div>
-                    </dl>
+                    ) : (
+                        <Empty>Tidak ada bahan pada atau di bawah batas minimum.</Empty>
+                    )}
+                    <div className="panel-footer">
+                        <Link
+                            href="/manage/inventory"
+                            className="text-link"
+                        >
+                            Periksa persediaan
+                        </Link>
+                    </div>
+                </section>
+            </div>
+            <section className="finance-report">
+                <div className="payment-breakdown">
                     <h3>Komposisi pembayaran kotor</h3>
                     {report.payments.length ? (
-                        report.payments.map((payment: Row) => (
+                        report.payments.map((p: Row) => (
                             <div
                                 className="key-value"
-                                key={payment.name}
+                                key={p.name}
                             >
-                                <span>{labels[payment.name] ?? payment.name}</span>
-                                <strong>{money(payment.amount)}</strong>
+                                <span>{labels[p.name]}</span>
+                                <strong>{money(p.amount)}</strong>
                             </div>
                         ))
                     ) : (
-                        <p>Belum ada pembayaran pada periode ini.</p>
+                        <p className="muted">Belum ada pembayaran.</p>
                     )}
-                </aside>
-            </div>
-            <BranchComparison
-                report={report}
-                owner={owner}
-            />
-            <section
-                id="report-sales"
-                className="analysis-sales"
-            >
-                <div className="section-heading">
-                    <div>
-                        <h2>Rincian penjualan</h2>
-                        <p>
-                            Rekap per {report.granularity === 'hour' ? 'jam' : 'hari'} dan
-                            kontribusi menu terlaris.
-                        </p>
-                    </div>
                 </div>
-                <div className="analysis-tables">
-                    <div className="analysis-periods table-scroll">
-                        <table>
-                            <caption>
-                                Penjualan bersih per{' '}
-                                {report.granularity === 'hour' ? 'jam' : 'hari'}
-                            </caption>
-                            <thead>
-                                <tr>
-                                    <th>Waktu</th>
-                                    <th className="num">Penjualan bersih</th>
+            </section>
+            <section className="recent-section">
+                <div className="section-heading">
+                    <h2>Transaksi terbaru</h2>
+                    <Link
+                        href="/manage/orders"
+                        className="text-link"
+                    >
+                        Lihat semua transaksi
+                    </Link>
+                </div>
+                <div className="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Transaksi</th>
+                                <th>Cabang / kasir</th>
+                                <th>Waktu</th>
+                                <th>Pembayaran</th>
+                                <th className="num">Total</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {report.recentOrders.map((order: Row) => (
+                                <tr key={order.id}>
+                                    <td>
+                                        <Link
+                                            href={`/orders/${order.id}`}
+                                            className="identity-link"
+                                        >
+                                            {order.order_number}
+                                        </Link>
+                                    </td>
+                                    <td>
+                                        {order.branch.city}
+                                        <small>{order.cashier.name}</small>
+                                    </td>
+                                    <td>{date(order.completed_at)}</td>
+                                    <td>{labels[order.payment?.method]}</td>
+                                    <td className="num">{money(order.total_amount)}</td>
+                                    <td>
+                                        <Status value={order.status} />
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {report.trend.map((entry: Row) => (
-                                    <tr key={entry.date}>
-                                        <td>{date(entry.date)}</td>
-                                        <td className="num">{money(entry.amount)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="table-scroll">
-                        <table>
-                            <caption>Menu terlaris pada periode ini</caption>
-                            <thead>
-                                <tr>
-                                    <th>Menu</th>
-                                    <th className="num">Unit bersih</th>
-                                    <th className="num">Penjualan bersih</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {report.topProducts.map((product: Row) => (
-                                    <tr key={product.product_id}>
-                                        <td>{product.name}</td>
-                                        <td className="num">
-                                            {number(product.quantity)}
-                                        </td>
-                                        <td className="num">{money(product.amount)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {!report.topProducts.length && (
-                            <Empty>Belum ada menu terjual pada periode ini.</Empty>
-                        )}
-                    </div>
+                            ))}
+                        </tbody>
+                    </table>
+                    {!report.recentOrders.length && (
+                        <Empty>Belum ada transaksi pada periode terpilih.</Empty>
+                    )}
                 </div>
             </section>
             <ReportDetails
                 report={report}
-                owner={owner}
+                owner={user.role === 'owner'}
             />
         </>
     );
