@@ -5,10 +5,152 @@ namespace App\Services;
 use App\Models\Branch;
 use App\Models\Product;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\DB;
 
 class ProductSales
 {
+    private const SUMS = 'COALESCE(SUM(sold_quantity), 0) AS sold_quantity,
+        COALESCE(SUM(refunded_quantity), 0) AS refunded_quantity,
+        COALESCE(SUM(sold_quantity - refunded_quantity), 0) AS quantity,
+        COALESCE(SUM(gross_amount), 0) AS gross_amount,
+        COALESCE(SUM(refund_amount), 0) AS refund_amount,
+        COALESCE(SUM(gross_amount - refund_amount), 0) AS amount';
+
+    /**
+     * @param array{
+     *     start: string,
+     *     end: string,
+     *     category_id?: int|string|null,
+     *     search?: string|null,
+     *     sort?: string
+     * } $filters
+     */
+    public function listing(array $filters, ?int $branchId): array
+    {
+        $query = $this->catalogQuery($filters, $branchId);
+        $totals = (array) DB::query()
+            ->fromSub((clone $query)->reorder(), 'menu_sales')
+            ->selectRaw('COUNT(*) AS menus, ' . self::SUMS)
+            ->first();
+        return [
+            'totals' => array_map(intval(...), $totals),
+            'products' => $query
+                ->paginate(25)
+                ->withQueryString()
+                ->through(fn($row) => $this->menuRow($row)),
+        ];
+    }
+
+    /**
+     * @param array{
+     *     start: string,
+     *     end: string,
+     *     category_id?: int|string|null,
+     *     search?: string|null,
+     *     sort?: string
+     * } $filters
+     */
+    public function export(array $filters, ?int $branchId): iterable
+    {
+        foreach ($this->catalogQuery($filters, $branchId)->cursor() as $row) {
+            yield $this->menuRow($row);
+        }
+    }
+
+    private function catalogQuery(array $filters, ?int $branchId): Builder
+    {
+        $aggregates = DB::query()
+            ->fromSub(
+                $this->facts($filters['start'], $filters['end'], $branchId),
+                'facts',
+            )
+            ->select('product_id')
+            ->selectRaw(self::SUMS)
+            ->groupBy('product_id');
+        $query = DB::table('products')
+            ->join('categories', 'categories.id', '=', 'products.category_id')
+            ->leftJoinSub($aggregates, 'sales', 'sales.product_id', '=', 'products.id')
+            ->select(
+                'products.id',
+                'products.name',
+                'products.sku',
+                'products.is_active',
+                'categories.name as category',
+            )
+            ->when(
+                $filters['category_id'] ?? null,
+                fn($query, $category) => $query->where('products.category_id', $category),
+            );
+        foreach (
+            [
+                'sold_quantity',
+                'refunded_quantity',
+                'quantity',
+                'gross_amount',
+                'refund_amount',
+                'amount',
+            ]
+            as $field
+        ) {
+            $query->selectRaw("COALESCE(sales.$field, 0) AS $field");
+        }
+        if (filled($filters['search'] ?? null)) {
+            $pattern =
+                '%' .
+                str_replace(
+                    ['!', '%', '_'],
+                    ['!!', '!%', '!_'],
+                    mb_strtolower(trim($filters['search'])),
+                ) .
+                '%';
+            $query->where(
+                fn($query) => $query
+                    ->whereRaw("LOWER(products.name) LIKE ? ESCAPE '!'", [$pattern])
+                    ->orWhereRaw("LOWER(products.sku) LIKE ? ESCAPE '!'", [$pattern])
+                    ->orWhereIn(
+                        'products.id',
+                        DB::table('order_items')
+                            ->select('product_id')
+                            ->whereRaw("LOWER(product_name_snapshot) LIKE ? ESCAPE '!'", [
+                                $pattern,
+                            ]),
+                    ),
+            );
+        }
+        match ($filters['sort'] ?? 'quantity_desc') {
+            'name_asc' => $query->orderBy('products.name'),
+            'amount_desc' => $query->orderByDesc('amount'),
+            default => $query->orderByDesc('quantity'),
+        };
+        return $query->orderBy('products.id');
+    }
+
+    private function menuRow(object $row): array
+    {
+        $result = [
+            'id' => (int) $row->id,
+            'name' => $row->name,
+            'sku' => $row->sku,
+            'category' => $row->category,
+            'is_active' => (bool) $row->is_active,
+        ];
+        foreach (
+            [
+                'sold_quantity',
+                'refunded_quantity',
+                'quantity',
+                'gross_amount',
+                'refund_amount',
+                'amount',
+            ]
+            as $field
+        ) {
+            $result[$field] = (int) $row->$field;
+        }
+        return $result;
+    }
+
     public function report(
         string $start,
         string $end,
@@ -61,40 +203,16 @@ class ProductSales
         $ids = $matches->modelKeys();
         $from = CarbonImmutable::parse($start)->startOfDay();
         $until = CarbonImmutable::parse($end)->endOfDay();
-        $sales = DB::table('order_items')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->whereIn('order_items.product_id', $ids)
-            ->whereBetween('orders.completed_at', [$from, $until])
-            ->when($branchId, fn($query) => $query->where('orders.branch_id', $branchId))
-            ->selectRaw('order_items.product_id, orders.branch_id, DATE(orders.completed_at) AS day,
-                quantity AS sold_quantity, 0 AS refunded_quantity,
-                total_price AS gross_amount, 0 AS refund_amount');
-        $refunds = DB::table('order_items')
-            ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->join('refunds', 'refunds.order_id', '=', 'orders.id')
-            ->where('refunds.status', 'approved')
-            ->whereIn('order_items.product_id', $ids)
-            ->whereBetween('refunds.processed_at', [$from, $until])
-            ->when($branchId, fn($query) => $query->where('orders.branch_id', $branchId))
-            ->selectRaw('order_items.product_id, orders.branch_id, DATE(refunds.processed_at) AS day,
-                0 AS sold_quantity, quantity AS refunded_quantity,
-                0 AS gross_amount, total_price AS refund_amount');
-        $facts = $sales->unionAll($refunds);
-        $sums = 'COALESCE(SUM(sold_quantity), 0) AS sold_quantity,
-            COALESCE(SUM(refunded_quantity), 0) AS refunded_quantity,
-            COALESCE(SUM(sold_quantity - refunded_quantity), 0) AS quantity,
-            COALESCE(SUM(gross_amount), 0) AS gross_amount,
-            COALESCE(SUM(refund_amount), 0) AS refund_amount,
-            COALESCE(SUM(gross_amount - refund_amount), 0) AS amount';
+        $facts = $this->facts($start, $end, $branchId, $ids);
         $totals = (array) DB::query()
             ->fromSub(clone $facts, 'product_facts')
-            ->selectRaw($sums)
+            ->selectRaw(self::SUMS)
             ->first();
         $totals = array_map(intval(...), $totals);
         $query = DB::query()
             ->fromSub($facts, 'product_facts')
             ->select('product_id')
-            ->selectRaw($sums)
+            ->selectRaw(self::SUMS)
             ->groupBy('product_id');
         if ($group === 'branch') {
             $query->addSelect('branch_id')->groupBy('branch_id');
@@ -193,6 +311,41 @@ class ProductSales
             ];
         }
         return $report;
+    }
+
+    private function facts(
+        string $start,
+        string $end,
+        ?int $branchId,
+        ?array $ids = null,
+    ): Builder {
+        $from = CarbonImmutable::parse($start)->startOfDay();
+        $until = CarbonImmutable::parse($end)->endOfDay();
+        $sales = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->when(
+                $ids !== null,
+                fn($query) => $query->whereIn('order_items.product_id', $ids),
+            )
+            ->whereBetween('orders.completed_at', [$from, $until])
+            ->when($branchId, fn($query) => $query->where('orders.branch_id', $branchId))
+            ->selectRaw('order_items.product_id, orders.branch_id, DATE(orders.completed_at) AS day,
+                quantity AS sold_quantity, 0 AS refunded_quantity,
+                total_price AS gross_amount, 0 AS refund_amount');
+        $refunds = DB::table('order_items')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->join('refunds', 'refunds.order_id', '=', 'orders.id')
+            ->where('refunds.status', 'approved')
+            ->when(
+                $ids !== null,
+                fn($query) => $query->whereIn('order_items.product_id', $ids),
+            )
+            ->whereBetween('refunds.processed_at', [$from, $until])
+            ->when($branchId, fn($query) => $query->where('orders.branch_id', $branchId))
+            ->selectRaw('order_items.product_id, orders.branch_id, DATE(refunds.processed_at) AS day,
+                0 AS sold_quantity, quantity AS refunded_quantity,
+                0 AS gross_amount, total_price AS refund_amount');
+        return $sales->unionAll($refunds);
     }
 
     private function rowKey(array $row, int $shiftDays = 0): string

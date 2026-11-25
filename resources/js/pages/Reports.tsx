@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Empty, PageTitle, Status } from '../components/common';
 import { ReportDetails } from '../components/report-details';
 import { ReportSummary } from '../components/financial-summary';
+import { ReportTabs } from '../components/report-tabs';
 import { date, labels, money, number, type Row, type Shared } from '../lib/utils';
 
 export default function Reports({
@@ -80,6 +81,14 @@ export default function Reports({
                         </div>
                     </>
                 }
+            />
+            <ReportTabs
+                active="summary"
+                filters={{
+                    start: filters.start,
+                    end: filters.end,
+                    branch_id: filters.branch_id,
+                }}
             />
             <form
                 id="report-filters"
@@ -203,6 +212,14 @@ export default function Reports({
                             Menu terlaris akan muncul setelah transaksi tercatat.
                         </Empty>
                     )}
+                    <div className="panel-footer">
+                        <Link
+                            href={`/reports/products?${new URLSearchParams({ start: filters.start, end: filters.end, branch_id: String(filters.branch_id ?? '') }).toString()}`}
+                            className="text-link"
+                        >
+                            Lihat semua penjualan menu
+                        </Link>
+                    </div>
                 </section>
                 <section className="panel stock-panel">
                     <div className="panel-header">

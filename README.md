@@ -81,6 +81,8 @@ Development demo password: `VeltrixDemo2026!`. Jakarta and Bogor manager/cashier
 
 ## Available workflows
 
+The business reports screen has Summary and Menu sales tabs. Menu sales lists the complete catalog with pagination, including inactive and zero-sale products. Filter by date, authorized branch, category, or product name/SKU; sort by net quantity, net sales, or name. Expand a menu for its branch breakdown. Summary figures cover the entire filtered result, and CSV exports include all matching pages. Managers can access only their assigned branch. Product figures share the same underlying sales/refund aggregation as the AI tools; approved refunds are recognized on their processing date.
+
 - Login, logout, password recovery, profiles, account activation, role and branch assignment, and change auditing.
 - Branches, users, categories, products, branch-specific pricing and availability, and price change approvals.
 - POS search and categories, cart quantities, manually recorded payments, tendered cash and change, cashier shifts, transaction history, printable receipts, and full refund requests and approvals.

@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\IntelligenceController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProductSalesController;
 use App\Http\Controllers\ResourceController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,6 +21,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [DashboardController::class, 'index']);
     Route::get('/reports/export', [DashboardController::class, 'export']);
     Route::get('/reports/pdf', [DashboardController::class, 'pdf']);
+    Route::get('/reports/products', [ProductSalesController::class, 'index']);
+    Route::get('/reports/products/export', [ProductSalesController::class, 'export']);
     Route::get('/alerts', [DashboardController::class, 'alerts']);
     Route::get('/pos', [PosController::class, 'index'])->name('pos');
     Route::post('/pos/checkout', [PosController::class, 'checkout'])->middleware(

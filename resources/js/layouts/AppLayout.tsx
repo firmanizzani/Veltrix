@@ -126,6 +126,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         .filter((group) => group.items.length);
     const isItemActive = (href: string) =>
         currentPath === href ||
+        (href === '/reports' && currentPath.startsWith('/reports/')) ||
         (href === '/manage/orders' && currentPath.startsWith('/orders/'));
     const activeGroup = visibleGroups.find(
         (group) =>

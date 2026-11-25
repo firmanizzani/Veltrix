@@ -1,0 +1,195 @@
+.report-tabs {
+    display: flex;
+    gap: 28px;
+    border-bottom: 1px solid #dfe6e1;
+    margin-bottom: 24px;
+}
+.report-tabs a {
+    padding: 12px 0;
+    color: #62736b;
+    border-bottom: 2px solid transparent;
+    font-size: 14px;
+}
+.report-tabs a[aria-current='page'] {
+    color: #173f32;
+    border-bottom-color: #166348;
+    font-weight: 600;
+}
+.menu-sales-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.menu-sales-filters label {
+    display: grid;
+    gap: 7px;
+    font-size: 12px;
+    color: #62736b;
+    flex: 1 1 150px;
+    min-width: 0;
+}
+.menu-sales-filters input,
+.menu-sales-filters select {
+    width: 100%;
+    min-width: 0;
+    font-size: 13px;
+}
+.menu-sales-filters .menu-sales-search {
+    flex-basis: 200px;
+}
+.menu-sales-filters label:last-of-type {
+    flex-basis: 190px;
+}
+.menu-sales-filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.menu-sales-totals {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(180px, 1.6fr);
+    gap: 24px;
+    padding-block: 24px;
+    margin-bottom: 30px;
+    border-block: 1px solid #dfe6e1;
+}
+.menu-sales-totals dt {
+    color: #62736b;
+    font-size: 12px;
+}
+.menu-sales-totals dd {
+    margin-top: 8px;
+    color: #173f32;
+    font-size: 24px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.menu-sales-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+}
+.menu-sales-heading h2 {
+    font-size: 20px;
+    font-weight: 600;
+}
+.menu-sales-heading p,
+.menu-sales-heading > span,
+.menu-sales-note {
+    font-size: 12px;
+    color: #62736b;
+    line-height: 1.7;
+}
+.menu-sales-heading p {
+    margin-top: 6px;
+}
+.menu-sales-note {
+    margin: 12px 0 20px;
+}
+.menu-sales-table {
+    min-width: 750px;
+}
+.menu-sales-table th {
+    white-space: nowrap;
+}
+.menu-sales-product-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #166348;
+    font-weight: 550;
+    min-height: 30px;
+}
+.menu-sales-product-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+.menu-sales-table td > small {
+    display: block;
+    color: #62736b;
+    font-size: 11px;
+}
+.menu-sales-selected {
+    background: #f5f8f5;
+}
+.menu-sales-detail > td {
+    padding: 0 16px 20px;
+    background: #f5f8f5;
+}
+.menu-sales-detail > td > div {
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #dfe6e1;
+    border-radius: 6px;
+}
+.menu-sales-detail h3 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+.menu-sales-detail table {
+    min-width: 590px;
+}
+.menu-sales-detail p {
+    font-size: 12px;
+    color: #62736b;
+    margin-top: 12px;
+}
+.menu-sales-pagination {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: center;
+    font-size: 12px;
+    color: #62736b;
+    margin-top: 20px;
+}
+.menu-sales-pagination nav {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.menu-sales-pagination a {
+    color: #166348;
+    padding-block: 10px;
+}
+@media (max-width: 1000px) {
+    .menu-sales-totals {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+    .menu-sales-totals > div:last-child {
+        grid-column: 1 / -1;
+    }
+}
+@media (max-width: 600px) {
+    .report-tabs {
+        gap: 24px;
+    }
+    .menu-sales-filters label {
+        flex-basis: calc(50% - 14px);
+    }
+    .menu-sales-filters .menu-sales-search {
+        flex-basis: 100%;
+    }
+    .menu-sales-filters input,
+    .menu-sales-filters select {
+        min-height: 44px;
+    }
+    .menu-sales-totals dd {
+        font-size: 22px;
+    }
+    .menu-sales-pagination {
+        align-items: start;
+        flex-direction: column;
+    }
+    .menu-sales-pagination nav {
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 12px;
+    }
+}

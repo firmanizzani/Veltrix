@@ -180,6 +180,14 @@ export default function Dashboard({
                             Menu terlaris akan muncul setelah transaksi tercatat.
                         </Empty>
                     )}
+                    <div className="panel-footer">
+                        <Link
+                            href={`/reports/products?${new URLSearchParams({ start: filters.start, end: filters.end, branch_id: String(filters.branch_id ?? '') }).toString()}`}
+                            className="text-link"
+                        >
+                            Lihat semua penjualan menu
+                        </Link>
+                    </div>
                 </section>
                 <section className="panel stock-panel">
                     <div className="panel-header">

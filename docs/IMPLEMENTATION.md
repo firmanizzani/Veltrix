@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 22 November 2026. This document records implemented behavior and explicit
+Updated: 26 November 2026. This document records implemented behavior and explicit
 boundaries against build.md and prd.md.
 
 ## Operational application
@@ -17,7 +17,7 @@ boundaries against build.md and prd.md.
 | People | Employees separate from accounts, branch assignments, daily schedules, monthly payroll components, approval, payment recording and payslips. |
 | Expenses | Categories, branch, private documents, approval/rejection, audit, and date/category/branch filters. |
 | Analytics | Gross/net sales, refunds, count, average order value, net units, COGS, gross/operating profit, expenses, payroll and active branches. |
-| Reports | Daily/hourly trends, top products, payment composition, branch revenue/units/average/profit/growth, expense categories, current stock valuation, movement counts, CSV and PDF. |
+| Reports | Summary and complete menu-sales tabs; date, branch, category and name/SKU filters; zero-sale and inactive menu inclusion; per-menu branch details; complete filtered CSV; daily/hourly trends, payment composition, branch comparisons, expense categories, stock valuation, CSV and PDF summaries. |
 | Interface | Grouped navigation for each role, desktop/tablet/mobile layouts, validation and loading/empty/error states. |
 
 ## Integrity and access
