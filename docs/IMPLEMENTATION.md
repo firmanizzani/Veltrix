@@ -59,12 +59,21 @@ boundaries against build.md and prd.md.
 - The demo seeder runs only in local/testing and refuses existing users/products.
   Reports query persisted records, not hardcoded frontend numbers.
 
-## Deferred by the user
+## Business intelligence
 
-Gemini integration remains deferred. The Laravel AI SDK, authorized AI tool
-calling, stored chat, API usage monitoring, generated insights and AI evaluation
-are not implemented. Intelligence discloses this status. Core operations remain
-independent of an AI provider.
+The owner workspace uses Laravel AI SDK 1.4 with Gemini, approved aggregate
+analytics tools, stored conversations, supporting evidence, and per-answer token
+usage. Rate limits and a daily allowance bound requests, including failed attempts.
+Requests are processed through a database queue with explicit unavailable, pending,
+failed, and expired states. Credentials remain server-side. No arbitrary SQL or
+operational mutation tools are available to the model.
+
+Daily deterministic analysis compares complete seven-day periods, enforces minimum
+transaction counts, detects sales and product changes, expense increases, branch
+differences, and current stock risk. Stock coverage uses recorded recipe usage and
+states its assumptions. Findings retain evidence and review status, are deduplicated,
+and notify owners. Optional Gemini explanations use the same chat budget. Core
+operations and rule-based insights remain independent of Gemini availability.
 
 ## Deployment boundary
 
@@ -72,7 +81,7 @@ Local build and verification are complete for the implemented operational scope.
 Public hosting, production SMTP, managed worker/scheduler installation, backup
 retention, production-like restore rehearsal, load testing and uptime monitoring
 have not been performed. README.md contains setup and deployment instructions.
-This is not a claim of production availability or acceptance of deferred AI scope.
+This is not a claim of production availability or of independently audited AI accuracy.
 
 ## Verification
 

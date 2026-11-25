@@ -1,10 +1,10 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IntelligenceController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ResourceController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -40,9 +40,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit']);
     Route::put('/profile', [ProfileController::class, 'update']);
     Route::put('/profile/password', [ProfileController::class, 'password']);
-    Route::get('/intelligence', function (Request $request) {
-        abort_unless($request->user()->isOwner(), 403);
-
-        return Inertia::render('Intelligence');
-    });
+    Route::get('/intelligence', [IntelligenceController::class, 'index']);
+    Route::post('/intelligence/messages', [
+        IntelligenceController::class,
+        'message',
+    ])->middleware('throttle:business-chat');
+    Route::post('/intelligence/generate', [
+        IntelligenceController::class,
+        'generate',
+    ])->middleware('throttle:business-insights');
+    Route::patch('/intelligence/insights/{insight}', [
+        IntelligenceController::class,
+        'status',
+    ]);
+    Route::post('/intelligence/insights/{insight}/explain', [
+        IntelligenceController::class,
+        'explain',
+    ])->middleware('throttle:business-chat');
 });
