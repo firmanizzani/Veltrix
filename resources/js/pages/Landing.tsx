@@ -103,11 +103,22 @@ export default function Landing() {
         : '/login';
     const action = auth.user ? 'Buka ruang kerja' : 'Masuk ke VELTRIX';
     const [navigationOpen, setNavigationOpen] = useState(false);
+    const [navigationScrolled, setNavigationScrolled] = useState(false);
     const [role, setRole] = useState(0);
     const page = useRef<HTMLDivElement>(null);
     const menuButton = useRef<HTMLButtonElement>(null);
     const roleButtons = useRef<(HTMLButtonElement | null)[]>([]);
     const currentRole = roles[role];
+
+    useEffect(() => {
+        function updateNavigation() {
+            setNavigationScrolled(window.scrollY > 32);
+        }
+
+        updateNavigation();
+        window.addEventListener('scroll', updateNavigation, { passive: true });
+        return () => window.removeEventListener('scroll', updateNavigation);
+    }, []);
 
     useEffect(() => {
         const target = window.location.hash.slice(1);
@@ -158,6 +169,7 @@ export default function Landing() {
 
     return (
         <div
+            id="home"
             className="landing"
             ref={page}
         >
@@ -177,7 +189,7 @@ export default function Landing() {
                 Lewati ke konten
             </a>
             <header
-                className="landing-header"
+                className={`landing-header${navigationScrolled ? ' landing-header-scrolled' : ''}`}
                 onKeyDown={(event) => {
                     if (event.key === 'Escape' && navigationOpen) {
                         setNavigationOpen(false);
@@ -185,55 +197,59 @@ export default function Landing() {
                     }
                 }}
             >
-                <Brand />
-                <nav
-                    className="landing-navigation"
-                    aria-label="Navigasi halaman publik"
-                >
-                    <a href="#alur">Fitur</a>
-                    <a href="#peran">Untuk tim Anda</a>
-                    <a href="#pertanyaan">Pertanyaan umum</a>
-                </nav>
-                <Link
-                    className="landing-login"
-                    href={destination}
-                >
-                    {auth.user ? 'Ruang kerja' : 'Masuk'}
-                    <ArrowUpRight size={17} />
-                </Link>
-                <button
-                    ref={menuButton}
-                    className="landing-menu-toggle"
-                    aria-label={navigationOpen ? 'Tutup menu' : 'Buka menu'}
-                    aria-expanded={navigationOpen}
-                    aria-controls="landing-mobile-menu"
-                    onClick={() => setNavigationOpen(!navigationOpen)}
-                >
-                    {navigationOpen ? <X size={22} /> : <Menu size={22} />}
-                </button>
-                <nav
-                    id="landing-mobile-menu"
-                    className="landing-mobile-navigation"
-                    hidden={!navigationOpen}
-                    aria-label="Menu halaman publik"
-                >
-                    {[
-                        ['Cara kerja', '#alur'],
-                        ['Untuk tim Anda', '#peran'],
-                        ['Pertanyaan umum', '#pertanyaan'],
-                    ].map(([label, href]) => (
-                        <a
-                            key={href}
-                            href={href}
-                            onClick={() => {
-                                setNavigationOpen(false);
-                                menuButton.current?.focus();
-                            }}
-                        >
-                            {label}
-                        </a>
-                    ))}
-                </nav>
+                <div className="landing-navbar">
+                    <Brand />
+                    <nav
+                        className="landing-navigation"
+                        aria-label="Navigasi halaman publik"
+                    >
+                        <a href="#home">Home</a>
+                        <a href="#alur">Fitur</a>
+                        <a href="#peran">Untuk tim Anda</a>
+                        <a href="#pertanyaan">Pertanyaan umum</a>
+                    </nav>
+                    <Link
+                        className="landing-login"
+                        href={destination}
+                    >
+                        {auth.user ? 'Ruang kerja' : 'Masuk'}
+                        <ArrowUpRight size={17} />
+                    </Link>
+                    <button
+                        ref={menuButton}
+                        className="landing-menu-toggle"
+                        aria-label={navigationOpen ? 'Tutup menu' : 'Buka menu'}
+                        aria-expanded={navigationOpen}
+                        aria-controls="landing-mobile-menu"
+                        onClick={() => setNavigationOpen(!navigationOpen)}
+                    >
+                        {navigationOpen ? <X size={22} /> : <Menu size={22} />}
+                    </button>
+                    <nav
+                        id="landing-mobile-menu"
+                        className="landing-mobile-navigation"
+                        hidden={!navigationOpen}
+                        aria-label="Menu halaman publik"
+                    >
+                        {[
+                            ['Home', '#home'],
+                            ['Fitur', '#alur'],
+                            ['Untuk tim Anda', '#peran'],
+                            ['Pertanyaan umum', '#pertanyaan'],
+                        ].map(([label, href]) => (
+                            <a
+                                key={href}
+                                href={href}
+                                onClick={() => {
+                                    setNavigationOpen(false);
+                                    menuButton.current?.focus();
+                                }}
+                            >
+                                {label}
+                            </a>
+                        ))}
+                    </nav>
+                </div>
             </header>
 
             <main id="landing-content">

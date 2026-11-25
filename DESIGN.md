@@ -216,6 +216,8 @@ The hero direction was calibrated against Square's coffee-shop product page and 
 
 Primary actions lead to login for guests and the workspace for authenticated users. Accounts remain assigned by the business, with no public registration. Direct section links are restored after the client mounts. The header disclosure supports Escape, the role selector supports arrow/Home/End keys, and reduced motion disables decoration. Landing styles stay isolated from operational screens.
 
+The public navbar blends into the forest hero at the top. After 32px of scrolling it becomes an inset light rectangle with 12px corners. Its outer height stays constant to prevent layout jumps. Home returns to the page top on desktop and mobile; choosing a mobile link closes the disclosure.
+
 ## Do's and Don'ts
 
 - Do reuse the shared tokens and existing components before introducing variants.
