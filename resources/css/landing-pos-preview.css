@@ -33,8 +33,9 @@
 }
 .pos-preview-body {
     display: grid;
-    grid-template-columns: 144px minmax(0, 1fr) 224px;
-    min-height: 458px;
+    grid-template-columns: 128px minmax(0, 1fr) 200px;
+    gap: 8px;
+    min-height: 420px;
 }
 .pos-preview-sidebar {
     display: flex;
@@ -66,7 +67,7 @@
 .pos-preview-catalog {
     min-width: 0;
     padding: 16px;
-    border-radius: 10px 0 0 10px;
+    border-radius: 10px;
     background: #fff;
 }
 .landing .landing-pos-preview h2 {
@@ -159,10 +160,10 @@
 .pos-preview-order {
     display: flex;
     flex-direction: column;
+    align-self: start;
     min-width: 0;
     padding: 20px 14px 14px;
-    border-left: 1px solid #e7ebe4;
-    border-radius: 0 10px 10px 0;
+    border-radius: 10px;
     background: #fff;
 }
 .landing .landing-pos-preview h3 {
@@ -179,8 +180,10 @@
     padding: 2px 5px;
     font-size: 10px;
 }
-.pos-preview-lines {
-    flex: 1;
+.pos-preview-checkout {
+    margin-top: 8px;
+    padding-top: 18px;
+    border-top: 1px solid #e7ebe4;
 }
 .pos-preview-line {
     display: grid;

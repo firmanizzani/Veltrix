@@ -283,34 +283,32 @@ export default function Landing() {
                                     Jelajahi fitur
                                 </a>
                             </div>
-                            <span className="landing-access-note">
-                                Masuk dengan akun dari pengelola kedai.
-                            </span>
                         </div>
                         <LandingPosPreview />
                     </div>
-                    <figure
-                        className="landing-cafe-atmosphere"
-                        aria-hidden="true"
-                    >
-                        <img
-                            src="/images/landing/coffee-craft.jpg"
-                            alt=""
-                            width={1122}
-                            height={1402}
-                        />
-                    </figure>
                 </section>
                 <section
                     id="alur"
                     className="landing-flow landing-section"
                 >
                     <div className="landing-flow-intro">
-                        <h2 data-reveal>Dari pesanan hingga laporan</h2>
-                        <p data-reveal>
-                            Satu pesanan tidak berhenti di struk. Bahan ikut terhitung,
-                            persediaan terpantau, dan penjualan bisa ditelusuri.
-                        </p>
+                        <figure className="landing-cafe-atmosphere">
+                            <img
+                                src="/images/landing/coffee-craft.jpg"
+                                alt="Barista menuangkan susu untuk membuat latte art"
+                                width={1122}
+                                height={1402}
+                                loading="lazy"
+                            />
+                        </figure>
+                        <div className="landing-flow-copy">
+                            <h2 data-reveal>Dari pesanan hingga laporan</h2>
+                            <p data-reveal>
+                                Satu pesanan tidak berhenti di struk. Bahan ikut
+                                terhitung, persediaan terpantau, dan penjualan bisa
+                                ditelusuri.
+                            </p>
+                        </div>
                     </div>
                     <div className="landing-process-list">
                         <div data-reveal>
