@@ -166,6 +166,17 @@
     background: #eef4ef;
     border-radius: 8px;
 }
+.intelligence-scope-note {
+    padding: 12px 24px 0;
+    color: #62736b;
+    font-size: 12px;
+    line-height: 1.6;
+}
+.intelligence-message > .intelligence-message-scope {
+    font-size: 12px;
+    color: #62736b;
+    margin-bottom: 8px;
+}
 .intelligence-composer {
     padding: 20px 24px;
     border-top: 1px solid #e5ebe7;

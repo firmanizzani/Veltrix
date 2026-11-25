@@ -27,6 +27,7 @@ class AnswerBusinessQuestion implements ShouldQueue
             return;
         }
         $thread = $message->thread;
+        $scope = $message->scope ?? $thread->only('start', 'end', 'branch_id');
         $user = User::find($thread->user_id);
         if (
             !$user ||
@@ -39,13 +40,6 @@ class AnswerBusinessQuestion implements ShouldQueue
             return;
         }
         try {
-            $tool = new BusinessAnalyticsTool(
-                $user,
-                $thread->start,
-                $thread->end,
-                $thread->branch_id,
-            );
-            $snapshot = $tool->read(['metric' => 'summary']);
             $history = $thread
                 ->messages()
                 ->where('id', '<', $message->id)
@@ -56,15 +50,40 @@ class AnswerBusinessQuestion implements ShouldQueue
                 ->reverse()
                 ->values();
             $question = $history->pop();
+            $periodPattern =
+                '/\b(?:hari|sehari|minggu|seminggu|pekan|bulan|sebulan|tahun|setahun|' .
+                'kemarin|senin|selasa|rabu|kamis|jumat|sabtu|januari|februari|maret|april|mei|' .
+                'juni|juli|agustus|september|oktober|november|desember|jan|feb|mar|apr|jun|jul|' .
+                'agu|sep|okt|nov|des|today|yesterday|week|month|year)\b|' .
+                '\d{4}-\d{2}-\d{2}|\b\d{1,2}[\/\-]\d{1,2}\b|\btanggal\s+\d{1,2}\b/iu';
+            $explicitPeriod = preg_match($periodPattern, $question->content) === 1;
+            $tool = new BusinessAnalyticsTool(
+                $user,
+                $scope['start'],
+                $scope['end'],
+                $scope['branch_id'],
+                lockPeriod: !$explicitPeriod,
+            );
+            $snapshot = $tool->read(['metric' => 'summary']);
             $agent = new BusinessAssistant(
                 $tool,
                 $history
-                    ->map(fn($row) => ['role' => $row->role, 'content' => $row->content])
+                    ->map(
+                        fn($row) => [
+                            'role' => $row->role,
+                            'content' => $row->content,
+                            'scope' => $row->scope,
+                        ],
+                    )
                     ->all(),
                 $snapshot,
             );
             $response = $agent->prompt(
-                $question->content,
+                'Cakupan pilihan untuk pertanyaan INI: ' .
+                    json_encode($scope, JSON_THROW_ON_ERROR) .
+                    '. Gunakan cakupan ini kecuali pertanyaan pengguna secara eksplisit menyebut tanggal atau periode lain.' .
+                    "\nPertanyaan pengguna: " .
+                    $question->content,
                 provider: 'gemini',
                 model: config('intelligence.model'),
                 timeout: config('intelligence.timeout'),

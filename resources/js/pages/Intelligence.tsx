@@ -12,6 +12,15 @@ type Evidence = {
     branch: string;
     data: Record<string, unknown> | Record<string, unknown>[];
     notes: string;
+    totals?: Record<string, unknown> | null;
+    truncated?: boolean;
+    comparison?: {
+        period: { start: string; end: string };
+        totals: Record<string, unknown>;
+        changes: Record<string, unknown>;
+        rows: Record<string, unknown>[];
+        complete: boolean;
+    };
 };
 type Message = {
     id: number;
@@ -19,6 +28,7 @@ type Message = {
     content: string | null;
     status: 'pending' | 'completed' | 'failed';
     evidence: Evidence[] | null;
+    scope?: { start: string; end: string; branch: string } | null;
 };
 type Thread = {
     id: number;
@@ -72,6 +82,19 @@ const evidenceLabels: Record<string, string> = {
     recommendation: 'Saran pemeriksaan',
     name: 'Nama',
     quantity: 'Jumlah',
+    product_name: 'Produk',
+    sku: 'SKU',
+    sold_quantity: 'Unit terjual',
+    refunded_quantity: 'Unit direfund',
+    gross_amount: 'Penjualan sebelum refund',
+    refund_amount: 'Nilai refund',
+    previous_quantity: 'Jumlah periode pembanding',
+    quantity_change: 'Perubahan jumlah',
+    quantity_change_percent: 'Perubahan jumlah (%)',
+    percentage_note: 'Batas perhitungan persentase',
+    previous_amount: 'Penjualan periode pembanding',
+    amount_change: 'Perubahan penjualan',
+    amount_change_percent: 'Perubahan penjualan (%)',
     amount: 'Nilai',
     branch: 'Cabang',
     ingredient: 'Bahan',
@@ -99,6 +122,10 @@ const currencyFields = new Set([
     'profit',
     'amount',
     'value',
+    'gross_amount',
+    'refund_amount',
+    'previous_amount',
+    'amount_change',
 ]);
 function EvidenceRows({ data }: { data: Record<string, unknown> }) {
     return (
@@ -177,6 +204,40 @@ function MessageEvidence({ sources }: { sources: Evidence[] }) {
                         ))
                     ) : (
                         <EvidenceRows data={source.data} />
+                    )}
+                    {Array.isArray(source.data) && source.data.length > 8 && (
+                        <p>
+                            Menampilkan 8 dari {source.data.length} rincian pada bukti
+                            ini.
+                        </p>
+                    )}
+                    {source.totals && (
+                        <>
+                            <h4>Total seluruh hasil yang cocok</h4>
+                            <EvidenceRows data={source.totals} />
+                        </>
+                    )}
+                    {source.comparison && (
+                        <>
+                            <h4>
+                                Pembanding: {source.comparison.period.start} —{' '}
+                                {source.comparison.period.end}
+                            </h4>
+                            <EvidenceRows data={source.comparison.totals} />
+                            <EvidenceRows data={source.comparison.changes} />
+                            {source.comparison.rows.slice(0, 8).map((row, rowIndex) => (
+                                <EvidenceRows
+                                    key={rowIndex}
+                                    data={row}
+                                />
+                            ))}
+                        </>
+                    )}
+                    {source.truncated && (
+                        <p>
+                            Rincian dibatasi. Persempit produk atau periode untuk
+                            memeriksa keseluruhan rincian.
+                        </p>
                     )}
                     <p>{source.notes}</p>
                 </section>
@@ -311,7 +372,7 @@ export default function Intelligence({
                                 Cabang
                                 <select
                                     value={form.data.branch_id}
-                                    disabled={!!conversation}
+                                    disabled={pending || form.processing}
                                     onChange={(event) =>
                                         form.setData(
                                             'branch_id',
@@ -338,9 +399,9 @@ export default function Intelligence({
                                     type="date"
                                     value={form.data.start}
                                     max={form.data.end}
-                                    disabled={!!conversation}
-                                    onChange={(event) =>
-                                        form.setData('start', event.target.value)
+                                    disabled={pending || form.processing}
+                                    onInput={(event) =>
+                                        form.setData('start', event.currentTarget.value)
                                     }
                                 />
                             </label>
@@ -351,13 +412,17 @@ export default function Intelligence({
                                     value={form.data.end}
                                     min={form.data.start}
                                     max={today}
-                                    disabled={!!conversation}
-                                    onChange={(event) =>
-                                        form.setData('end', event.target.value)
+                                    disabled={pending || form.processing}
+                                    onInput={(event) =>
+                                        form.setData('end', event.currentTarget.value)
                                     }
                                 />
                             </label>
                         </header>
+                        <p className="intelligence-scope-note">
+                            Tanggal dan cabang berlaku untuk pertanyaan berikutnya.
+                            Jawaban lama tetap memakai cakupan asalnya.
+                        </p>
                         {!available && (
                             <p
                                 className="intelligence-notice"
@@ -411,6 +476,12 @@ export default function Intelligence({
                                             ? 'Anda'
                                             : 'Asisten VELTRIX'}
                                     </h3>
+                                    {message.role === 'user' && message.scope && (
+                                        <p className="intelligence-message-scope">
+                                            {message.scope.branch} · {message.scope.start}{' '}
+                                            — {message.scope.end}
+                                        </p>
+                                    )}
                                     {message.status === 'pending' ? (
                                         <p role="status">
                                             Sedang membaca data dan menyusun jawaban…

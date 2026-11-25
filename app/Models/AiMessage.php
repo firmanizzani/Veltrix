@@ -11,7 +11,7 @@ class AiMessage extends Model
 
     protected function casts(): array
     {
-        return ['evidence' => 'array'];
+        return ['evidence' => 'array', 'scope' => 'array'];
     }
 
     public function thread(): BelongsTo

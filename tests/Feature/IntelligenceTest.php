@@ -9,11 +9,16 @@ use App\Models\AiThread;
 use App\Models\Branch;
 use App\Models\BusinessInsight;
 use App\Models\CashierShift;
+use App\Models\Category;
 use App\Models\Expense;
 use App\Models\Ingredient;
 use App\Models\Inventory;
 use App\Models\InventoryMovement;
 use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\RecipeVersion;
+use App\Models\Refund;
 use App\Models\User;
 use App\Services\BusinessAnalyticsTool;
 use App\Services\BusinessAssistant;
@@ -68,6 +73,50 @@ class IntelligenceTest extends TestCase
             'start' => '2026-11-01',
             'end' => '2026-11-25',
         ];
+    }
+
+    private function product(string $name): Product
+    {
+        return Product::create([
+            'name' => $name,
+            'sku' => Str::upper(Str::random(12)),
+            'base_price' => 22000,
+            'category_id' => Category::firstOrCreate(['name' => 'Coffee'])->id,
+        ]);
+    }
+
+    private function productOrder(Product $product, int $quantity, string $date): Order
+    {
+        $order = $this->order($quantity * 22000, $date);
+        OrderItem::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_name_snapshot' => $product->name,
+            'recipe_version_id' => RecipeVersion::firstOrCreate([
+                'product_id' => $product->id,
+                'version' => 1,
+            ])->id,
+            'unit_price' => 22000,
+            'quantity' => $quantity,
+            'total_price' => 22000 * $quantity,
+            'cost_amount' => 2000,
+        ]);
+        return $order;
+    }
+
+    private function switchBranch(Branch $branch): void
+    {
+        $this->branch = $branch;
+        $this->cashier = User::factory()->create([
+            'role' => 'cashier',
+            'branch_id' => $branch->id,
+        ]);
+        $this->shift = CashierShift::create([
+            'branch_id' => $branch->id,
+            'cashier_id' => $this->cashier->id,
+            'opening_cash' => 0,
+            'opened_at' => now(),
+        ]);
     }
 
     private function order(int $amount, string $date): Order
@@ -388,5 +437,246 @@ class IntelligenceTest extends TestCase
         $this->assertCount(2, $comparison->evidence['branches']);
         $this->assertSame(300000, $comparison->evidence['branches'][0]['net']);
         $this->assertSame(50000, $comparison->evidence['branches'][1]['net']);
+    }
+
+    public function test_named_product_includes_every_branch_and_reconciles_with_total(): void
+    {
+        $product = $this->product('Matcha Latte');
+        $depok = $this->branch;
+        $this->productOrder($product, 3, '2026-11-20');
+        $bogor = Branch::create([
+            'code' => 'BGR',
+            'name' => 'Bogor',
+            'city' => 'Bogor',
+            'address' => 'Bogor',
+        ]);
+        $this->switchBranch($bogor);
+        $this->productOrder($product, 6, '2026-11-21');
+        Branch::create([
+            'code' => 'JKT',
+            'name' => 'Jakarta',
+            'city' => 'Jakarta',
+            'address' => 'Jakarta',
+        ]);
+        $tool = new BusinessAnalyticsTool($this->owner, '2026-11-01', '2026-11-25', null);
+        $result = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => '  MATCHA   LATTE ',
+            'group_by' => 'branch',
+        ]);
+        $this->assertSame('ok', $result['status']);
+        $this->assertCount(3, $result['data']);
+        $this->assertSame([3, 6, 0], array_column($result['data'], 'quantity'));
+        $this->assertSame(9, $result['totals']['quantity']);
+        $this->assertSame(198000, array_sum(array_column($result['data'], 'amount')));
+        $scoped = new BusinessAnalyticsTool(
+            $this->owner,
+            '2026-11-01',
+            '2026-11-25',
+            $depok->id,
+        );
+        $onlyDepok = $scoped->read([
+            'metric' => 'product_sales',
+            'product_id' => $product->id,
+            'group_by' => 'branch',
+        ]);
+        $this->assertCount(1, $onlyDepok['data']);
+        $this->assertSame(3, $onlyDepok['totals']['quantity']);
+    }
+
+    public function test_product_outside_top_five_is_still_found_and_unsold_is_distinct_from_unknown(): void
+    {
+        $matcha = $this->product('Matcha Latte');
+        $this->productOrder($matcha, 1, '2026-11-20');
+        for ($index = 0; $index < 6; $index++) {
+            $this->productOrder(
+                $this->product('Coffee ' . $index),
+                10 + $index,
+                '2026-11-20',
+            );
+        }
+        $tool = new BusinessAnalyticsTool($this->owner, '2026-11-01', '2026-11-25', null);
+        $top = $tool->read(['metric' => 'top_products']);
+        $this->assertNotContains($matcha->id, $top['data']->pluck('product_id')->all());
+        $result = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => 'Matcha Latte',
+        ]);
+        $this->assertSame(1, $result['totals']['quantity']);
+        $this->product('Unsold tea');
+        $zero = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => 'Unsold tea',
+        ]);
+        $this->assertSame('ok', $zero['status']);
+        $this->assertSame(0, $zero['totals']['quantity']);
+        $unknown = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => "%' OR 1=1 --",
+        ]);
+        $this->assertSame('product_not_found', $unknown['status']);
+        $this->assertNull($unknown['totals']);
+        $literal = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => 'Matcha%',
+        ]);
+        $this->assertSame('product_not_found', $literal['status']);
+        $matcha->update(['name' => 'Green bar special']);
+        $renamed = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => 'Matcha Latte',
+        ]);
+        $this->assertSame(1, $renamed['totals']['quantity']);
+        $this->assertSame('Green bar special', $renamed['data'][0]['product_name']);
+    }
+
+    public function test_product_daily_sales_subtract_refunds_by_processing_date_including_prior_sales(): void
+    {
+        $matcha = $this->product('Matcha Latte');
+        foreach (['2026-11-20' => 5, '2026-10-31' => 2] as $date => $quantity) {
+            $order = $this->productOrder($matcha, $quantity, $date);
+            Refund::create([
+                'order_id' => $order->id,
+                'requested_by' => $this->owner->id,
+                'approved_by' => $this->owner->id,
+                'amount' => $order->total_amount,
+                'reason' => 'Refund penuh',
+                'status' => 'approved',
+                'processed_at' => '2026-11-24 12:00:00',
+            ]);
+        }
+        $tool = new BusinessAnalyticsTool($this->owner, '2026-11-01', '2026-11-25', null);
+        $result = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => 'Matcha Latte',
+            'group_by' => 'day',
+        ]);
+        $this->assertCount(25, $result['data']);
+        $this->assertSame(5, $result['totals']['sold_quantity']);
+        $this->assertSame(7, $result['totals']['refunded_quantity']);
+        $this->assertSame(-2, $result['totals']['quantity']);
+        $this->assertSame(-44000, $result['totals']['amount']);
+        $this->assertSame(
+            5,
+            collect($result['data'])->firstWhere('date', '2026-11-20')['quantity'],
+        );
+        $this->assertSame(
+            -7,
+            collect($result['data'])->firstWhere('date', '2026-11-24')['quantity'],
+        );
+        $this->assertSame(
+            0,
+            collect($result['data'])->firstWhere('date', '2026-11-25')['quantity'],
+        );
+    }
+
+    public function test_product_comparison_returns_backend_changes_and_no_percentage_for_zero_baseline(): void
+    {
+        $matcha = $this->product('Matcha Latte');
+        $this->productOrder($matcha, 6, '2026-11-12');
+        $this->productOrder($matcha, 9, '2026-11-20');
+        $tool = new BusinessAnalyticsTool($this->owner, '2026-11-18', '2026-11-24', null);
+        $result = $tool->read([
+            'metric' => 'product_sales',
+            'product_query' => 'Matcha Latte',
+            'group_by' => 'branch',
+            'compare_previous' => true,
+        ]);
+        $this->assertSame(
+            ['start' => '2026-11-11', 'end' => '2026-11-17'],
+            $result['comparison']['period'],
+        );
+        $this->assertSame(6, $result['comparison']['totals']['quantity']);
+        $this->assertSame(3, $result['comparison']['changes']['quantity_change']);
+        $this->assertSame(
+            50.0,
+            $result['comparison']['changes']['quantity_change_percent'],
+        );
+        $this->assertSame(3, $result['comparison']['rows'][0]['quantity_change']);
+        $newProduct = $this->product('New tea');
+        $this->productOrder($newProduct, 2, '2026-11-20');
+        $zero = $tool->read([
+            'metric' => 'product_sales',
+            'product_id' => $newProduct->id,
+            'compare_previous' => true,
+        ]);
+        $this->assertNull($zero['comparison']['changes']['quantity_change_percent']);
+    }
+
+    public function test_scope_can_change_in_same_thread_without_rewriting_previous_answers(): void
+    {
+        $this->actingAs($this->owner)->post('/intelligence/messages', $this->question());
+        BusinessAssistant::fake(['Jawaban periode pertama.'])->preventStrayPrompts();
+        $first = AiMessage::where('role', 'assistant')->firstOrFail();
+        (new AnswerBusinessQuestion($first->id))->handle();
+        $oldEvidence = $first->fresh()->evidence;
+        $this->post(
+            '/intelligence/messages',
+            $this->question([
+                'thread_id' => $first->ai_thread_id,
+                'message' => 'Bagaimana pada periode ini?',
+                'start' => '2026-11-18',
+                'end' => '2026-11-24',
+                'branch_id' => $this->branch->id,
+            ]),
+        )->assertRedirect('/intelligence?thread=' . $first->ai_thread_id);
+        $second = AiMessage::where('status', 'pending')->firstOrFail();
+        $this->assertSame('2026-11-18', $second->scope['start']);
+        $this->assertSame($this->branch->id, $second->scope['branch_id']);
+        BusinessAssistant::fake(['Jawaban periode kedua.'])->preventStrayPrompts();
+        (new AnswerBusinessQuestion($second->id))->handle();
+        $this->assertSame('2026-11-18', $second->fresh()->evidence[0]['period']['start']);
+        $this->assertSame($this->branch->name, $second->fresh()->evidence[0]['branch']);
+        $this->assertSame($oldEvidence, $first->fresh()->evidence);
+        $this->assertSame('2026-11-01', $first->fresh()->scope['start']);
+        $this->assertDatabaseCount('ai_threads', 1);
+        $this->assertDatabaseCount('ai_messages', 4);
+    }
+
+    public function test_follow_up_cannot_silently_reuse_old_dates_but_explicit_date_requests_work(): void
+    {
+        $matcha = $this->product('Matcha Latte');
+        $this->productOrder($matcha, 5, '2026-11-12');
+        $this->productOrder($matcha, 2, '2026-11-20');
+        foreach (
+            [
+                [
+                    'question' =>
+                        'Pada periode yang baru dipilih, tiap cabangnya berapa?',
+                    'expected' => 2,
+                ],
+                [
+                    'question' => 'Berapa dari 2026-11-01 sampai 2026-11-25?',
+                    'expected' => 7,
+                ],
+            ]
+            as $case
+        ) {
+            $this->actingAs($this->owner)->post(
+                '/intelligence/messages',
+                $this->question([
+                    'start' => '2026-11-18',
+                    'end' => '2026-11-24',
+                    'message' => $case['question'],
+                ]),
+            );
+            BusinessAssistant::fake([
+                new ToolCall('product-call', 'business_analytics', [
+                    'metric' => 'product_sales',
+                    'product_query' => 'Matcha Latte',
+                    'group_by' => 'branch',
+                    'start' => '2026-11-01',
+                    'end' => '2026-11-25',
+                ]),
+                'Jawaban dari data produk.',
+            ])->preventStrayPrompts();
+            $answer = AiMessage::where('status', 'pending')->firstOrFail();
+            (new AnswerBusinessQuestion($answer->id))->handle();
+            $this->assertSame('completed', $answer->fresh()->status);
+            $this->assertSame(
+                $case['expected'],
+                $answer->fresh()->evidence[1]['totals']['quantity'],
+            );
+        }
     }
 }

@@ -68,6 +68,19 @@ Requests are processed through a database queue with explicit unavailable, pendi
 failed, and expired states. Credentials remain server-side. No arbitrary SQL or
 operational mutation tools are available to the model.
 
+Named-product analysis searches the catalog and historical product names instead
+of treating the top-five list as a complete catalog. It returns per-product,
+per-branch, or daily counts, including zeros and approved refunds processed during
+the requested period. Optional equal-duration comparisons calculate deltas in the
+backend; percentage changes remain unavailable for zero or negative baselines.
+Unknown products are distinguished from known products with no sales.
+
+Dates and branch selections can change within a conversation. Each new message
+captures its own scope; earlier answers and evidence remain unchanged. Implicit
+follow-ups use the current selection, while explicit date expressions can request
+another bounded period. The model is instructed to answer counts directly and to
+separate evidence from hypotheses when discussing possible causes.
+
 Daily deterministic analysis compares complete seven-day periods, enforces minimum
 transaction counts, detects sales and product changes, expense increases, branch
 differences, and current stock risk. Stock coverage uses recorded recipe usage and

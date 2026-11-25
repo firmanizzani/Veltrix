@@ -122,12 +122,25 @@ class IntelligenceController extends Controller
                     'message' => 'Tunggu jawaban sebelumnya selesai.',
                 ]);
             }
-            $thread
-                ->messages()
-                ->create(['role' => 'user', 'content' => trim($data['message'])]);
-            $answer = $thread
-                ->messages()
-                ->create(['role' => 'assistant', 'status' => 'pending']);
+            $scope = [
+                'start' => $data['start'],
+                'end' => $data['end'],
+                'branch_id' => $data['branch_id'] ?? null,
+                'branch' => !empty($data['branch_id'])
+                    ? Branch::findOrFail($data['branch_id'])->name
+                    : 'Seluruh cabang',
+            ];
+            $thread->update(collect($scope)->except('branch')->all());
+            $thread->messages()->create([
+                'role' => 'user',
+                'content' => trim($data['message']),
+                'scope' => $scope,
+            ]);
+            $answer = $thread->messages()->create([
+                'role' => 'assistant',
+                'status' => 'pending',
+                'scope' => $scope,
+            ]);
             $thread->touch();
             return [$thread, $answer];
         });
