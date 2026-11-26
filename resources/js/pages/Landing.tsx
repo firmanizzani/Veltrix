@@ -126,12 +126,21 @@ export default function Landing() {
             return;
         }
         const frame = requestAnimationFrame(() => {
-            document.getElementById(target)?.scrollIntoView({ block: 'start' });
+            document.getElementById(target)?.scrollIntoView({
+                block: 'start',
+                behavior: 'instant',
+            });
         });
         return () => cancelAnimationFrame(frame);
     }, []);
 
     useEffect(() => {
+        if (
+            !('IntersectionObserver' in window) ||
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ) {
+            return;
+        }
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
@@ -206,7 +215,7 @@ export default function Landing() {
                         <a href="#home">Home</a>
                         <a href="#alur">Fitur</a>
                         <a href="#peran">Untuk tim Anda</a>
-                        <a href="#pertanyaan">Pertanyaan umum</a>
+                        <a href="#pertanyaan">FAQ</a>
                     </nav>
                     <Link
                         className="landing-login"
@@ -235,7 +244,7 @@ export default function Landing() {
                             ['Home', '#home'],
                             ['Fitur', '#alur'],
                             ['Untuk tim Anda', '#peran'],
-                            ['Pertanyaan umum', '#pertanyaan'],
+                            ['FAQ', '#pertanyaan'],
                         ].map(([label, href]) => (
                             <a
                                 key={href}
@@ -368,6 +377,7 @@ export default function Landing() {
                             ))}
                         </div>
                         <div
+                            key={currentRole.name}
                             className="landing-role-content"
                             id="landing-role-content"
                             role="tabpanel"
@@ -442,7 +452,7 @@ export default function Landing() {
                     className="landing-faq"
                 >
                     <div>
-                        <h2 data-reveal>Pertanyaan umum</h2>
+                        <h2 data-reveal>FAQ</h2>
                         <p data-reveal>
                             Beberapa hal yang perlu Anda tahu tentang ruang kerja VELTRIX.
                         </p>

@@ -207,7 +207,7 @@ export function LandingPosPreview() {
                             aria-live="polite"
                         >
                             <span>Total</span>
-                            <strong>{money(total)}</strong>
+                            <strong key={total}>{money(total)}</strong>
                         </div>
                         <label className="pos-preview-payment">
                             <span className="sr-only">Metode pembayaran contoh</span>

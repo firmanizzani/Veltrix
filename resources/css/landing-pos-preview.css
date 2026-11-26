@@ -390,11 +390,53 @@
         line-height: 1.5;
     }
 }
+.pos-preview-line,
+.pos-preview-checkout > [role='status'] {
+    animation: pos-preview-confirm 220ms ease-out both;
+}
+.pos-preview-total strong {
+    display: inline-block;
+    animation: pos-preview-total-confirm 220ms ease-out;
+    font-variant-numeric: tabular-nums;
+}
+.pos-preview-quantity button,
+.pos-preview-receipt {
+    transition:
+        background-color 120ms ease-out,
+        transform 120ms ease-out;
+}
+.pos-preview-quantity button:active,
+.pos-preview-receipt:active:not(:disabled) {
+    transform: translateY(1px);
+}
+@keyframes pos-preview-confirm {
+    from {
+        opacity: 0.65;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes pos-preview-total-confirm {
+    from {
+        color: #166348;
+        transform: translateY(3px);
+    }
+    to {
+        transform: none;
+    }
+}
 @media (prefers-reduced-motion: reduce) {
     .pos-preview-product {
         transition: none;
     }
     .pos-preview-product:hover {
+        transform: none;
+    }
+    .pos-preview-quantity button:active,
+    .pos-preview-receipt:active:not(:disabled) {
         transform: none;
     }
 }
