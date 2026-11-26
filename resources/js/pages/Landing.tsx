@@ -150,7 +150,7 @@ export default function Landing() {
                     }
                 });
             },
-            { threshold: 0.12 },
+            { threshold: 0.08, rootMargin: '0px 0px -40px 0px' },
         );
         page.current
             ?.querySelectorAll('[data-reveal]')
@@ -301,7 +301,10 @@ export default function Landing() {
                     className="landing-flow landing-section"
                 >
                     <div className="landing-flow-intro">
-                        <figure className="landing-cafe-atmosphere">
+                        <figure
+                            className="landing-cafe-atmosphere"
+                            data-reveal="photo"
+                        >
                             <img
                                 src="/images/landing/coffee-craft.jpg"
                                 alt="Barista menuangkan susu untuk membuat latte art"
@@ -355,6 +358,7 @@ export default function Landing() {
                         </p>
                         <div
                             className="landing-role-tabs"
+                            data-reveal
                             role="tablist"
                             aria-label="Pilih peran tim"
                         >
@@ -459,7 +463,10 @@ export default function Landing() {
                     </div>
                     <div className="landing-faq-list">
                         {questions.map((entry) => (
-                            <details key={entry.question}>
+                            <details
+                                key={entry.question}
+                                data-reveal
+                            >
                                 <summary>
                                     {entry.question}
                                     <ChevronDown size={20} />
