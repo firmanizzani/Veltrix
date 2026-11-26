@@ -1,0 +1,136 @@
+.landing-product-preview {
+    min-width: 0;
+    margin: 0;
+}
+.landing-product-preview > img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+.landing-hero .landing-product-preview {
+    animation: landing-workspace-arrive 650ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-origin: center top;
+}
+.landing-ai-section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: 88px;
+}
+.landing-ai-section-copy > p {
+    max-width: 42ch;
+    margin-top: 24px;
+    color: var(--landing-muted);
+}
+.landing-ai-questions {
+    display: grid;
+    gap: 0;
+    margin-top: 28px;
+}
+.landing-ai-questions button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    min-height: 58px;
+    width: 100%;
+    padding: 16px 0;
+    border: 0;
+    border-bottom: 1px solid #dbe3d6;
+    background: transparent;
+    color: #63735b;
+    font-size: 15px;
+    line-height: 1.5;
+    text-align: left;
+}
+.landing-ai-questions button[aria-pressed='true'] {
+    color: #234c30;
+    font-weight: 600;
+}
+.landing-ai-questions button > svg {
+    flex-shrink: 0;
+    opacity: 0.55;
+}
+.landing-ai-questions button[aria-pressed='true'] > svg {
+    opacity: 1;
+}
+.landing-ai-questions button:hover {
+    color: #234c30;
+}
+.landing-ai-section-copy > .landing-ai-access {
+    font-size: 13px;
+    line-height: 1.7;
+    margin-top: 24px;
+    max-width: 49ch;
+}
+.landing-ai-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    margin-top: 20px;
+    color: #214f35;
+    font-size: 15px;
+    font-weight: 550;
+    text-decoration: underline;
+    text-underline-offset: 5px;
+}
+.landing-ai-example {
+    min-width: 0;
+    margin: 0;
+}
+.landing-ai-preview {
+    min-width: 0;
+    border: 1px solid #dce4d5;
+    border-radius: 12px;
+    background: #fff;
+    color: #202a24;
+    overflow: hidden;
+}
+.landing-ai-preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e5ebe7;
+    background: #fbfcf8;
+    color: #52665a;
+    font-size: 12px;
+}
+.landing-ai-preview .intelligence-message:last-child {
+    margin-bottom: 0;
+}
+.landing-ai-example > figcaption {
+    max-width: 58ch;
+    margin: 14px 4px 0;
+    color: #62705d;
+    font-size: 12px;
+    line-height: 1.7;
+}
+@media (max-width: 1100px) {
+    .landing-ai-section {
+        gap: 40px;
+    }
+}
+@media (max-width: 800px) {
+    .landing-ai-section {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+    .landing-ai-section-copy > p {
+        max-width: 60ch;
+    }
+    .landing-ai-questions {
+        margin-top: 22px;
+    }
+}
+@media (max-width: 600px) {
+    .landing-ai-preview-header {
+        padding-inline: 16px;
+    }
+    .landing-ai-questions button {
+        min-height: 56px;
+        font-size: 14px;
+    }
+}

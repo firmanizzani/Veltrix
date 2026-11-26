@@ -1,7 +1,10 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { ArrowUpRight, Check, ChevronDown, Menu, Minus, Plus, X } from 'lucide-react';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
-import { LandingPosPreview } from '../components/landing-pos-preview';
+import {
+    LandingAssistantSection,
+    LandingProductPreview,
+} from '../components/landing-ai-preview';
 import '../../css/landing.css';
 
 const roles = [
@@ -15,6 +18,7 @@ const roles = [
             'Dashboard seluruh cabang',
             'Laporan bisnis dan pengeluaran',
             'Pengguna, cabang, dan persetujuan',
+            'Asisten AI untuk data lintas cabang',
         ],
     },
     {
@@ -27,6 +31,7 @@ const roles = [
             'Persediaan dan pembelian bahan',
             'Karyawan dan jadwal kerja',
             'Tindak lanjut operasional cabang',
+            'Asisten AI sesuai akses cabang',
         ],
     },
     {
@@ -44,6 +49,10 @@ const roles = [
 ];
 
 const questions = [
+    {
+        question: 'Apa yang bisa ditanyakan kepada Asisten AI?',
+        answer: 'Owner dan manager dapat bertanya tentang penjualan, performa menu, serta persediaan. Jawaban menggunakan data sesuai akses akun dan dilengkapi data pendukung. Pengelola perlu mengaktifkan koneksi Gemini. Tinjau jawaban sebelum mengambil keputusan; AI tidak mengubah transaksi atau membeli bahan.',
+    },
     {
         question: 'Apa saja yang bisa dikelola di VELTRIX?',
         answer:
@@ -305,6 +314,7 @@ export default function Landing() {
                     >
                         <a href="#home">Home</a>
                         <a href="#alur">Fitur</a>
+                        <a href="#asisten-ai">Asisten AI</a>
                         <a href="#peran">Untuk tim Anda</a>
                         <a href="#pertanyaan">FAQ</a>
                     </nav>
@@ -334,6 +344,7 @@ export default function Landing() {
                         {[
                             ['Home', '#home'],
                             ['Fitur', '#alur'],
+                            ['Asisten AI', '#asisten-ai'],
                             ['Untuk tim Anda', '#peran'],
                             ['FAQ', '#pertanyaan'],
                         ].map(([label, href]) => (
@@ -360,13 +371,14 @@ export default function Landing() {
                     <div className="landing-hero-main">
                         <div className="landing-hero-copy">
                             <h1 id="landing-title">
-                                Satu aplikasi
+                                Kelola kedai Anda.
                                 <br />
-                                untuk kedai Anda
+                                Pahami bisnisnya lebih dalam.
                             </h1>
                             <p>
-                                Kelola penjualan, persediaan, dan pekerjaan tim dari satu
-                                ruang kerja.
+                                Satukan penjualan, persediaan, dan pekerjaan tim. Tanyakan
+                                performa kedai kepada asisten AI berdasarkan data bisnis
+                                Anda.
                             </p>
                             <div className="landing-hero-actions">
                                 <Link
@@ -380,11 +392,11 @@ export default function Landing() {
                                     className="landing-hero-explore"
                                     href="#alur"
                                 >
-                                    Jelajahi fitur
+                                    Lihat cara kerjanya
                                 </a>
                             </div>
                         </div>
-                        <LandingPosPreview />
+                        <LandingProductPreview />
                     </div>
                 </section>
                 <section
@@ -437,6 +449,10 @@ export default function Landing() {
                         </div>
                     </div>
                 </section>
+                <LandingAssistantSection
+                    destination={destination}
+                    action={action}
+                />
                 <section
                     id="peran"
                     className="landing-roles landing-section"
