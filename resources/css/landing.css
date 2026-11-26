@@ -438,42 +438,17 @@
     font-size: 13px;
     padding-bottom: 10px;
 }
-.landing-in-view {
-    animation: landing-scroll-enter 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+.landing-reveal-ready {
+    transition:
+        opacity 600ms cubic-bezier(0.22, 0.61, 0.36, 1),
+        transform 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-.landing-process-list > .landing-in-view:nth-child(2),
-.landing-faq-list > .landing-in-view:nth-child(2) {
-    animation-delay: 80ms;
+.landing-reveal-pending {
+    opacity: 0;
+    transform: translateY(18px);
 }
-.landing-process-list > .landing-in-view:nth-child(3),
-.landing-faq-list > .landing-in-view:nth-child(n + 3) {
-    animation-delay: 160ms;
-}
-.landing-cafe-atmosphere.landing-in-view {
-    animation-name: landing-photo-enter;
-    animation-duration: 850ms;
-}
-@keyframes landing-scroll-enter {
-    from {
-        opacity: 0;
-        transform: translateY(32px);
-    }
-    to {
-        opacity: 1;
-        transform: none;
-    }
-}
-@keyframes landing-photo-enter {
-    from {
-        opacity: 0.3;
-        clip-path: inset(12% 0 0 0);
-        transform: translateY(24px);
-    }
-    to {
-        opacity: 1;
-        clip-path: inset(0);
-        transform: none;
-    }
+.landing-cafe-atmosphere.landing-reveal-pending {
+    transform: translateY(12px);
 }
 @keyframes landing-reveal {
     from {
@@ -775,6 +750,10 @@ html:has(.landing) {
     }
 }
 @media (prefers-reduced-motion: reduce) {
+    .landing .landing-reveal-pending {
+        opacity: 1;
+        transform: none;
+    }
     html:has(.landing) {
         scroll-behavior: auto;
     }

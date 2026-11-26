@@ -145,17 +145,32 @@ export default function Landing() {
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
+                        entry.target.classList.remove('landing-reveal-pending');
                         entry.target.classList.add('landing-in-view');
                         observer.unobserve(entry.target);
                     }
                 });
             },
-            { threshold: 0.08, rootMargin: '0px 0px -40px 0px' },
+            { threshold: 0, rootMargin: '0px 0px 64px 0px' },
         );
-        page.current
-            ?.querySelectorAll('[data-reveal]')
-            .forEach((element) => observer.observe(element));
-        return () => observer.disconnect();
+        const elements = Array.from(
+            page.current?.querySelectorAll('[data-reveal]') ?? [],
+        ).filter((element) => element.getBoundingClientRect().top >= window.innerHeight);
+
+        elements.forEach((element) => {
+            element.classList.add('landing-reveal-ready', 'landing-reveal-pending');
+            observer.observe(element);
+        });
+
+        return () => {
+            observer.disconnect();
+            elements.forEach((element) => {
+                element.classList.remove(
+                    'landing-reveal-ready',
+                    'landing-reveal-pending',
+                );
+            });
+        };
     }, []);
 
     function changeRole(event: KeyboardEvent<HTMLButtonElement>, index: number) {
