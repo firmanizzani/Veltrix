@@ -135,45 +135,103 @@ export default function Landing() {
     }, []);
 
     useEffect(() => {
-        if (
-            CSS.supports('animation-timeline', 'view()') ||
-            !('IntersectionObserver' in window) ||
-            window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ) {
-            return;
-        }
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.remove('landing-reveal-pending');
-                        entry.target.classList.add('landing-in-view');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            },
-            { threshold: 0, rootMargin: '0px 0px 64px 0px' },
-        );
+        const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
         const elements = Array.from(
-            page.current?.querySelectorAll('[data-reveal]') ?? [],
-        ).filter((element) => element.getBoundingClientRect().top >= window.innerHeight);
+            page.current?.querySelectorAll<HTMLElement>('[data-reveal]') ?? [],
+        ).map((element) => ({
+            element,
+            offset: 0,
+            progress: -1,
+            stagger: element.parentElement?.classList.contains('landing-process-list')
+                ? Array.from(element.parentElement.children).indexOf(element) * 0.05
+                : 0,
+        }));
+        let frame: number | null = null;
 
-        elements.forEach((element) => {
-            element.classList.add('landing-reveal-ready', 'landing-reveal-pending');
-            observer.observe(element);
-        });
+        function updateProgress() {
+            frame = null;
+            if (preference.matches) {
+                elements.forEach((entry) => {
+                    entry.element.classList.remove('landing-scroll-ready');
+                    entry.offset = 0;
+                    entry.progress = -1;
+                });
+                return;
+            }
+
+            const viewportHeight = window.innerHeight;
+            const positions = elements.map((entry) => {
+                const focused = entry.element.contains(document.activeElement);
+                return {
+                    entry,
+                    focused,
+                    top:
+                        entry.element.getBoundingClientRect().top -
+                        (focused ? 0 : entry.offset),
+                };
+            });
+
+            positions.forEach(({ entry, top, focused }) => {
+                const start = viewportHeight * (0.94 - entry.stagger);
+                const distance = viewportHeight * 0.32;
+                const progress = focused
+                    ? 1
+                    : Math.max(0, Math.min(1, (start - top) / distance));
+                const eased = Number(
+                    (progress * progress * (3 - 2 * progress)).toFixed(4),
+                );
+                if (eased === entry.progress) {
+                    return;
+                }
+                entry.progress = eased;
+                entry.offset = Number(((1 - eased) * 36).toFixed(3));
+                entry.element.style.setProperty(
+                    '--landing-reveal-opacity',
+                    String(eased),
+                );
+                entry.element.style.setProperty(
+                    '--landing-reveal-offset',
+                    `${entry.offset}px`,
+                );
+                entry.element.classList.add('landing-scroll-ready');
+            });
+        }
+
+        function scheduleUpdate() {
+            if (frame === null) {
+                frame = requestAnimationFrame(updateProgress);
+            }
+        }
+
+        scheduleUpdate();
+        window.addEventListener('scroll', scheduleUpdate, { passive: true });
+        window.addEventListener('resize', scheduleUpdate);
+        page.current?.addEventListener('focusin', scheduleUpdate);
+        page.current?.addEventListener('focusout', scheduleUpdate);
+        preference.addEventListener('change', scheduleUpdate);
+        const layoutObserver = new ResizeObserver(scheduleUpdate);
+        if (page.current) {
+            layoutObserver.observe(page.current);
+        }
+        const root = page.current;
 
         return () => {
-            observer.disconnect();
-            elements.forEach((element) => {
-                element.classList.remove(
-                    'landing-reveal-ready',
-                    'landing-reveal-pending',
-                );
+            if (frame !== null) {
+                cancelAnimationFrame(frame);
+            }
+            window.removeEventListener('scroll', scheduleUpdate);
+            window.removeEventListener('resize', scheduleUpdate);
+            root?.removeEventListener('focusin', scheduleUpdate);
+            root?.removeEventListener('focusout', scheduleUpdate);
+            preference.removeEventListener('change', scheduleUpdate);
+            layoutObserver.disconnect();
+            elements.forEach(({ element }) => {
+                element.classList.remove('landing-scroll-ready');
+                element.style.removeProperty('--landing-reveal-opacity');
+                element.style.removeProperty('--landing-reveal-offset');
             });
         };
     }, []);
-
     function changeRole(event: KeyboardEvent<HTMLButtonElement>, index: number) {
         let next = index;
         if (event.key === 'ArrowRight') {
