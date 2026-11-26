@@ -14,6 +14,19 @@
     },
     "routes": [
         {
+            "src": "/sw.js",
+            "headers": { "Cache-Control": "no-cache", "Service-Worker-Allowed": "/" },
+            "continue": true
+        },
+        {
+            "src": "/manifest.webmanifest",
+            "headers": {
+                "Content-Type": "application/manifest+json",
+                "Cache-Control": "no-cache"
+            },
+            "continue": true
+        },
+        {
             "src": "/build/assets/(.*)",
             "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
             "continue": true
@@ -32,6 +45,8 @@
         "DB_SSLMODE": "require",
         "PGCHANNELBINDING": "require",
         "SESSION_DRIVER": "database",
+        "SESSION_LIFETIME": "10080",
+        "SESSION_EXPIRE_ON_CLOSE": "false",
         "SESSION_ENCRYPT": "true",
         "SESSION_SECURE_COOKIE": "true",
         "CACHE_STORE": "database",

@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="utf-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        />
+        <meta
+            name="theme-color"
+            content="#166348"
+        />
+        <title>VELTRIX</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                min-height: 100vh;
+                display: grid;
+                place-items: center;
+                padding: 32px 24px;
+                background: #f0f3ec;
+                color: #173f32;
+                font-family: system-ui, sans-serif;
+                line-height: 1.65;
+            }
+            main {
+                max-width: 440px;
+            }
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 22px;
+                font-weight: 700;
+            }
+            svg {
+                width: 28px;
+                height: 28px;
+            }
+            h1 {
+                margin: 48px 0 16px;
+                font-size: clamp(30px, 7vw, 40px);
+                line-height: 1.15;
+                letter-spacing: -0.03em;
+            }
+            p {
+                color: #536454;
+            }
+            button {
+                margin-top: 24px;
+                min-height: 48px;
+                padding: 12px 24px;
+                border: 0;
+                border-radius: 8px;
+                background: #166348;
+                color: white;
+                font: inherit;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            button:focus-visible {
+                outline: 3px solid #166348;
+                outline-offset: 4px;
+            }
+            .note {
+                margin-top: 24px;
+                font-size: 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div class="brand">
+                <svg
+                    viewBox="0 0 32 32"
+                    aria-hidden="true"
+                >
+                    <path
+                        d="M2 5h8l6 12L22 5h8L18 28h-4z"
+                        fill="currentColor"
+                    />
+                </svg>
+                VELTRIX
+            </div>
+            <h1>Koneksi sedang terputus</h1>
+            <p>
+                Sambungkan kembali internet untuk membuka ruang kerja dan melanjutkan
+                transaksi.
+            </p>
+            <button
+                type="button"
+                onclick="location.reload()"
+            >
+                Coba lagi
+            </button>
+            <p class="note">
+                Jika koneksi terputus saat pembayaran, periksa riwayat transaksi sebelum
+                mengulangi pesanan.
+            </p>
+        </main>
+    </body>
+</html>

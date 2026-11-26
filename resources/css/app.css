@@ -1916,6 +1916,9 @@ legend {
 .auth-options > a {
     color: var(--primary);
 }
+.auth-options-session {
+    justify-content: flex-end;
+}
 .secure-note {
     display: flex;
     align-items: center;

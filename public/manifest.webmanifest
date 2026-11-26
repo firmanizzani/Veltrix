@@ -1,0 +1,33 @@
+{
+    "id": "/",
+    "name": "VELTRIX",
+    "short_name": "VELTRIX",
+    "description": "Penjualan, persediaan, dan operasional kedai dalam satu ruang kerja.",
+    "lang": "id",
+    "start_url": "/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#f0f3ec",
+    "theme_color": "#166348",
+    "icons": [
+        {
+            "src": "/images/pwa-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/pwa-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/images/pwa-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "prefer_related_applications": false
+}

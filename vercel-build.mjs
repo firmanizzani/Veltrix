@@ -36,9 +36,20 @@ const publicExtensions = new Set([
     '.svg',
     '.ico',
     '.txt',
+    '.html',
+    '.webmanifest',
 ]);
 
-for (const entry of ['build', 'images', 'favicon.ico', 'favicon.svg', 'robots.txt']) {
+for (const entry of [
+    'build',
+    'images',
+    'favicon.ico',
+    'favicon.svg',
+    'robots.txt',
+    'manifest.webmanifest',
+    'sw.js',
+    'offline.html',
+]) {
     cpSync(join(projectRoot, 'public', entry), join(staticDirectory, entry), {
         recursive: true,
         filter(source) {

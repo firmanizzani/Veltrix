@@ -48,6 +48,7 @@ class FortifyServiceProvider extends ServiceProvider
             ]),
         );
         Fortify::authenticateUsing(function (Request $request) {
+            $request->merge(['remember' => false]);
             $user = User::where('email', strtolower($request->string('email')))->first();
             if (
                 $user &&
@@ -56,6 +57,7 @@ class FortifyServiceProvider extends ServiceProvider
                 Hash::check($request->string('password'), $user->password)
             ) {
                 $request->session()->put('session_version', $user->session_version);
+                $request->session()->put('auth.login_at', now()->timestamp);
 
                 return $user;
             }

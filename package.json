@@ -10,6 +10,7 @@
         "build:vercel": "npm run build && node vercel-build.mjs",
         "dev": "vite",
         "typecheck": "tsc --noEmit",
+        "test:pwa": "node --test tests/pwa.test.mjs",
         "format": "prettier --write resources/js resources/css app database routes tests \"bootstrap/*.php\" config package.json vite.config.js tsconfig.json components.json",
         "format:check": "prettier --check resources/js resources/css app database routes tests \"bootstrap/*.php\" config package.json vite.config.js tsconfig.json components.json"
     },

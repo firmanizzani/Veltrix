@@ -18,7 +18,6 @@ export default function Auth({
         email,
         password: '',
         password_confirmation: '',
-        remember: false,
         token,
     });
     const [visible, setVisible] = useState(false);
@@ -179,17 +178,7 @@ export default function Auth({
                             </label>
                         )}
                         {mode === 'login' && (
-                            <div className="auth-options">
-                                <label className="checkbox-label">
-                                    <input
-                                        type="checkbox"
-                                        checked={form.data.remember}
-                                        onChange={(e) =>
-                                            form.setData('remember', e.target.checked)
-                                        }
-                                    />
-                                    Ingat saya
-                                </label>
+                            <div className="auth-options auth-options-session">
                                 <Link href="/forgot-password">Lupa password?</Link>
                             </div>
                         )}

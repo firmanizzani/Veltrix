@@ -1,0 +1,61 @@
+.sidebar > .pwa-sidebar-install {
+    flex-shrink: 0;
+    width: fit-content;
+    min-height: 34px;
+    margin: 8px 4px;
+    padding: 6px 10px;
+    gap: 7px;
+    font-size: 12px;
+    justify-content: flex-start;
+    color: #173f32;
+    border-color: #c5d3be;
+    background: transparent;
+}
+.sidebar > .pwa-sidebar-install:hover {
+    background: #dce7d5;
+}
+.pwa-sidebar-install svg {
+    width: 15px;
+    height: 15px;
+}
+@media (pointer: coarse) {
+    .sidebar > .pwa-sidebar-install {
+        min-height: 44px;
+    }
+}
+.pwa-install-instructions {
+    display: grid;
+    gap: 16px;
+    line-height: 1.7;
+}
+.pwa-notices {
+    position: fixed;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(620px, calc(100% - 32px));
+    z-index: 45;
+    display: grid;
+    gap: 10px;
+}
+.pwa-notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 1px solid #c5d3be;
+    border-radius: 12px;
+    background: #f7faf4;
+    color: #173f32;
+    font-size: 13px;
+}
+.pwa-notice p {
+    flex: 1 1 240px;
+}
+@media print {
+    .pwa-notices,
+    .pwa-sidebar-install {
+        display: none;
+    }
+}

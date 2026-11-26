@@ -31,6 +31,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Toaster, toast } from 'sonner';
 import { labels, type Shared } from '../lib/utils';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { PwaInstallButton } from '../components/pwa';
 
 type NavItem = [string, string, typeof Coffee, string[]];
 const all = ['owner', 'manager', 'cashier'];
@@ -272,6 +273,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     );
                 })}
             </nav>
+            <PwaInstallButton className="pwa-sidebar-install" />
             <div className="sidebar-bottom">
                 <Link
                     href="/profile"

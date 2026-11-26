@@ -4,6 +4,7 @@ import '@fontsource-variable/inter';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';
 import AppLayout from './layouts/AppLayout';
+import { PwaProvider } from './components/pwa';
 import type { ComponentType, ReactNode } from 'react';
 
 const pages = import.meta.glob('./pages/*.tsx');
@@ -20,7 +21,11 @@ createInertiaApp({
         return page.default;
     },
     setup({ el, App, props }) {
-        createRoot(el).render(<App {...props} />);
+        createRoot(el).render(
+            <PwaProvider>
+                <App {...props} />
+            </PwaProvider>,
+        );
     },
     progress: {
         delay: 700,
