@@ -1,4 +1,5 @@
 import '../css/app.css';
+import '../css/workspace.css';
 import '@fontsource-variable/inter';
 import { createInertiaApp } from '@inertiajs/react';
 import { createRoot } from 'react-dom/client';

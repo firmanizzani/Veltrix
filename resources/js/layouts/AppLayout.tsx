@@ -200,7 +200,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     }
     const navigation = (
         <aside
-            className={`sidebar ${menu ? 'sidebar-open' : ''}`}
+            className={`sidebar workspace-navigation ${menu ? 'sidebar-open' : ''}`}
             aria-label="Navigasi utama"
         >
             {mobile && (
@@ -309,7 +309,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             open={mobile && menu}
             onOpenChange={setMenu}
         >
-            <div className="app-shell">
+            <div
+                className={`app-shell workspace-shell ${currentPath === '/dashboard' ? 'dashboard-workspace' : ''}`}
+            >
                 <a
                     href="#main-content"
                     className="skip-link"
@@ -334,6 +336,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     <main
                         id="main-content"
                         className="main-sheet"
+                        data-section={currentPath.split('/')[1] || 'dashboard'}
                         aria-busy={loading}
                     >
                         {children}

@@ -21,7 +21,7 @@ export function Dialog({
         >
             <DialogPrimitive.Portal>
                 <DialogPrimitive.Overlay className="dialog-overlay" />
-                <DialogPrimitive.Content className="dialog-content">
+                <DialogPrimitive.Content className="dialog-content workspace-dialog">
                     <div className="dialog-header">
                         <div>
                             <DialogPrimitive.Title>{title}</DialogPrimitive.Title>

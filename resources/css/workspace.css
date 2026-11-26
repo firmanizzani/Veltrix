@@ -1,0 +1,586 @@
+:is(.workspace-shell, .workspace-navigation) {
+    --ground: #e7ede3;
+    --surface: #fff;
+    --raised: #f7f9f3;
+    --active: #dce7d5;
+    --border: #dfe6db;
+    --rule: #edf1e8;
+    --control: #c8d3c1;
+    --text: #263527;
+    --muted: #56654f;
+    --primary: #245e3c;
+    color: var(--text);
+    background: var(--ground);
+}
+.workspace-dialog {
+    --primary: #245e3c;
+    --control: #c8d3c1;
+    --border: #dfe6db;
+    --muted: #56654f;
+    --raised: #f7f9f3;
+    --text: #263527;
+    background: #fff;
+    border-color: #d7e1cf;
+    border-radius: 14px;
+}
+.workspace-dialog .dialog-header {
+    border-bottom: 1px solid #e5ecdf;
+    padding-bottom: 18px;
+    margin-bottom: 20px;
+}
+.workspace-dialog :is(input, select, textarea) {
+    border-color: #c8d3c1;
+    caret-color: #245e3c;
+}
+.workspace-dialog :is(button, input, select, textarea):focus-visible {
+    outline: 2px solid #39774b;
+    outline-offset: 3px;
+}
+:is(.workspace-shell, .workspace-navigation) ::selection {
+    background: #d5e4ca;
+    color: #243e27;
+}
+:is(.workspace-shell, .workspace-navigation) :is(input, textarea) {
+    caret-color: var(--primary);
+}
+:is(.workspace-shell, .workspace-navigation)
+    :is(a, button, input, select, textarea, summary):focus-visible {
+    outline: 2px solid #39774b;
+    outline-offset: 3px;
+}
+:is(.workspace-shell, .workspace-navigation) .sidebar {
+    background: #e7ede3;
+    padding-top: 28px;
+}
+:is(.workspace-shell, .workspace-navigation) .brand {
+    color: #244c31;
+}
+:is(.workspace-shell, .workspace-navigation) .workspace {
+    padding: 16px 2px 20px;
+    margin: 16px 8px 14px;
+    border-bottom: 1px solid #d3ddcd;
+}
+:is(.workspace-shell, .workspace-navigation) .workspace strong {
+    font-size: 13px;
+    color: #31462f;
+}
+:is(.workspace-shell, .workspace-navigation) .workspace span {
+    color: #596b52;
+}
+:is(.workspace-shell, .workspace-navigation) .nav-item {
+    min-height: 42px;
+    border-radius: 7px;
+    color: #58664f;
+    font-size: 13px;
+}
+:is(.workspace-shell, .workspace-navigation) .nav-item:hover,
+:is(.workspace-shell, .workspace-navigation) .nav-group-toggle:hover {
+    background: #dfe7d9;
+    color: #2e4d32;
+}
+:is(.workspace-shell, .workspace-navigation) .nav-active {
+    background: #d2dfcb;
+    color: #234a2e;
+    font-weight: 600;
+}
+:is(.workspace-shell, .workspace-navigation) .nav-group-toggle {
+    min-height: 43px;
+    font-size: 13px;
+    color: #596b52;
+}
+:is(.workspace-shell, .workspace-navigation) .nav-group-current {
+    color: #244e30;
+}
+:is(.workspace-shell, .workspace-navigation) .nav-group-items {
+    padding-left: 7px;
+    margin-left: 10px;
+    border-left: 1px solid #cfdac8;
+}
+:is(.workspace-shell, .workspace-navigation) .nav-group-items .nav-item {
+    font-size: 13px;
+    min-height: 39px;
+    gap: 9px;
+}
+:is(.workspace-shell, .workspace-navigation) .sidebar-bottom {
+    border-top-color: #d2ddcb;
+    background: #e7ede3;
+    padding-top: 14px;
+}
+:is(.workspace-shell, .workspace-navigation) .avatar {
+    background: #d0dfc7;
+    color: #315434;
+}
+:is(.workspace-shell, .workspace-navigation) .app-main {
+    background: #f0f3ec;
+    border-left: 0;
+}
+:is(.workspace-shell, .workspace-navigation) .main-sheet {
+    background: #f0f3ec;
+    padding: 28px 28px 36px;
+}
+:is(.workspace-shell, .workspace-navigation) .page-title {
+    margin-bottom: 24px;
+    gap: 16px;
+}
+:is(.workspace-shell, .workspace-navigation) .page-title h1 {
+    font-size: 27px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    color: #2a3f2b;
+}
+:is(.workspace-shell, .workspace-navigation) .page-title p {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 6px;
+}
+:is(.workspace-shell, .workspace-navigation) .button {
+    border-radius: 7px;
+    min-height: 36px;
+    font-size: 13px;
+}
+:is(.workspace-shell, .workspace-navigation) .button-primary {
+    background: #245e3c;
+}
+:is(.workspace-shell, .workspace-navigation) .button-primary:hover {
+    background: #1b4c2f;
+}
+:is(.workspace-shell, .workspace-navigation) .button-outline {
+    background: #fff;
+    border-color: #cbd6c3;
+}
+:is(.workspace-shell, .workspace-navigation) .button-outline:hover {
+    background: #f5f8f0;
+    border-color: #a5b99a;
+}
+:is(.workspace-shell, .workspace-navigation) .button-small {
+    min-height: 30px;
+    font-size: 12px;
+}
+:is(.workspace-shell, .workspace-navigation) .button-icon {
+    min-height: 36px;
+    width: 36px;
+}
+:is(.workspace-shell, .workspace-navigation)
+    :is(input:not([type='checkbox']), select, textarea) {
+    border-color: #cad5c3;
+    border-radius: 7px;
+    background-color: #fff;
+}
+:is(.workspace-shell, .workspace-navigation) :is(input, textarea)::placeholder {
+    color: #697563;
+}
+:is(.workspace-shell, .workspace-navigation) .panel {
+    background: #fff;
+    border-color: var(--border);
+    border-radius: 12px;
+}
+:is(.workspace-shell, .workspace-navigation) .panel-header {
+    padding: 18px 20px 0;
+}
+:is(.workspace-shell, .workspace-navigation) .panel-header h2 {
+    font-size: 15px;
+    font-weight: 600;
+}
+:is(.workspace-shell, .workspace-navigation) .panel-header p {
+    font-size: 12px;
+}
+:is(.workspace-shell, .workspace-navigation) .panel-footer {
+    padding: 12px 20px;
+    background: #fbfcf8;
+    font-size: 12px;
+}
+:is(.workspace-shell, .workspace-navigation) .section-tabs {
+    border-bottom-color: #d4dfcd;
+    margin-bottom: 18px;
+}
+:is(.workspace-shell, .workspace-navigation) .section-tabs .tab-active {
+    color: #2a5837;
+    border-color: #2e6942;
+}
+:is(.workspace-shell, .workspace-navigation) .list-toolbar,
+:is(.workspace-shell, .workspace-navigation) .report-toolbar {
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 16px;
+    gap: 10px;
+}
+:is(.workspace-shell, .workspace-navigation) .search-box input {
+    background: #f9fbf5;
+    height: 38px;
+}
+:is(.workspace-shell, .workspace-navigation) .context-strip {
+    background: #e7efdf;
+    border-color: #d1ddc8;
+    color: #45603d;
+    border-radius: 10px;
+}
+:is(.workspace-shell, .workspace-navigation)
+    .main-sheet[data-section='manage']
+    > .table-scroll,
+:is(.workspace-shell, .workspace-navigation)
+    .main-sheet[data-section='reports']
+    > .recent-section,
+:is(.workspace-shell, .workspace-navigation)
+    .main-sheet[data-section='reports']
+    > .finance-report {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 8px 18px 4px;
+}
+:is(.workspace-shell, .workspace-navigation)
+    .main-sheet[data-section='reports']
+    > .recent-section {
+    padding-top: 18px;
+}
+:is(.workspace-shell, .workspace-navigation) table {
+    font-size: 13px;
+}
+:is(.workspace-shell, .workspace-navigation) th {
+    font-size: 12px;
+    color: #63725c;
+    font-weight: 500;
+    height: 42px;
+    background: transparent;
+}
+:is(.workspace-shell, .workspace-navigation) td {
+    color: #4e6048;
+    border-bottom-color: #ecf0e7;
+    padding-block: 15px;
+}
+:is(.workspace-shell, .workspace-navigation) tr:hover td {
+    background: #f8faf4;
+}
+:is(.workspace-shell, .workspace-navigation) .identity-link,
+:is(.workspace-shell, .workspace-navigation) .identity-cell {
+    color: #30462f;
+    font-weight: 550;
+}
+:is(.workspace-shell, .workspace-navigation) td small {
+    font-size: 12px;
+    color: #66765f;
+}
+:is(.workspace-shell, .workspace-navigation) .num {
+    font-variant-numeric: tabular-nums;
+}
+:is(.workspace-shell, .workspace-navigation) .status {
+    border-radius: 5px;
+    min-height: 23px;
+}
+:is(.workspace-shell, .workspace-navigation) .pagination {
+    padding-block: 18px;
+}
+:is(.workspace-shell, .workspace-navigation) .financial-summary {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 18px;
+}
+:is(.workspace-shell, .workspace-navigation) .financial-summary .kpi-strip {
+    padding: 0;
+    margin: 0;
+    gap: 0;
+    border: 0;
+}
+:is(.workspace-shell, .workspace-navigation) .financial-summary .kpi {
+    padding: 20px 24px;
+}
+:is(.workspace-shell, .workspace-navigation) .financial-summary .kpi:first-child {
+    background: #fff;
+}
+:is(.workspace-shell, .workspace-navigation)
+    .financial-summary
+    .kpi:first-child
+    > strong {
+    color: #244c31;
+    font-size: 30px;
+}
+:is(.workspace-shell, .workspace-navigation) .financial-summary .supporting-metrics {
+    padding: 14px 24px;
+    background: #fbfcf8;
+    border-top: 1px solid var(--border);
+}
+:is(.workspace-shell, .workspace-navigation) .financial-summary .supporting-metrics dd {
+    font-size: 17px;
+}
+:is(.workspace-shell, .workspace-navigation) .profit-details {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px 18px;
+    margin-bottom: 20px;
+}
+:is(.workspace-shell, .workspace-navigation) .settings-section {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 18px;
+}
+:is(.workspace-shell, .workspace-navigation) .settings-section > div:first-child > svg {
+    color: #527548;
+}
+:is(.workspace-shell, .workspace-navigation) .alerts-layout > section {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+}
+:is(.workspace-shell, .workspace-navigation) .alert-row {
+    border-bottom-color: var(--rule);
+    padding-block: 16px;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-tabs {
+    border-color: #d4dfcd;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-history {
+    padding: 16px 12px;
+    border-radius: 12px;
+    background: #e6eddf;
+    align-self: start;
+}
+:is(.workspace-shell, .workspace-navigation)
+    .intelligence-history
+    > a[aria-current='page'] {
+    background: #d2dfc9;
+    color: #24492c;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-chat {
+    border-color: var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-scope {
+    background: #fbfcf8;
+    border-bottom-color: var(--border);
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-message-user {
+    background: #edf3e7;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-composer {
+    background: #fbfcf8;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-suggestions button {
+    background: #f7faf2;
+    border-color: #d8e3ce;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-suggestions button:hover {
+    background: #edf4e5;
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-insight {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 14px;
+}
+:is(.workspace-shell, .workspace-navigation) .menu-sales-totals {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+}
+:is(.workspace-shell, .workspace-navigation) .menu-sales-filters {
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: #fff;
+}
+:is(.workspace-shell, .workspace-navigation) .menu-sales-results {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+}
+:is(.workspace-shell, .workspace-navigation) .pos-search {
+    margin-bottom: 16px;
+}
+:is(.workspace-shell, .workspace-navigation) .category-tabs {
+    padding-bottom: 14px;
+}
+:is(.workspace-shell, .workspace-navigation) .category-tabs button {
+    background: #fff;
+    border: 1px solid #d8e2d1;
+    color: #5d7055;
+    border-radius: 7px;
+    min-height: 36px;
+}
+:is(.workspace-shell, .workspace-navigation) .category-tabs .category-active {
+    background: #dce8d3;
+    border-color: #aec39e;
+    color: #284f2f;
+}
+:is(.workspace-shell, .workspace-navigation) .product-card {
+    background: #fff;
+    border-color: #dce5d5;
+    border-radius: 12px;
+}
+:is(.workspace-shell, .workspace-navigation) .product-card:hover {
+    border-color: #99b387;
+}
+:is(.workspace-shell, .workspace-navigation) .product-selected {
+    border-color: #59834c;
+    background: #f8fbf3;
+}
+:is(.workspace-shell, .workspace-navigation) .product-info > strong {
+    font-size: 13px;
+    color: #2c402b;
+}
+:is(.workspace-shell, .workspace-navigation) .product-info > div {
+    font-size: 13px;
+}
+:is(.workspace-shell, .workspace-navigation) .cart-panel {
+    background: #fff;
+    border-color: var(--border);
+    border-radius: 12px;
+}
+:is(.workspace-shell, .workspace-navigation) .cart-title {
+    background: #f8faf4;
+    border-bottom-color: var(--border);
+}
+:is(.workspace-shell, .workspace-navigation) .cart-total {
+    color: #244b2c;
+    border-color: #d8e3cf;
+}
+:is(.workspace-shell, .workspace-navigation) .payment-methods .method-active {
+    background: #edf4e5;
+    border-color: #83a674;
+    color: #284d30;
+}
+:is(.workspace-shell, .workspace-navigation) .receipt {
+    background: #fff;
+    border-color: var(--border);
+    border-radius: 12px;
+}
+:is(.workspace-shell, .workspace-navigation) .receipt-brand {
+    color: #2c5634;
+}
+@media (max-height: 760px) and (min-width: 1101px) {
+    :is(.workspace-shell, .workspace-navigation) .sidebar {
+        padding-top: 16px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .workspace {
+        margin-top: 8px;
+        padding-top: 8px;
+        padding-bottom: 12px;
+        margin-bottom: 8px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .nav-item,
+    :is(.workspace-shell, .workspace-navigation) .nav-group-toggle {
+        min-height: 36px;
+    }
+}
+@media (max-width: 1100px) {
+    :is(.workspace-shell, .workspace-navigation) .sidebar {
+        padding-top: 24px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .nav-item,
+    :is(.workspace-shell, .workspace-navigation) .nav-group-items .nav-item,
+    :is(.workspace-shell, .workspace-navigation) .nav-group-toggle {
+        min-height: 44px;
+        font-size: 13px;
+    }
+}
+@media (max-width: 800px) {
+    :is(.workspace-shell, .workspace-navigation) .main-sheet {
+        padding: 22px 18px 30px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .settings-section {
+        padding: 20px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .financial-summary .kpi {
+        padding: 18px 14px;
+    }
+    :is(.workspace-shell, .workspace-navigation)
+        .financial-summary
+        .kpi:first-child
+        > strong {
+        font-size: 26px;
+    }
+}
+@media (max-width: 600px) {
+    :is(.workspace-shell, .workspace-navigation) .main-sheet {
+        padding: 20px 16px 28px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .page-title h1 {
+        font-size: 24px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .page-title p {
+        font-size: 13px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .list-toolbar,
+    :is(.workspace-shell, .workspace-navigation) .report-toolbar {
+        padding: 12px;
+        border-radius: 10px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .button,
+    :is(.workspace-shell, .workspace-navigation) .category-tabs button {
+        min-height: 44px;
+    }
+    :is(.workspace-shell, .workspace-navigation)
+        :is(select, input:not([type='checkbox'])) {
+        min-height: 44px;
+    }
+    :is(.workspace-shell, .workspace-navigation)
+        .main-sheet[data-section='manage']
+        > .table-scroll {
+        padding-inline: 12px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .financial-summary .kpi-strip {
+        grid-template-columns: 1fr;
+    }
+    :is(.workspace-shell, .workspace-navigation) .financial-summary .kpi {
+        padding: 18px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+    }
+    :is(.workspace-shell, .workspace-navigation) .financial-summary .kpi:last-child {
+        border-bottom: 0;
+    }
+    :is(.workspace-shell, .workspace-navigation) .financial-summary .supporting-metrics {
+        padding: 16px 18px;
+        gap: 16px;
+        grid-template-columns: 1fr 1fr;
+    }
+    :is(.workspace-shell, .workspace-navigation)
+        .financial-summary
+        .supporting-metrics
+        > div {
+        padding: 0;
+        border: 0;
+    }
+    :is(.workspace-shell, .workspace-navigation) .settings-section,
+    :is(.workspace-shell, .workspace-navigation) .alerts-layout > section {
+        padding: 18px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .intelligence-history {
+        padding: 12px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .intelligence-chat {
+        border-radius: 10px;
+    }
+    :is(.workspace-shell, .workspace-navigation) .receipt {
+        border-radius: 10px;
+    }
+}
+:is(.workspace-shell, .workspace-navigation) .intelligence-history :is(h2, p) {
+    color: #52654a;
+}
+:is(.workspace-shell, .workspace-navigation) .cart-empty p {
+    color: #5e6e58;
+}
+@media print {
+    :is(.workspace-shell, .workspace-navigation),
+    :is(.workspace-shell, .workspace-navigation) .main-sheet,
+    :is(.workspace-shell, .workspace-navigation) .app-main {
+        background: #fff;
+        color: #000;
+    }
+    :is(.workspace-shell, .workspace-navigation) .receipt {
+        border: 0;
+        border-radius: 0;
+    }
+}

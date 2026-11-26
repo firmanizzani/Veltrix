@@ -272,7 +272,13 @@ class IntelligenceTest extends TestCase
             '/intelligence/messages',
             $this->question(['thread_id' => $answer->ai_thread_id]),
         )->assertRedirect();
-        $manager->update(['branch_id' => null]);
+        $otherBranch = Branch::create([
+            'code' => 'MOVED',
+            'name' => 'Kedai Lain',
+            'city' => 'Bogor',
+            'address' => 'Bogor',
+        ]);
+        $manager->update(['branch_id' => $otherBranch->id]);
         $next = AiMessage::where('status', 'pending')->firstOrFail();
         (new AnswerBusinessQuestion($next->id))->handle();
         $this->assertSame('failed', $next->fresh()->status);

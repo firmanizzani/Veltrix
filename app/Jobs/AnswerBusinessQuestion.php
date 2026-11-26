@@ -53,7 +53,7 @@ class AnswerBusinessQuestion implements ShouldQueue
                     !$user->isOwner(),
                     fn($query) => $query
                         ->where('scope->audience', 'manager')
-                        ->where('scope->branch_id', $user->branch_id),
+                        ->whereJsonContains('scope->branch_id', $user->branch_id),
                 )
                 ->latest('id')
                 ->limit(13)

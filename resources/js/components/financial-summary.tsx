@@ -20,7 +20,10 @@ export function FinancialSummary({ metrics, owner }: { metrics: Row; owner: bool
         },
     ];
     return (
-        <section aria-label="Ringkasan kinerja">
+        <section
+            className="financial-summary"
+            aria-label="Ringkasan kinerja"
+        >
             <div className="kpi-strip">
                 {stats.map((stat) => (
                     <div
