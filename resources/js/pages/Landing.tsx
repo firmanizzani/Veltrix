@@ -147,9 +147,12 @@ export default function Landing() {
                 : 0,
         }));
         let frame: number | null = null;
+        let previousTime = 0;
 
-        function updateProgress() {
+        function updateProgress(timestamp: number) {
             frame = null;
+            const elapsed = previousTime ? Math.min(timestamp - previousTime, 64) : 16;
+            previousTime = timestamp;
             if (preference.matches) {
                 elements.forEach((entry) => {
                     entry.element.classList.remove('landing-scroll-ready');
@@ -160,6 +163,8 @@ export default function Landing() {
             }
 
             const viewportHeight = window.innerHeight;
+            const smoothing = 1 - Math.exp(-elapsed / 160);
+            let settling = false;
             const positions = elements.map((entry) => {
                 const focused = entry.element.contains(document.activeElement);
                 return {
@@ -172,19 +177,26 @@ export default function Landing() {
             });
 
             positions.forEach(({ entry, top, focused }) => {
-                const start = viewportHeight * (0.94 - entry.stagger);
-                const distance = viewportHeight * 0.32;
+                const start = viewportHeight * (0.92 - entry.stagger);
+                const distance = viewportHeight * 0.42;
                 const progress = focused
                     ? 1
                     : Math.max(0, Math.min(1, (start - top) / distance));
-                const eased = Number(
-                    (progress * progress * (3 - 2 * progress)).toFixed(4),
-                );
+                const target = progress * progress * (3 - 2 * progress);
+                const current = Math.max(0, entry.progress);
+                const difference = target - current;
+                const eased =
+                    focused || Math.abs(difference) < 0.002
+                        ? target
+                        : current + difference * smoothing;
+                if (Math.abs(target - eased) >= 0.002) {
+                    settling = true;
+                }
                 if (eased === entry.progress) {
                     return;
                 }
                 entry.progress = eased;
-                entry.offset = Number(((1 - eased) * 36).toFixed(3));
+                entry.offset = Number(((1 - eased) * 48).toFixed(3));
                 entry.element.style.setProperty(
                     '--landing-reveal-opacity',
                     String(eased),
@@ -195,6 +207,11 @@ export default function Landing() {
                 );
                 entry.element.classList.add('landing-scroll-ready');
             });
+            if (settling) {
+                frame = requestAnimationFrame(updateProgress);
+            } else {
+                previousTime = 0;
+            }
         }
 
         function scheduleUpdate() {

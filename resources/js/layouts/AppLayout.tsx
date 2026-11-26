@@ -50,7 +50,6 @@ const groups: { title: string; items: NavItem[] }[] = [
             ['Point of Sale', '/pos', ShoppingBag, all],
             ['Transaksi', '/manage/orders', ReceiptText, all],
             ['Sesi kasir', '/manage/shifts', History, all],
-            ['Pengembalian dana', '/manage/refunds', ArrowLeftRight, all],
         ],
     },
     {
@@ -96,7 +95,7 @@ const groups: { title: string; items: NavItem[] }[] = [
     },
     {
         title: 'Intelligence',
-        items: [['AI & insight bisnis', '/intelligence', Sparkles, ops]],
+        items: [['Asisten AI', '/intelligence', Sparkles, ops]],
     },
 ];
 
@@ -107,10 +106,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     const currentPath = url.split('?')[0];
     const primaryPaths =
         user.role === 'owner'
-            ? ['/dashboard', '/reports', '/manage/orders']
+            ? ['/dashboard', '/reports', '/manage/orders', '/intelligence']
             : user.role === 'manager'
               ? ['/dashboard', '/manage/inventory', '/reports', '/intelligence']
-              : ['/pos', '/manage/orders', '/manage/shifts', '/manage/refunds'];
+              : ['/pos', '/manage/orders', '/manage/shifts'];
     const allItems = groups.flatMap((group) => group.items);
     const primaryItems = primaryPaths.flatMap((href) =>
         allItems.filter((item) => item[1] === href && item[3].includes(user.role)),
@@ -127,7 +126,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     const isItemActive = (href: string) =>
         currentPath === href ||
         (href === '/reports' && currentPath.startsWith('/reports/')) ||
-        (href === '/manage/orders' && currentPath.startsWith('/orders/'));
+        (href === '/manage/orders' &&
+            (currentPath.startsWith('/orders/') || currentPath === '/manage/refunds'));
     const activeGroup = visibleGroups.find(
         (group) =>
             group.items.length > 1 && group.items.some(([, href]) => isItemActive(href)),
@@ -190,11 +190,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     size={17}
                     strokeWidth={1.6}
                 />
-                <span>
-                    {href === '/intelligence' && user.role === 'manager'
-                        ? 'Asisten AI'
-                        : title}
-                </span>
+                <span>{title}</span>
             </Link>
         );
     }

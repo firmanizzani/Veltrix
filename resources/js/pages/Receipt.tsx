@@ -121,15 +121,18 @@ export default function Receipt({ order }: { order: Row }) {
                             onClick={() => setRefund(true)}
                         >
                             <RotateCcw size={15} />
-                            Ajukan refund penuh
+                            Ajukan pengembalian dana
                         </Button>
                     ) : (
                         order.refund && (
                             <div className="notice-block">
-                                <strong>Permintaan refund</strong>
+                                <strong>Pengembalian dana</strong>
                                 <Status value={order.refund.status} />
                                 <p>{order.refund.reason}</p>
                                 <p className="muted">{money(order.refund.amount)}</p>
+                                <Link href="/manage/refunds">
+                                    Lihat pengembalian dana
+                                </Link>
                             </div>
                         )
                     )}
@@ -138,8 +141,8 @@ export default function Receipt({ order }: { order: Row }) {
             <Dialog
                 open={refund}
                 onOpenChange={setRefund}
-                title="Ajukan refund penuh"
-                description="Persetujuan manager atau owner diperlukan. Bahan yang telah dipakai tidak dikembalikan ke stok otomatis."
+                title="Ajukan pengembalian dana"
+                description="Pengajuan mencakup seluruh nilai transaksi dan memerlukan persetujuan manager atau owner. Bahan yang telah dipakai tidak dikembalikan ke stok otomatis."
             >
                 <form onSubmit={submit}>
                     <Errors errors={form.errors} />
@@ -165,7 +168,7 @@ export default function Receipt({ order }: { order: Row }) {
                             Batal
                         </Button>
                         <Button disabled={form.processing}>
-                            {form.processing ? 'Mengirim…' : 'Ajukan refund'}
+                            {form.processing ? 'Mengirim…' : 'Kirim pengajuan'}
                         </Button>
                     </div>
                 </form>

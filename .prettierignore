@@ -5,6 +5,8 @@ node_modules
 .taste-skill
 .impeccable
 public/build
+.vercel
+.vercel-static
 storage
 composer.lock
 package-lock.json

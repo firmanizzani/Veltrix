@@ -200,7 +200,10 @@ class DashboardController extends Controller
                     ->all(),
             );
         }
-        $pdf = new \Dompdf\Dompdf();
+        $pdf = new \Dompdf\Dompdf([
+            'tempDir' => sys_get_temp_dir(),
+            'fontCache' => sys_get_temp_dir(),
+        ]);
         $pdf->setPaper('A4');
         $pdf->loadHtml(
             view('reports.summary', [

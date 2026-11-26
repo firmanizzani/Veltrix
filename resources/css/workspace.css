@@ -299,9 +299,15 @@
     font-size: 30px;
 }
 :is(.workspace-shell, .workspace-navigation) .financial-summary .supporting-metrics {
-    padding: 14px 24px;
+    padding: 14px 0;
     background: #fbfcf8;
     border-top: 1px solid var(--border);
+}
+:is(.workspace-shell, .workspace-navigation)
+    .financial-summary
+    .supporting-metrics
+    > div {
+    padding-inline: 24px;
 }
 :is(.workspace-shell, .workspace-navigation) .financial-summary .supporting-metrics dd {
     font-size: 17px;

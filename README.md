@@ -73,11 +73,11 @@ The demo seeder runs only in local/testing environments. It stops without overwr
 
 | Role | Demo email |
 | --- | --- |
-| Owner | owner@veltrix.test |
-| Depok manager | depok.manager@veltrix.test |
-| Depok cashier | depok.kasir1@veltrix.test |
+| Owner | owner@veltrix.com |
+| Depok manager | depok.manager@veltrix.com |
+| Depok cashier | depok.kasir1@veltrix.com |
 
-Development demo password: `VeltrixDemo2026!`. Jakarta and Bogor manager/cashier accounts follow the same email pattern. Demo menu photos are representative Unsplash images; replace them with the shop's product photos for a real catalog.
+Development demo password: `demo1234`. Jakarta and Bogor manager/cashier accounts follow the same email pattern. Demo menu photos are generated images stored in `public/images/menu`; replace them with the shop's product photos for a real catalog.
 
 ## Available workflows
 
@@ -147,7 +147,27 @@ Run the scheduler every minute. The stock notification job is scheduled hourly a
 
 ## Deployment
 
-Production hosting is not configured in this workspace. Point the web document root to `public/`. Configure HTTPS, `APP_ENV=production`, `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, a production `APP_URL`, SMTP, and private PostgreSQL credentials. Install production dependencies, build Vite assets, run migrations, and run `php artisan optimize`. Do not run DemoSeeder in production. Manage the queue worker through a process supervisor and the scheduler through cron or an equivalent service.
+Vercel deployment is configured from the repository root without Docker. Import this GitHub repository, leave **Root Directory** at `./`, select **Other** as the framework preset, and use Node.js **22.x**. The committed `vercel.json` sets the install command, build command, and output directory; keep those settings without dashboard overrides. `vercel-php@0.8.0` supplies PHP 8.4. This community runtime is archived and is not officially supported by Vercel.
+
+Add these environment variables in Vercel before deploying:
+
+| Variable | Value |
+| --- | --- |
+| `APP_KEY` | The existing Laravel application key, kept private. Reuse it when connecting to the existing database so encrypted data remains readable. |
+| `APP_URL` | The full HTTPS URL of the deployment or custom domain. |
+| `DB_HOST` | Your Neon pooled hostname. |
+| `DB_PORT` | `5432` |
+| `DB_DATABASE` | Your Neon database name. |
+| `DB_USERNAME` | Your Neon role name. |
+| `DB_PASSWORD` | Your Neon password, kept private. |
+
+The configuration enables production mode, HTTPS cookies, PostgreSQL sessions/cache, TLS for Neon, stderr logs, and synchronous queue execution. Configure SMTP separately for password reset emails. `npm run build:vercel` builds the frontend and copies only public assets into `.vercel-static`; it includes the generated menu photos and landing image, while excluding PHP entry points, the Vite hot file, private storage, and source files. Composer dependencies and package discovery are handled by the PHP runtime. The Laravel entry point creates writable view and framework cache directories in temporary storage. Local development continues using `public/index.php` as usual.
+
+Run `php artisan migrate --force` from a trusted environment configured for the target database when migrations are needed. Builds deliberately do not migrate, seed, reset data, or generate a replacement application key. Do not run DemoSeeder or DemoAccountSeeder in production. The built-in `/up` route provides a deployment health check.
+
+Vercel does not run this application's Artisan scheduler automatically. Run `php artisan schedule:run` from an external scheduler/worker environment for hourly operational notifications. Synchronous queue execution covers jobs dispatched by web requests; it does not process an existing database queue backlog. Uploads of expense receipts currently use private local storage, which is temporary on Vercel: permanent receipt storage must be configured before relying on this upload feature in production. The committed menu images are deployment assets and are available without external image storage.
+
+For traditional PHP hosting, point the web document root to `public/`, install production dependencies, build Vite assets, configure HTTPS and the environment, run migrations, and run `php artisan optimize`. Manage the queue worker through a process supervisor and the scheduler through cron or an equivalent service.
 
 Keep encrypted PostgreSQL backups outside the web root and repository. Test `pg_dump` and `pg_restore` against a separate recovery database before going live. Backup execution, a restore drill, public deployment, uptime monitoring, and production load testing have not been completed in this workspace.
 

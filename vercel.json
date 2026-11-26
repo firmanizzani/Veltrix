@@ -1,0 +1,42 @@
+{
+    "$schema": "https://openapi.vercel.sh/vercel.json",
+    "framework": null,
+    "installCommand": "npm ci --include=dev --ignore-scripts",
+    "buildCommand": "npm run build:vercel",
+    "outputDirectory": ".vercel-static",
+    "regions": ["sin1"],
+    "functions": {
+        "api/index.php": {
+            "runtime": "vercel-php@0.8.0",
+            "maxDuration": 60,
+            "excludeFiles": "{node_modules/**,.vercel-static/**,.git/**,.tools/**,tests/**,storage/**}"
+        }
+    },
+    "routes": [
+        {
+            "src": "/build/assets/(.*)",
+            "headers": { "Cache-Control": "public, max-age=31536000, immutable" },
+            "continue": true
+        },
+        { "handle": "filesystem" },
+        { "src": "/(.*)", "dest": "/api/index.php" }
+    ],
+    "env": {
+        "APP_NAME": "VELTRIX",
+        "APP_ENV": "production",
+        "APP_DEBUG": "false",
+        "APP_LOCALE": "id",
+        "LOG_CHANNEL": "stderr",
+        "LOG_LEVEL": "warning",
+        "DB_CONNECTION": "pgsql",
+        "DB_SSLMODE": "require",
+        "PGCHANNELBINDING": "require",
+        "SESSION_DRIVER": "database",
+        "SESSION_ENCRYPT": "true",
+        "SESSION_SECURE_COOKIE": "true",
+        "CACHE_STORE": "database",
+        "QUEUE_CONNECTION": "sync",
+        "INERTIA_SSR_ENABLED": "false",
+        "BOOST_BROWSER_LOGS_WATCHER": "false"
+    }
+}

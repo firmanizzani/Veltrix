@@ -2,8 +2,12 @@
     "$schema": "https://www.schemastore.org/package.json",
     "private": true,
     "type": "module",
+    "engines": {
+        "node": "22.x"
+    },
     "scripts": {
         "build": "tsc --noEmit && vite build",
+        "build:vercel": "npm run build && node vercel-build.mjs",
         "dev": "vite",
         "typecheck": "tsc --noEmit",
         "format": "prettier --write resources/js resources/css app database routes tests \"bootstrap/*.php\" config package.json vite.config.js tsconfig.json components.json",

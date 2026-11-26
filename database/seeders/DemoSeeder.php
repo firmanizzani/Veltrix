@@ -41,10 +41,10 @@ class DemoSeeder extends Seeder
             return;
         }
         DB::transaction(function () {
-            $password = 'VeltrixDemo2026!';
+            $password = DemoAccountSeeder::PASSWORD;
             $owner = User::create([
                 'name' => 'Firman Izzani',
-                'email' => 'owner@veltrix.test',
+                'email' => 'owner@veltrix.com',
                 'password' => $password,
                 'role' => 'owner',
             ]);
@@ -140,7 +140,7 @@ class DemoSeeder extends Seeder
                     'name' => ['Nadia Putri', 'Raka Pratama', 'Dinda Maharani'][
                         $branchIndex
                     ],
-                    'email' => strtolower($city) . '.manager@veltrix.test',
+                    'email' => strtolower($city) . '.manager@veltrix.com',
                     'password' => $password,
                     'role' => 'manager',
                     'branch_id' => $branch->id,
@@ -149,7 +149,7 @@ class DemoSeeder extends Seeder
                 for ($i = 1; $i <= 2; $i++) {
                     $cashiers[] = User::create([
                         'name' => $city . ' Kasir ' . $i,
-                        'email' => strtolower($city) . '.kasir' . $i . '@veltrix.test',
+                        'email' => strtolower($city) . '.kasir' . $i . '@veltrix.com',
                         'password' => $password,
                         'role' => 'cashier',
                         'branch_id' => $branch->id,
@@ -282,7 +282,7 @@ class DemoSeeder extends Seeder
         });
         Carbon::setTestNow();
         $this->command?->info(
-            'Demo tersedia: owner@veltrix.test / VeltrixDemo2026! (khusus development).',
+            'Demo tersedia: owner@veltrix.com / demo1234 (khusus development).',
         );
     }
 }

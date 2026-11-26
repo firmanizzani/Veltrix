@@ -314,7 +314,26 @@ export default function Records({
                 }
             />
             <div className="section-tabs">
-                <span className="tab-active">{d.title}</span>
+                {['orders', 'refunds'].includes(d.key) ? (
+                    <>
+                        <Link
+                            href="/manage/orders"
+                            className={d.key === 'orders' ? 'tab-active' : undefined}
+                            aria-current={d.key === 'orders' ? 'page' : undefined}
+                        >
+                            Transaksi
+                        </Link>
+                        <Link
+                            href="/manage/refunds"
+                            className={d.key === 'refunds' ? 'tab-active' : undefined}
+                            aria-current={d.key === 'refunds' ? 'page' : undefined}
+                        >
+                            Pengembalian dana
+                        </Link>
+                    </>
+                ) : (
+                    <span className="tab-active">{d.title}</span>
+                )}
                 <span className="muted">{number(records.total)} catatan</span>
             </div>
             {special}

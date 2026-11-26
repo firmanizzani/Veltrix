@@ -30,6 +30,8 @@
 /.impeccable/review
 /.impeccable/reference
 /backups
+/.vercel
+/.vercel-static
 /.env.testing
 _ide_helper.php
 Homestead.json
