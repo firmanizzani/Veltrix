@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\Role;
 use App\Models\AiMessage;
 use App\Models\User;
 use App\Services\BusinessAnalyticsTool;
@@ -32,7 +33,11 @@ class AnswerBusinessQuestion implements ShouldQueue
         if (
             !$user ||
             !$user->is_active ||
-            !$user->isOwner() ||
+            (!$user->isOwner() &&
+                ($user->role !== Role::Manager ||
+                    $user->branch_id === null ||
+                    $scope['branch_id'] !== $user->branch_id ||
+                    ($scope['audience'] ?? null) !== 'manager')) ||
             !config('intelligence.enabled') ||
             !config('ai.providers.gemini.key')
         ) {
@@ -44,6 +49,12 @@ class AnswerBusinessQuestion implements ShouldQueue
                 ->messages()
                 ->where('id', '<', $message->id)
                 ->where('status', 'completed')
+                ->when(
+                    !$user->isOwner(),
+                    fn($query) => $query
+                        ->where('scope->audience', 'manager')
+                        ->where('scope->branch_id', $user->branch_id),
+                )
                 ->latest('id')
                 ->limit(13)
                 ->get()

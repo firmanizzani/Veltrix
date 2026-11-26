@@ -1,3 +1,4 @@
+import { AnswerText } from '../components/ai-answer';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ArrowUp, Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -50,6 +51,7 @@ type Insight = {
     evidence: Record<string, unknown>;
 };
 type Props = {
+    canManageInsights: boolean;
     available: boolean;
     dailyLimit: number;
     usedToday: number;
@@ -150,41 +152,6 @@ function EvidenceRows({ data }: { data: Record<string, unknown> }) {
     );
 }
 
-function AnswerText({ content }: { content: string }) {
-    function inline(text: string) {
-        return text.split(/(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g).map((part, index) => {
-            if (part.startsWith('**') && part.endsWith('**')) {
-                return <strong key={index}>{part.slice(2, -2)}</strong>;
-            }
-            if (part.startsWith('`') && part.endsWith('`')) {
-                return <code key={index}>{part.slice(1, -1)}</code>;
-            }
-            if (part.startsWith('*') && part.endsWith('*')) {
-                return <em key={index}>{part.slice(1, -1)}</em>;
-            }
-            return part;
-        });
-    }
-    return (
-        <div className="intelligence-answer">
-            {content.split(/\n\s*\n/).map((paragraph, index) => {
-                const lines = paragraph.split('\n');
-                if (lines.every((line) => /^\s*[-*]\s/.test(line))) {
-                    return (
-                        <ul key={index}>
-                            {lines.map((line, row) => (
-                                <li key={row}>
-                                    {inline(line.replace(/^\s*[-*]\s/, ''))}
-                                </li>
-                            ))}
-                        </ul>
-                    );
-                }
-                return <p key={index}>{inline(paragraph)}</p>;
-            })}
-        </div>
-    );
-}
 function MessageEvidence({ sources }: { sources: Evidence[] }) {
     return (
         <details className="intelligence-evidence">
@@ -247,6 +214,7 @@ function MessageEvidence({ sources }: { sources: Evidence[] }) {
 }
 
 export default function Intelligence({
+    canManageInsights,
     available,
     dailyLimit,
     usedToday,
@@ -268,7 +236,7 @@ export default function Intelligence({
         thread_id: conversation?.id ?? (null as number | null),
         start: conversation?.start ?? today.slice(0, 8) + '01',
         end: conversation?.end ?? today,
-        branch_id: conversation?.branch_id ?? ('' as number | ''),
+        branch_id: conversation?.branch_id ?? filters.branch_id,
     });
     const [activeTab, setActiveTab] = useState(tab);
     const composer = useRef<HTMLTextAreaElement>(null);
@@ -281,7 +249,7 @@ export default function Intelligence({
             thread_id: conversation?.id ?? null,
             start: conversation?.start ?? today.slice(0, 8) + '01',
             end: conversation?.end ?? today,
-            branch_id: conversation?.branch_id ?? '',
+            branch_id: conversation?.branch_id ?? filters.branch_id,
         });
     }, [conversation?.id]);
     useEffect(() => {
@@ -300,10 +268,14 @@ export default function Intelligence({
     const exhausted = usedToday >= dailyLimit;
     return (
         <div className="intelligence">
-            <Head title="AI & insight bisnis" />
+            <Head title={canManageInsights ? 'AI & insight bisnis' : 'Asisten AI'} />
             <PageTitle
-                title="AI & insight bisnis"
-                description="Tanyakan angka bisnis Anda, lalu telusuri data di balik jawabannya."
+                title={canManageInsights ? 'AI & insight bisnis' : 'Asisten AI Cabang'}
+                description={
+                    canManageInsights
+                        ? 'Tanyakan angka bisnis Anda, lalu telusuri data di balik jawabannya.'
+                        : 'Tanyakan penjualan, menu, dan persediaan cabang Anda.'
+                }
             />
             <div
                 className="intelligence-tabs"
@@ -316,15 +288,17 @@ export default function Intelligence({
                 >
                     Asisten bisnis
                 </button>
-                <button
-                    aria-pressed={activeTab === 'insights'}
-                    onClick={() => setActiveTab('insights')}
-                >
-                    Insight otomatis
-                </button>
+                {canManageInsights && (
+                    <button
+                        aria-pressed={activeTab === 'insights'}
+                        onClick={() => setActiveTab('insights')}
+                    >
+                        Insight otomatis
+                    </button>
+                )}
                 <span>{available ? 'Gemini terkonfigurasi' : 'Gemini belum aktif'}</span>
             </div>
-            {activeTab === 'assistant' ? (
+            {!canManageInsights || activeTab === 'assistant' ? (
                 <div className="intelligence-workspace">
                     <aside
                         className="intelligence-history"
@@ -372,7 +346,9 @@ export default function Intelligence({
                                 Cabang
                                 <select
                                     value={form.data.branch_id}
-                                    disabled={pending || form.processing}
+                                    disabled={
+                                        !canManageInsights || pending || form.processing
+                                    }
                                     onChange={(event) =>
                                         form.setData(
                                             'branch_id',
@@ -382,7 +358,9 @@ export default function Intelligence({
                                         )
                                     }
                                 >
-                                    <option value="">Seluruh cabang</option>
+                                    {canManageInsights && (
+                                        <option value="">Seluruh cabang</option>
+                                    )}
                                     {branches.map((branch) => (
                                         <option
                                             key={branch.id}
@@ -420,17 +398,18 @@ export default function Intelligence({
                             </label>
                         </header>
                         <p className="intelligence-scope-note">
-                            Tanggal dan cabang berlaku untuk pertanyaan berikutnya.
-                            Jawaban lama tetap memakai cakupan asalnya.
+                            {canManageInsights
+                                ? 'Tanggal dan cabang berlaku untuk pertanyaan berikutnya. Jawaban lama tetap memakai cakupan asalnya.'
+                                : 'Analisis hanya menggunakan data cabang Anda. Periode yang dipilih berlaku untuk pertanyaan berikutnya.'}
                         </p>
                         {!available && (
                             <p
                                 className="intelligence-notice"
                                 role="status"
                             >
-                                Chat belum aktif. Pengelola perlu mengonfigurasi koneksi
-                                Gemini. Insight otomatis dan laporan bisnis tetap
-                                tersedia.
+                                {canManageInsights
+                                    ? 'Chat belum aktif. Pengelola perlu mengonfigurasi koneksi Gemini. Insight otomatis dan laporan bisnis tetap tersedia.'
+                                    : 'Chat belum aktif. Hubungi owner untuk mengaktifkan layanan Gemini. Laporan cabang tetap tersedia.'}
                             </p>
                         )}
                         <div
@@ -440,11 +419,14 @@ export default function Intelligence({
                             {!conversation?.messages.length && (
                                 <div className="intelligence-start">
                                     <h2>
-                                        Apa yang ingin Anda pahami dari kedai hari ini?
+                                        {canManageInsights
+                                            ? 'Apa yang ingin Anda pahami dari kedai hari ini?'
+                                            : 'Apa yang perlu ditindaklanjuti di cabang Anda?'}
                                     </h2>
                                     <p>
-                                        Pilih cabang dan periode, lalu tanyakan penjualan,
-                                        menu, biaya, atau persediaan.
+                                        {canManageInsights
+                                            ? 'Pilih cabang dan periode, lalu tanyakan penjualan, menu, biaya, atau persediaan.'
+                                            : 'Pilih periode, lalu telusuri penjualan, perubahan menu, atau bahan yang perlu dibeli.'}
                                     </p>
                                     <div className="intelligence-suggestions">
                                         {[

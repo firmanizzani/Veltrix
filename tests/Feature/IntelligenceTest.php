@@ -136,19 +136,219 @@ class IntelligenceTest extends TestCase
         ]);
     }
 
-    public function test_only_owner_can_access_chat_or_run_analysis(): void
+    public function test_cashier_cannot_access_chat_and_only_owner_can_run_global_analysis(): void
     {
         $manager = User::factory()->create([
             'role' => 'manager',
             'branch_id' => $this->branch->id,
         ]);
         foreach ([$manager, $this->cashier] as $user) {
-            $this->actingAs($user)->get('/intelligence')->assertForbidden();
-            $this->post('/intelligence/messages', $this->question())->assertForbidden();
+            $this->actingAs($user);
+            if ($user === $this->cashier) {
+                $this->get('/intelligence')->assertForbidden();
+                $this->post(
+                    '/intelligence/messages',
+                    $this->question(),
+                )->assertForbidden();
+            }
             $this->post('/intelligence/generate')->assertForbidden();
         }
         $this->assertDatabaseCount('ai_messages', 0);
         Queue::assertNothingPushed();
+    }
+
+    public function test_manager_chat_is_bound_to_branch_and_shown_on_its_own_page(): void
+    {
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'branch_id' => $this->branch->id,
+        ]);
+        $this->actingAs($manager)
+            ->post('/intelligence/messages', $this->question())
+            ->assertRedirect('/intelligence?thread=1');
+        $thread = AiThread::firstOrFail();
+        $this->assertSame($this->branch->id, $thread->branch_id);
+        Queue::assertPushed(AnswerBusinessQuestion::class);
+        $this->get('/intelligence?thread=' . $thread->id)->assertInertia(
+            fn(Assert $page) => $page
+                ->component('Intelligence')
+                ->where('available', true)
+                ->where('canManageInsights', false)
+                ->where('usedToday', 1)
+                ->where('conversation.id', $thread->id)
+                ->where('conversation.messages.1.status', 'pending')
+                ->has('branches', 1)
+                ->where('branches.0.id', $this->branch->id)
+                ->where('filters.branch_id', $this->branch->id)
+                ->has('insights.data', 0),
+        );
+        $this->get('/dashboard')->assertInertia(
+            fn(Assert $page) => $page->missing('assistant'),
+        );
+        $this->get('/intelligence?tab=insights')->assertInertia(
+            fn(Assert $page) => $page->where('tab', 'assistant'),
+        );
+        $other = User::factory()->create([
+            'role' => 'manager',
+            'branch_id' => $this->branch->id,
+        ]);
+        $this->actingAs($other)
+            ->get('/intelligence?thread=' . $thread->id)
+            ->assertNotFound();
+        $this->post(
+            '/intelligence/messages',
+            $this->question(['thread_id' => $thread->id]),
+        )->assertNotFound();
+        $this->actingAs($manager)
+            ->post('/intelligence/messages', $this->question(['branch_id' => 99999]))
+            ->assertSessionHasErrors('branch_id');
+    }
+
+    public function test_manager_tool_filters_private_metrics_and_rejects_other_branches(): void
+    {
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'branch_id' => $this->branch->id,
+        ]);
+        $this->order(22000, '2026-11-24');
+        $tool = new BusinessAnalyticsTool(
+            $manager,
+            '2026-11-01',
+            '2026-11-25',
+            $this->branch->id,
+        );
+        $summary = $tool->read(['metric' => 'summary']);
+        $this->assertSame(22000, $summary['data']['net']);
+        $this->assertArrayNotHasKey('payroll', $summary['data']);
+        $this->assertArrayNotHasKey('profit', $summary['data']);
+        $branches = $tool->read(['metric' => 'branch_comparison']);
+        $this->assertCount(1, $branches['data']);
+        $this->assertArrayNotHasKey('payroll', $branches['data'][0]);
+        $this->assertArrayNotHasKey('profit', $branches['data'][0]);
+        foreach (['profitability', 'insights'] as $metric) {
+            try {
+                $tool->read(['metric' => $metric]);
+                $this->fail('Owner-only data accepted.');
+            } catch (ValidationException) {
+                $this->assertTrue(true);
+            }
+        }
+        $other = Branch::create([
+            'code' => 'OTHER',
+            'name' => 'Other',
+            'city' => 'Bogor',
+            'address' => 'Bogor',
+        ]);
+        $this->actingAs($manager)
+            ->post('/intelligence/messages', $this->question(['branch_id' => $other->id]))
+            ->assertForbidden();
+        $this->expectException(
+            \Symfony\Component\HttpKernel\Exception\HttpException::class,
+        );
+        $tool->read(['metric' => 'summary', 'branch_id' => $other->id]);
+    }
+
+    public function test_manager_can_receive_answer_and_follow_up_without_private_evidence(): void
+    {
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'branch_id' => $this->branch->id,
+        ]);
+        $this->actingAs($manager)->post('/intelligence/messages', $this->question());
+        BusinessAssistant::fake([
+            new ToolCall('manager-summary', 'business_analytics', [
+                'metric' => 'summary',
+            ]),
+            'Ringkasan cabang berdasarkan data.',
+        ])->preventStrayPrompts();
+        $answer = AiMessage::where('status', 'pending')->firstOrFail();
+        (new AnswerBusinessQuestion($answer->id))->handle();
+        $this->assertSame('completed', $answer->fresh()->status);
+        foreach ($answer->fresh()->evidence as $source) {
+            $this->assertArrayNotHasKey('payroll', $source['data']);
+            $this->assertArrayNotHasKey('profit', $source['data']);
+        }
+        $this->post(
+            '/intelligence/messages',
+            $this->question(['thread_id' => $answer->ai_thread_id]),
+        )->assertRedirect();
+        $manager->update(['branch_id' => null]);
+        $next = AiMessage::where('status', 'pending')->firstOrFail();
+        (new AnswerBusinessQuestion($next->id))->handle();
+        $this->assertSame('failed', $next->fresh()->status);
+    }
+
+    public function test_manager_budget_disabled_provider_and_stale_pending_are_handled(): void
+    {
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'branch_id' => $this->branch->id,
+        ]);
+        $this->actingAs($manager);
+        config(['intelligence.enabled' => false]);
+        $this->post('/intelligence/messages', $this->question())->assertSessionHasErrors(
+            'message',
+        );
+        config(['intelligence.enabled' => true]);
+        $this->post('/intelligence/messages', $this->question());
+        $thread = AiThread::firstOrFail();
+        $this->post(
+            '/intelligence/messages',
+            $this->question(['thread_id' => $thread->id]),
+        )->assertSessionHasErrors('message');
+        config(['intelligence.daily_limit' => 1]);
+        $this->post('/intelligence/messages', $this->question())->assertSessionHasErrors(
+            'message',
+        );
+        AiMessage::where('status', 'pending')->update([
+            'created_at' => now()->subMinutes(6),
+        ]);
+        $this->get('/intelligence?thread=' . $thread->id)->assertInertia(
+            fn(Assert $page) => $page->where('conversation.messages.1.status', 'failed'),
+        );
+    }
+
+    public function test_manager_cannot_read_owner_history_after_a_role_change(): void
+    {
+        $this->actingAs($this->owner)->post(
+            '/intelligence/messages',
+            $this->question(['branch_id' => $this->branch->id]),
+        );
+        $thread = AiThread::firstOrFail();
+        $this->owner->update(['role' => 'manager', 'branch_id' => $this->branch->id]);
+        $this->actingAs($this->owner->fresh());
+        $this->get('/intelligence?thread=' . $thread->id)->assertNotFound();
+        $this->get('/intelligence')->assertInertia(
+            fn(Assert $page) => $page->has('threads', 0),
+        );
+        $this->post(
+            '/intelligence/messages',
+            $this->question(['thread_id' => $thread->id]),
+        )->assertForbidden();
+    }
+
+    public function test_manager_cannot_reopen_history_from_their_previous_branch(): void
+    {
+        $manager = User::factory()->create([
+            'role' => 'manager',
+            'branch_id' => $this->branch->id,
+        ]);
+        $this->actingAs($manager)->post('/intelligence/messages', $this->question());
+        $thread = AiThread::firstOrFail();
+        $other = Branch::create([
+            'code' => 'OTHER',
+            'name' => 'Other',
+            'city' => 'Bogor',
+            'address' => 'Bogor',
+        ]);
+        $manager->update(['branch_id' => $other->id]);
+        $this->get('/intelligence?thread=' . $thread->id)->assertNotFound();
+        $this->get('/intelligence')->assertInertia(
+            fn(Assert $page) => $page
+                ->has('threads', 0)
+                ->where('branches.0.id', $other->id),
+        );
+        $this->get('/intelligence?branch_id=' . $this->branch->id)->assertForbidden();
     }
 
     public function test_chat_is_queued_private_and_never_exposes_credentials(): void

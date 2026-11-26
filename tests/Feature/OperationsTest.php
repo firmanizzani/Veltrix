@@ -337,13 +337,7 @@ class OperationsTest extends TestCase
     public function test_manager_cannot_read_owner_pages_or_other_branch(): void
     {
         foreach (
-            [
-                '/manage/payroll',
-                '/manage/users',
-                '/manage/branches',
-                '/manage/audit',
-                '/intelligence',
-            ]
+            ['/manage/payroll', '/manage/users', '/manage/branches', '/manage/audit']
             as $path
         ) {
             $this->actingAs($this->manager)->get($path)->assertForbidden();
@@ -364,6 +358,40 @@ class OperationsTest extends TestCase
                     ->missing('report.branches.0.payroll')
                     ->missing('report.branches.0.profit'),
             );
+    }
+
+    public function test_manager_dashboard_defaults_to_month_and_remembers_applied_dates(): void
+    {
+        $this->travelTo(now()->setDate(2026, 11, 26)->setTime(12, 0));
+        $this->actingAs($this->manager)
+            ->get('/dashboard')
+            ->assertInertia(
+                fn(Assert $page) => $page
+                    ->where('filters.start', '2026-11-01')
+                    ->where('filters.end', '2026-11-26'),
+            );
+        $this->get('/dashboard?start=2026-10-01&end=2026-10-31')->assertOk();
+        $this->get('/reports?start=2026-11-01&end=2026-11-20')->assertOk();
+        $this->get('/dashboard')->assertInertia(
+            fn(Assert $page) => $page
+                ->where('filters.start', '2026-10-01')
+                ->where('filters.end', '2026-10-31'),
+        );
+        $this->actingAs($this->owner)
+            ->get('/dashboard')
+            ->assertInertia(
+                fn(Assert $page) => $page
+                    ->where('filters.start', '2026-11-01')
+                    ->where('filters.end', '2026-11-26'),
+            );
+        $this->actingAs($this->manager)
+            ->get('/dashboard?start=2026-11-20&end=2026-11-01')
+            ->assertSessionHasErrors('end');
+        $this->get('/dashboard')->assertInertia(
+            fn(Assert $page) => $page
+                ->where('filters.start', '2026-10-01')
+                ->where('filters.end', '2026-10-31'),
+        );
     }
 
     public function test_dashboard_tasks_follow_branch_scope_and_reports_use_a_separate_page(): void

@@ -96,7 +96,7 @@ const groups: { title: string; items: NavItem[] }[] = [
     },
     {
         title: 'Intelligence',
-        items: [['AI & insight bisnis', '/intelligence', Sparkles, owner]],
+        items: [['AI & insight bisnis', '/intelligence', Sparkles, ops]],
     },
 ];
 
@@ -109,7 +109,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         user.role === 'owner'
             ? ['/dashboard', '/reports', '/manage/orders']
             : user.role === 'manager'
-              ? ['/dashboard', '/manage/inventory', '/reports']
+              ? ['/dashboard', '/manage/inventory', '/reports', '/intelligence']
               : ['/pos', '/manage/orders', '/manage/shifts', '/manage/refunds'];
     const allItems = groups.flatMap((group) => group.items);
     const primaryItems = primaryPaths.flatMap((href) =>
@@ -190,7 +190,11 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                     size={17}
                     strokeWidth={1.6}
                 />
-                <span>{title}</span>
+                <span>
+                    {href === '/intelligence' && user.role === 'manager'
+                        ? 'Asisten AI'
+                        : title}
+                </span>
             </Link>
         );
     }

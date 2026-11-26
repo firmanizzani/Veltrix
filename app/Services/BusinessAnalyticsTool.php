@@ -2,8 +2,12 @@
 
 namespace App\Services;
 
+use App\Enums\Role;
 use App\Models\Branch;
 use App\Models\BusinessInsight;
+use App\Models\Expense;
+use App\Models\PurchaseOrder;
+use App\Models\Refund;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -93,7 +97,14 @@ class BusinessAnalyticsTool implements Tool
      */
     public function read(array $arguments): array
     {
-        abort_unless($this->user->is_active && $this->user->isOwner(), 403);
+        abort_unless(
+            $this->user->is_active &&
+                ($this->user->isOwner() ||
+                    ($this->user->role === Role::Manager &&
+                        $this->user->branch_id !== null &&
+                        $this->branchId === $this->user->branch_id)),
+            403,
+        );
         $arguments = Validator::make($arguments, [
             'metric' =>
                 'required|in:summary,sales_trend,top_products,product_sales,stock,expenses,branch_comparison,profitability,insights',
@@ -116,6 +127,15 @@ class BusinessAnalyticsTool implements Tool
         abort_if($this->branchId !== null && $branchId !== $this->branchId, 403);
         $key = "$start:$end:$branchId";
         $metric = $arguments['metric'];
+        if (
+            !$this->user->isOwner() &&
+            in_array($metric, ['profitability', 'insights'], true)
+        ) {
+            throw ValidationException::withMessages([
+                'metric' =>
+                    'Data laba operasional, payroll, dan insight owner tidak tersedia untuk manager.',
+            ]);
+        }
         $report =
             $metric === 'product_sales'
                 ? null
@@ -159,6 +179,22 @@ class BusinessAnalyticsTool implements Tool
                     'evidence',
                 ]),
         };
+        if (!$this->user->isOwner()) {
+            if ($metric === 'summary') {
+                $data = collect($data)
+                    ->except(['payroll', 'profit'])
+                    ->all();
+            }
+            if ($metric === 'branch_comparison') {
+                $data = collect($data)
+                    ->map(
+                        fn($branch) => collect($branch)
+                            ->except(['payroll', 'profit'])
+                            ->all(),
+                    )
+                    ->all();
+            }
+        }
         $result = [
             'metric' => $metric,
             'period' => ['start' => $start, 'end' => $end],
@@ -179,6 +215,28 @@ class BusinessAnalyticsTool implements Tool
             )
                 ->get(['id', 'name', 'city'])
                 ->toArray();
+            if (!$this->user->isOwner()) {
+                $result['current_tasks'] = [
+                    'observed_at' => now()->toIso8601String(),
+                    'note' =>
+                        'Status operasional saat diperiksa, di luar filter tanggal.',
+                    'purchases_awaiting_stock' => PurchaseOrder::where(
+                        'branch_id',
+                        $branchId,
+                    )
+                        ->whereIn('status', ['ordered', 'partial'])
+                        ->count(),
+                    'refunds_pending' => Refund::where('status', 'pending')
+                        ->whereHas(
+                            'order',
+                            fn($query) => $query->where('branch_id', $branchId),
+                        )
+                        ->count(),
+                    'expenses_pending' => Expense::where('branch_id', $branchId)
+                        ->where('approval_status', 'pending')
+                        ->count(),
+                ];
+            }
         }
         if ($metric === 'top_products') {
             $result['coverage'] =

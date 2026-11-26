@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Role;
 use App\Jobs\AnswerBusinessQuestion;
 use App\Jobs\GenerateBusinessInsights;
 use App\Models\AiMessage;
@@ -9,6 +10,7 @@ use App\Models\AiThread;
 use App\Models\Branch;
 use App\Models\BusinessInsight;
 use App\Models\User;
+use App\Services\BranchAccess;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,11 +24,27 @@ class IntelligenceController extends Controller
 {
     public function index(Request $request): Response
     {
-        $this->authorizeOwner($request);
+        $this->authorizeAssistant($request);
+        $request->validate(['thread' => 'nullable|integer|min:1']);
+        $threads = AiThread::where('user_id', $request->user()->id)->when(
+            !$request->user()->isOwner(),
+            fn($query) => $query
+                ->where('branch_id', $request->user()->branch_id)
+                ->whereHas(
+                    'messages',
+                    fn($messages) => $messages->where('scope->audience', 'manager'),
+                )
+                ->whereDoesntHave(
+                    'messages',
+                    fn($messages) => $messages->where(function ($messages) {
+                        $messages
+                            ->whereNull('scope->audience')
+                            ->orWhere('scope->audience', '!=', 'manager');
+                    }),
+                ),
+        );
         $thread = $request->filled('thread')
-            ? AiThread::where('user_id', $request->user()->id)->findOrFail(
-                $request->integer('thread'),
-            )
+            ? (clone $threads)->findOrFail($request->integer('thread'))
             : null;
         if ($thread) {
             $thread
@@ -39,18 +57,13 @@ class IntelligenceController extends Controller
                         'Pemrosesan melewati batas waktu. Coba kirim kembali pertanyaan Anda.',
                 ]);
         }
-        $branchId =
-            $request->validate(['branch_id' => 'nullable|integer|exists:branches,id'])[
-                'branch_id'
-            ] ?? null;
+        $branchId = app(BranchAccess::class)->selected($request);
         return Inertia::render('Intelligence', [
+            'canManageInsights' => $request->user()->isOwner(),
             'available' => $this->available(),
             'dailyLimit' => config('intelligence.daily_limit'),
             'usedToday' => $this->usage($request->user()->id),
-            'threads' => fn() => AiThread::where('user_id', $request->user()->id)
-                ->latest('updated_at')
-                ->limit(20)
-                ->get(),
+            'threads' => fn() => (clone $threads)->latest('updated_at')->limit(20)->get(),
             'conversation' => $thread
                 ? [
                     ...$thread->toArray(),
@@ -63,21 +76,32 @@ class IntelligenceController extends Controller
                         ->values(),
                 ]
                 : null,
-            'branches' => fn() => Branch::select('id', 'name')->orderBy('name')->get(),
-            'insights' => fn() => BusinessInsight::query()
-                ->when($branchId, fn($query) => $query->where('branch_id', $branchId))
-                ->orderByDesc('end')
-                ->orderByDesc('id')
-                ->paginate(12)
-                ->withQueryString(),
+            'branches' => fn() => Branch::select('id', 'name')
+                ->when(
+                    !$request->user()->isOwner(),
+                    fn($query) => $query->whereKey($branchId),
+                )
+                ->orderBy('name')
+                ->get(),
+            'insights' => fn() => $request->user()->isOwner()
+                ? BusinessInsight::query()
+                    ->when($branchId, fn($query) => $query->where('branch_id', $branchId))
+                    ->orderByDesc('end')
+                    ->orderByDesc('id')
+                    ->paginate(12)
+                    ->withQueryString()
+                : ['data' => [], 'next_page_url' => null, 'prev_page_url' => null],
             'filters' => ['branch_id' => $branchId ?? ''],
-            'tab' => $request->query('tab') === 'insights' ? 'insights' : 'assistant',
+            'tab' =>
+                $request->user()->isOwner() && $request->query('tab') === 'insights'
+                    ? 'insights'
+                    : 'assistant',
         ]);
     }
 
     public function message(Request $request): RedirectResponse
     {
-        $this->authorizeOwner($request);
+        $this->authorizeAssistant($request);
         if (!$this->available()) {
             throw ValidationException::withMessages([
                 'message' =>
@@ -97,6 +121,7 @@ class IntelligenceController extends Controller
                 'start' => 'Pilih rentang maksimal 90 hari.',
             ]);
         }
+        $data['branch_id'] = app(BranchAccess::class)->selected($request);
         [$thread, $answer] = DB::transaction(function () use ($request, $data) {
             User::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
             if (
@@ -117,12 +142,27 @@ class IntelligenceController extends Controller
                     'end' => $data['end'],
                     'title' => Str::limit(trim($data['message']), 100),
                 ]);
+            if (!$request->user()->isOwner()) {
+                abort_unless($thread->branch_id === $request->user()->branch_id, 403);
+                abort_if(
+                    $thread
+                        ->messages()
+                        ->where(function ($query) {
+                            $query
+                                ->whereNull('scope->audience')
+                                ->orWhere('scope->audience', '!=', 'manager');
+                        })
+                        ->exists(),
+                    403,
+                );
+            }
             if ($thread->messages()->where('status', 'pending')->exists()) {
                 throw ValidationException::withMessages([
                     'message' => 'Tunggu jawaban sebelumnya selesai.',
                 ]);
             }
             $scope = [
+                'audience' => $request->user()->isOwner() ? 'owner' : 'manager',
                 'start' => $data['start'],
                 'end' => $data['end'],
                 'branch_id' => $data['branch_id'] ?? null,
@@ -130,7 +170,11 @@ class IntelligenceController extends Controller
                     ? Branch::findOrFail($data['branch_id'])->name
                     : 'Seluruh cabang',
             ];
-            $thread->update(collect($scope)->except('branch')->all());
+            $thread->update(
+                collect($scope)
+                    ->except(['branch', 'audience'])
+                    ->all(),
+            );
             $thread->messages()->create([
                 'role' => 'user',
                 'content' => trim($data['message']),
@@ -188,6 +232,17 @@ class IntelligenceController extends Controller
     private function authorizeOwner(Request $request): void
     {
         abort_unless($request->user()->is_active && $request->user()->isOwner(), 403);
+    }
+
+    private function authorizeAssistant(Request $request): void
+    {
+        abort_unless(
+            $request->user()->is_active &&
+                ($request->user()->isOwner() ||
+                    ($request->user()->role === Role::Manager &&
+                        $request->user()->branch_id !== null)),
+            403,
+        );
     }
 
     private function available(): bool

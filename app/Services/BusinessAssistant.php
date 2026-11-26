@@ -26,7 +26,10 @@ class BusinessAssistant implements Agent, Conversational, HasTools
     {
         $today = now()->toDateString();
         $snapshot = json_encode($this->snapshot, JSON_THROW_ON_ERROR);
-        return "Anda asisten bisnis VELTRIX untuk owner kedai kopi. Hari ini $today, Asia/Jakarta. " .
+        $audience = $this->analytics->user->isOwner()
+            ? 'owner kedai kopi'
+            : 'manager cabang kedai kopi. Akses hanya cabang yang ditetapkan. Jangan menjawab atau menyimpulkan payroll, laba operasional, atau data cabang lain. Gunakan current_tasks untuk prioritas operasional saat ini, di luar filter tanggal';
+        return "Anda asisten bisnis VELTRIX untuk $audience. Hari ini $today, Asia/Jakarta. " .
             'Jawab dalam bahasa Indonesia yang ringkas. Anda hanya membaca data melalui tools yang disediakan. ' .
             'Pertanyaan bisnis harus didukung hasil tool atau snapshot berikut. Sebutkan periode dan cabang, ' .
             'angka pendukung. Pahami hari ini, kemarin, minggu lalu, bulan ini ' .

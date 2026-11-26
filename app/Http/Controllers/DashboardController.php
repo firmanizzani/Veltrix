@@ -33,18 +33,24 @@ class DashboardController extends Controller
             'end' =>
                 'nullable|date_format:Y-m-d|after_or_equal:start|before_or_equal:today',
         ]);
+        $sessionKey = 'dashboard.date_range.' . $request->user()->id;
+        $savedRange =
+            !$request->is('reports') && !$request->hasAny(['start', 'end'])
+                ? $request->session()->get($sessionKey, [])
+                : [];
         $start =
             $filters['start'] ??
-            ($request->user()->isOwner() || $request->is('reports')
-                ? now()->startOfMonth()->toDateString()
-                : now()->toDateString());
-        $end = $filters['end'] ?? now()->toDateString();
+            ($savedRange['start'] ?? now()->startOfMonth()->toDateString());
+        $end = $filters['end'] ?? ($savedRange['end'] ?? now()->toDateString());
         if (Carbon::parse($start)->diffInDays($end) > 366 || $start > $end) {
             throw ValidationException::withMessages([
                 'start' => 'Pilih rentang maksimal 366 hari.',
             ]);
         }
         $branchId = $access->selected($request);
+        if (!$request->is('reports') && $request->filled(['start', 'end'])) {
+            $request->session()->put($sessionKey, ['start' => $start, 'end' => $end]);
+        }
         $report = $analytics->report($start, $end, $branchId, $request->is('reports'));
         if (!$request->user()->isOwner()) {
             unset($report['metrics']['payroll'], $report['metrics']['profit']);
