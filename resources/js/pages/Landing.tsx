@@ -136,6 +136,7 @@ export default function Landing() {
 
     useEffect(() => {
         if (
+            CSS.supports('animation-timeline', 'view()') ||
             !('IntersectionObserver' in window) ||
             window.matchMedia('(prefers-reduced-motion: reduce)').matches
         ) {

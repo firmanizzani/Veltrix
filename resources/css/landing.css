@@ -450,6 +450,34 @@
 .landing-cafe-atmosphere.landing-reveal-pending {
     transform: translateY(12px);
 }
+@supports (animation-timeline: view()) {
+    .landing [data-reveal] {
+        animation: landing-scroll-progress linear both;
+        animation-timeline: view();
+        animation-range: entry 0% cover 30%;
+    }
+    .landing-process-list > [data-reveal]:nth-child(2) {
+        animation-range: cover 5% cover 35%;
+    }
+    .landing-process-list > [data-reveal]:nth-child(3) {
+        animation-range: cover 10% cover 40%;
+    }
+    .landing [data-reveal]:focus-within {
+        animation: none;
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes landing-scroll-progress {
+    from {
+        opacity: 0;
+        transform: translateY(36px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
 @keyframes landing-reveal {
     from {
         opacity: 0.7;
