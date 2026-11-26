@@ -1,30 +1,63 @@
 # VELTRIX
 
-VELTRIX is a multi-branch coffee shop operations application for owners, branch managers, and cashiers. Laravel and React communicate through Inertia in one modular monolith. The application interface is in Indonesian, with IDR amounts and the Asia/Jakarta business timezone.
+VELTRIX adalah aplikasi pengelolaan kedai kopi multi-cabang yang menghubungkan penjualan, stok bahan, pembelian, karyawan, keuangan, dan analisis bisnis dalam satu tempat. Aplikasi menyediakan ruang kerja untuk owner, manager cabang, dan kasir, dengan akses data sesuai peran dan cabang masing-masing.
 
-## Stack
+Antarmuka menggunakan Bahasa Indonesia, nominal Rupiah (IDR), dan zona waktu bisnis Asia/Jakarta. Frontend React dan backend Laravel terhubung melalui Inertia dalam satu proyek.
 
-Laravel 13 · PHP 8.4 · React 19 · TypeScript · Inertia 3 · Tailwind 4 · shadcn/ui · Lucide · Recharts · PostgreSQL / Neon · Dompdf.
+## Fitur
 
-PostgreSQL is the only operational database. XAMPP, Apache, MySQL, and Docker are not required. PHP can run directly from a terminal, including the VS Code terminal.
+- **Dashboard operasional:** ringkasan penjualan, tren harian dan per jam, menu terlaris, transaksi terbaru, stok rendah, dan pekerjaan yang perlu ditindaklanjuti.
+- **Point of Sale:** pencarian dan filter menu, keranjang, jumlah pesanan, pencatatan pembayaran, uang diterima dan kembalian, sesi kasir, serta struk yang bisa dicetak.
+- **Transaksi dan refund:** riwayat transaksi, detail pesanan, dan pengajuan serta persetujuan pengembalian dana penuh.
+- **Katalog menu:** produk, kategori, foto sesuai menu, harga dan ketersediaan per cabang, serta persetujuan perubahan harga.
+- **Bahan dan persediaan:** bahan baku, resep dengan versi, pemotongan bahan saat penjualan, stok cabang, penyesuaian, opname, riwayat pergerakan, dan peringatan stok rendah.
+- **Pembelian dan transfer:** supplier, pembelian bahan, penerimaan sebagian, dan transfer stok dengan tahap persetujuan, pengiriman, serta penerimaan.
+- **Karyawan dan payroll:** data karyawan yang terpisah dari akun login, jadwal kerja, komponen gaji bulanan, persetujuan dan pencatatan pembayaran payroll, serta slip gaji.
+- **Pengeluaran:** pencatatan pengeluaran, kategori, bukti pengeluaran privat, dan persetujuan atau penolakan.
+- **Laporan bisnis:** ringkasan penjualan, biaya bahan, estimasi laba, pengeluaran, payroll, perbandingan cabang, komposisi pembayaran, serta ekspor CSV dan PDF sesuai hak akses.
+- **Laporan penjualan menu:** katalog lengkap termasuk menu tidak aktif atau belum terjual, filter tanggal/cabang/kategori/nama/SKU, pengurutan, pagination, rincian per cabang, dan ekspor seluruh hasil filter.
+- **AI Business Intelligence:** chat Gemini dengan riwayat percakapan, periode analisis, bukti dari data bisnis, dan batas pertanyaan harian. Owner dapat menganalisis lintas cabang; manager dibatasi ke cabangnya dan tidak mendapat data payroll atau laba operasional.
+- **Insight otomatis:** analisis berbasis aturan untuk perubahan penjualan, menu, pengeluaran, perbedaan cabang, dan risiko stok. Owner dapat meninjau temuan dan meminta penjelasan AI. Analisis berbasis aturan tetap tersedia tanpa Gemini.
+- **Administrasi dan keamanan:** pengaturan cabang, pengguna dan peran, aktivasi akun, profil, pemulihan password, notifikasi, pengaturan bisnis/struk, dan audit perubahan.
+- **Progressive Web App:** instalasi melalui browser yang mendukung, ikon aplikasi, panduan instalasi iOS, halaman offline, dan pembaruan yang dikendalikan pengguna. Transaksi POS tetap memerlukan koneksi; halaman privat dan permintaan checkout tidak disimpan sebagai cache offline.
 
-## Local setup
+## Peran pengguna
 
-Requirements: PHP 8.4+, Composer, Node.js 22.12+, and PostgreSQL. Enable the PHP extensions curl, fileinfo, mbstring, openssl, pdo_pgsql, pgsql, zip, intl, and dom. The fast test suite also requires pdo_sqlite.
+| Peran   | Cakupan                                                                                                                                   |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Owner   | Pengelolaan seluruh cabang, pengguna, payroll, laporan keuangan, chat AI, dan insight otomatis.                                           |
+| Manager | Operasional, stok, laporan yang diizinkan, dan chat AI untuk cabang yang ditugaskan. Tidak dapat mengakses payroll atau laba operasional. |
+| Kasir   | POS, sesi kasir, transaksi miliknya, struk, dan pengajuan refund sesuai izin.                                                             |
+
+Tidak ada registrasi publik. Akun operasional dikelola oleh owner. Sesi login berlaku maksimal tujuh hari sejak autentikasi password, tanpa opsi remember-me yang memperpanjang batas tersebut.
+
+## Teknologi
+
+Laravel 13, PHP 8.4, React 19, TypeScript, Inertia 3, Tailwind CSS 4, komponen Radix/shadcn, Lucide, Recharts, PostgreSQL/Neon, Dompdf, serta Laravel AI SDK dengan Gemini.
+
+PostgreSQL digunakan untuk data operasional. SQLite hanya digunakan pada pengujian terisolasi. Aplikasi tidak memerlukan pemisahan frontend dan backend, XAMPP, MySQL, atau Docker untuk development lokal.
+
+## Instalasi lokal
+
+Siapkan PHP 8.4+, Composer, Node.js 22.12+ pada seri 22.x, dan PostgreSQL. Aktifkan ekstensi PHP `curl`, `fileinfo`, `mbstring`, `openssl`, `pdo_pgsql`, `pgsql`, `zip`, `intl`, dan `dom`. Pengujian cepat juga membutuhkan `pdo_sqlite`.
 
 ```sh
 composer install
 npm ci
 ```
 
-Copy `.env.example` to `.env` and configure your PostgreSQL credentials locally. Neon connections use `DB_SSLMODE=require` and `PGCHANNELBINDING=require`. Keep private credentials out of the repository.
+Salin `.env.example` menjadi `.env`, lalu isi kredensial database. Koneksi Neon memakai `DB_SSLMODE=require` dan `PGCHANNELBINDING=require`.
+
+Untuk instalasi baru:
 
 ```sh
 php artisan key:generate
 php artisan migrate
 ```
 
-Run Laravel and Vite in separate terminals:
+Jangan membuat ulang `APP_KEY` saat memakai database lama yang berisi data terenkripsi.
+
+Jalankan backend dan frontend di terminal terpisah:
 
 ```sh
 php artisan serve
@@ -34,143 +67,190 @@ php artisan serve
 npm run dev
 ```
 
-Open [the local application](http://127.0.0.1:8000). To use compiled assets without a Vite development server, run `npm run build`, then run only the Laravel server.
+Buka [aplikasi lokal](http://127.0.0.1:8000). Jika ingin menggunakan aset hasil build tanpa server Vite, jalankan `npm run build`, kemudian cukup jalankan server Laravel.
 
-This Windows workspace also has a local portable PHP installation, which Git ignores:
+Pada workspace Windows yang memiliki PHP portabel lokal:
 
 ```powershell
 & .\.tools\php\php.exe artisan serve
 & .\.tools\php\php.exe .tools\composer.phar install
 ```
 
-The application uses client-side React rendering. SSR is disabled until a real
-SSR service is configured. Automatic Boost browser-log posting is also disabled
-by default to avoid additional development-server requests.
+Folder `.tools` tidak ikut Git. SSR Inertia dan pengiriman otomatis browser log Boost dinonaktifkan secara default.
 
-The local portable PHP runtime enables OPcache for CLI with timestamp validation
-and `opcache.revalidate_freq=0`. Restart PHP after changing `php.ini`. Vite still
-provides live frontend updates. Warm navigation differs from an initial visit,
-which must also load the development modules.
+## Instalasi awal dan akun demo
 
-## Initial setup and demo data
-
-For a normal installation, seed the three initial branches and create the first owner. This does not add sample transactions or a default production password.
+Untuk instalasi operasional tanpa transaksi contoh:
 
 ```sh
 php artisan db:seed
 php artisan veltrix:owner owner@example.com --name=Owner
 ```
 
-The owner command prompts for a hidden password and refuses to create a second owner.
+Perintah owner meminta password tersembunyi dan menolak pembuatan owner kedua.
 
-For an empty development database, use the separate demo seeder instead of creating the initial owner:
+Untuk database development yang masih kosong, gunakan demo seeder sebagai pengganti pembuatan owner awal:
 
 ```sh
 php artisan db:seed --class=DemoSeeder
 ```
 
-The demo seeder runs only in local/testing environments. It stops without overwriting data if users or products already exist. It supplies three branches, ten accounts, twenty menu items, recipes, stock ledger entries, suppliers, employees, schedules, draft payroll, and approximately three months of transactions.
+Demo seeder hanya berjalan pada environment `local` atau `testing` dan berhenti jika pengguna atau produk sudah ada. Data contoh mencakup tiga cabang, sepuluh akun, dua puluh menu, resep, stok, supplier, karyawan, jadwal, draft payroll, dan sekitar tiga bulan transaksi.
 
-| Role | Demo email |
-| --- | --- |
-| Owner | owner@veltrix.com |
-| Depok manager | depok.manager@veltrix.com |
-| Depok cashier | depok.kasir1@veltrix.com |
+| Peran   | Cabang         | Email demo                    |
+| ------- | -------------- | ----------------------------- |
+| Owner   | Seluruh cabang | `owner@veltrix.com`           |
+| Manager | Depok          | `depok.manager@veltrix.com`   |
+| Kasir 1 | Depok          | `depok.kasir1@veltrix.com`    |
+| Kasir 2 | Depok          | `depok.kasir2@veltrix.com`    |
+| Manager | Jakarta        | `jakarta.manager@veltrix.com` |
+| Kasir 1 | Jakarta        | `jakarta.kasir1@veltrix.com`  |
+| Kasir 2 | Jakarta        | `jakarta.kasir2@veltrix.com`  |
+| Manager | Bogor          | `bogor.manager@veltrix.com`   |
+| Kasir 1 | Bogor          | `bogor.kasir1@veltrix.com`    |
+| Kasir 2 | Bogor          | `bogor.kasir2@veltrix.com`    |
 
-Development demo password: `demo1234`. Jakarta and Bogor manager/cashier accounts follow the same email pattern. Demo menu photos are generated images stored in `public/images/menu`; replace them with the shop's product photos for a real catalog.
+Password bawaan seluruh akun demo: `demo1234`. Akun tersebut khusus demonstrasi, bukan konfigurasi akun produksi.
 
-## Available workflows
+Foto menu adalah gambar hasil generasi yang disimpan di `public/images/menu`. Database menyimpan path gambar; server aplikasi menyajikan file fotonya. Ganti dengan foto produk kedai untuk katalog sebenarnya.
 
-The business reports screen has Summary and Menu sales tabs. Menu sales lists the complete catalog with pagination, including inactive and zero-sale products. Filter by date, authorized branch, category, or product name/SKU; sort by net quantity, net sales, or name. Expand a menu for its branch breakdown. Summary figures cover the entire filtered result, and CSV exports include all matching pages. Managers can access only their assigned branch. Product figures share the same underlying sales/refund aggregation as the AI tools; approved refunds are recognized on their processing date.
+## Konfigurasi AI
 
-- Login, logout, password recovery, profiles, account activation, role and branch assignment, and change auditing.
-- Login lasts at most seven days from password authentication, even with continued activity. The login form has no remember-me option; legacy remember cookies cannot restart the seven-day limit. Existing active sessions receive their seven-day baseline on their first request after this update.
-- Branches, users, categories, products, branch-specific pricing and availability, and price change approvals.
-- POS search and categories, cart quantities, manually recorded payments, tendered cash and change, cashier shifts, transaction history, printable receipts, and full refund requests and approvals.
-- Ingredients, versioned recipes, branch inventory, adjustments, stock counts, stock ledger, suppliers, purchasing, partial receiving, and stock transfers with approval, dispatch, and receipt stages.
-- Employees separate from login accounts, work schedules, expenses with private evidence and approval, and draft → approved → paid payroll with printable payslips.
-- Owner and manager dashboards, daily and hourly trends, equal-duration branch growth comparisons, bestselling products, management financial reports, expense category breakdowns, current inventory valuation, stock movement counts, and CSV/PDF exports. Owners see eight overview metrics; managers see four. Inventory valuation reflects current balances, not historical balances at the report's end date.
-- Stock notifications, per-user read status, business settings, and receipt footer configuration.
-- Installable PWA with a sidebar install button above the account profile, standalone app icons, iOS installation guidance, an offline fallback, and user-controlled updates. Installation requires HTTPS or localhost and browser support. The service worker caches only the public offline page and app icons; authenticated pages, reports, API responses, and checkout requests are never cached or queued offline. Run `npm run test:pwa` to verify these cache boundaries.
+Isi variabel server berikut di `.env` lokal atau Environment Variables pada hosting:
 
-The owner-only Intelligence workspace provides Gemini chat, conversation history, supporting analytics evidence, and automatic business insights. Chat uses Laravel AI SDK and approved read-only aggregate tools; it cannot execute arbitrary SQL or change transactions. Insight detection runs locally using explicit thresholds and remains available without Gemini. Sales trends require at least 10 transactions in both seven-day periods; stock coverage is an estimate based on seven days of recorded recipe consumption. Insight review statuses and notifications are deduplicated. The “Explain with AI” action opens a grounded conversation and uses the same daily question allowance.
+```env
+AI_ENABLED=true
+GEMINI_API_KEY=isi_key_di_server
+GEMINI_MODEL=gemini-3.5-flash-lite
+AI_DAILY_LIMIT=30
+```
 
-Product questions can search catalog and historical names, return per-branch or daily quantities, and compare equally long periods with backend-calculated changes. Products outside the top five are searchable; unknown names are distinguished from recorded products with zero sales. Percent changes are unavailable when the baseline is zero or negative. Dates and branches can be changed within the same conversation: each new message stores its scope, while previous answers and evidence retain their original period. Implicit follow-ups use the current selection; explicit date requests may use another validated period.
+Model default mengikuti `config/intelligence.php`. Pastikan model tersebut tersedia untuk key dan kuota provider yang digunakan. Key tidak boleh masuk ke Git, kode frontend, atau variabel `VITE_*`.
 
-Set `AI_ENABLED=true`, `GEMINI_API_KEY`, and `GEMINI_MODEL` on the server to enable chat. The default model is `gemini-3.5-flash-lite`; use `php artisan veltrix:ai-check --models` to inspect available text models and `php artisan veltrix:ai-check` to verify the connection without sending business data. `php artisan veltrix:ai-check --business` explicitly verifies analytics tool calling with business aggregates. Keep keys outside Git and the browser. `AI_DAILY_LIMIT` defaults to 30 questions per owner per Jakarta calendar day, including failed attempts; token usage is recorded per answer. Provider pricing and quotas apply separately from the free Laravel AI SDK.
+```sh
+php artisan veltrix:ai-check --models
+php artisan veltrix:ai-check
+```
 
-Run a persistent database queue worker (`php artisan queue:work database --tries=1 --timeout=150`) for chat and manually requested analysis, even when the default queue connection is synchronous. The UI polls only while a reply is pending and reports stalled requests after five minutes. Run `php artisan veltrix:insights` for an immediate deterministic analysis. The scheduler dispatches automatic analysis daily at 06:00 Asia/Jakarta. Serverless hosting requires an external persistent queue worker and scheduler; synchronous web execution is not used for AI requests. No live provider call is made by automated tests.
+Perintah pertama menampilkan model teks yang tersedia. Perintah kedua memeriksa koneksi tanpa mengirim data bisnis. Untuk secara eksplisit menguji pemanggilan analytics tool dengan agregat bisnis:
 
-## Data integrity and accounting conventions
+```sh
+php artisan veltrix:ai-check --business
+```
 
-The backend determines checkout prices. Idempotency keys prevent repeated checkout and receiving operations. Ingredient deductions, orders, items, payments, ledger entries, and audit records are written within database transactions. Row locks protect concurrent access to the last available stock.
+Chat memakai tool agregasi read-only; AI tidak diberi akses SQL bebas atau perubahan transaksi. Pertanyaan produk dapat mencari seluruh katalog dan nama historis, membedakan produk tidak dikenal dari produk tanpa penjualan, serta membandingkan periode dengan perhitungan backend. Setiap pesan menyimpan cakupan tanggal/cabangnya, sehingga jawaban lama mempertahankan konteks aslinya.
 
-Inventory valuation uses a weighted average for each ingredient and branch. Sales item costs are frozen at checkout, so later ingredient price changes do not rewrite history. A purchase does not immediately become cost of goods sold or add stock before receipt. Transfers preserve a snapshot of the source cost.
+Batas default adalah 30 pertanyaan per pengguna per hari kalender Jakarta, termasuk percobaan yang gagal. Pemakaian token dicatat pada jawaban; kuota dan biaya Gemini mengikuti akun provider.
 
-Refunds in this release are always full refunds and do not return consumed ingredients to stock. Non-cash payments and refunds are recorded manually; there is no payment gateway. Approved/paid payroll is recognized on the first date of its monthly period. Profit reports are management estimates, not statutory accounting statements.
+**Chat AI dan analisis yang diminta manual memakai queue `database` secara eksplisit**, termasuk jika `QUEUE_CONNECTION=sync`. Jalankan worker persisten:
 
-## Tests and formatting
+```sh
+php artisan queue:work database --tries=1 --timeout=150
+```
+
+Tanpa worker, permintaan AI akan tetap pending hingga dianggap kedaluwarsa. UI memantau hanya saat jawaban sedang diproses. Pengujian otomatis tidak memanggil provider AI secara langsung.
+
+Untuk analisis berbasis aturan tanpa Gemini:
+
+```sh
+php artisan veltrix:insights
+```
+
+Analisis tren menggunakan periode lengkap tujuh hari dengan batas minimum transaksi. Estimasi cakupan stok berasal dari konsumsi resep yang tercatat. Temuan menyimpan bukti, status peninjauan, dan notifikasi yang dideduplikasi.
+
+## Integritas data dan batas fitur
+
+- Harga checkout ditentukan backend. Checkout dan penerimaan memiliki idempotency key untuk mencegah pencatatan berulang.
+- Penjualan, pembayaran, pemotongan bahan, ledger, dan audit dicatat dalam transaksi database. Row lock melindungi stok dari pemakaian bersamaan.
+- Biaya stok memakai rata-rata tertimbang per bahan/cabang. Biaya bahan pesanan dibekukan saat checkout; perubahan harga berikutnya tidak menulis ulang riwayat.
+- Pembelian belum menambah stok sebelum diterima. Transfer mempertahankan snapshot biaya sumber.
+- Refund berlaku penuh untuk satu pesanan dan tidak mengembalikan bahan yang telah dikonsumsi ke stok. Pembayaran non-tunai dan refund dicatat manual; belum ada payment gateway.
+- Payroll disusun dari komponen bulanan dan diakui pada tanggal pertama periodenya setelah disetujui/dibayar. Belum ada perhitungan otomatis absensi atau pajak wajib.
+- Laba merupakan estimasi manajemen, bukan laporan akuntansi resmi. Valuasi persediaan menggambarkan saldo stok saat ini, bukan saldo historis pada akhir periode laporan.
+
+Rincian implementasi dan batas alur kerja tersedia di [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md). Kebutuhan produk dan arahan implementasi tersedia di [prd.md](prd.md) dan [build.md](build.md).
+
+## Queue, scheduler, dan email
+
+Jalankan worker database di atas untuk AI. Jalankan scheduler setiap menit melalui cron atau layanan setara:
+
+```sh
+php artisan schedule:run
+```
+
+Scheduler menjalankan notifikasi stok setiap jam dan analisis bisnis harian pada pukul 06.00 Asia/Jakarta. Pemeriksaan stok manual tersedia melalui:
+
+```sh
+php artisan veltrix:notifications
+```
+
+`MAIL_MAILER=log` mencatat email untuk development. Atur SMTP atau transport email yang sesuai agar pemulihan password dapat mengirim email ke pengguna.
+
+## Deployment Vercel
+
+Deployment disiapkan dari root repo tanpa Docker, menggunakan runtime komunitas `vercel-php@0.8.0` untuk PHP 8.4. Runtime ini sudah diarsipkan dan tidak didukung resmi Vercel.
+
+Saat import repository, gunakan:
+
+| Pengaturan                   | Nilai                                   |
+| ---------------------------- | --------------------------------------- |
+| Application/Framework Preset | `Other`                                 |
+| Root Directory               | `./`                                    |
+| Node.js                      | `22.x`                                  |
+| Install Command              | `npm ci --include=dev --ignore-scripts` |
+| Build Command                | `npm run build:vercel`                  |
+| Output Directory             | `.vercel-static`                        |
+
+Nilai build sudah diatur dalam `vercel.json`. Tambahkan Environment Variables berikut:
+
+| Variabel      | Nilai                                                                       |
+| ------------- | --------------------------------------------------------------------------- |
+| `APP_KEY`     | Key aplikasi yang sama jika memakai database yang sudah ada; simpan privat. |
+| `APP_URL`     | URL HTTPS deployment atau domain aplikasi.                                  |
+| `DB_HOST`     | Hostname pooled Neon.                                                       |
+| `DB_PORT`     | `5432`                                                                      |
+| `DB_DATABASE` | Nama database Neon.                                                         |
+| `DB_USERNAME` | Nama role Neon.                                                             |
+| `DB_PASSWORD` | Password Neon; simpan privat.                                               |
+
+Tambahkan juga variabel AI di bagian konfigurasi AI jika chat ingin diaktifkan. Jika mengimpor `.env` lokal, sesuaikan `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL`, `SESSION_SECURE_COOKIE=true`, dan `LOG_CHANNEL=stderr`. Jangan menimpa konfigurasi hosting dengan URL localhost atau pengaturan development.
+
+Konfigurasi Vercel menyiapkan session/cache database, TLS Neon, cookie HTTPS, dan log stderr. Build hanya menyalin aset publik, foto, dan file PWA ke `.vercel-static`; kode PHP, `.env`, private storage, serta file Vite development tidak menjadi aset publik. Laravel menggunakan direktori sementara untuk cache framework dan hasil kompilasi view. Development lokal tetap memakai `public/index.php`.
+
+Jalankan migrasi dari lingkungan tepercaya yang dikonfigurasi ke database tujuan bila diperlukan:
+
+```sh
+php artisan migrate --force
+```
+
+Build tidak menjalankan migrasi, reset database, demo seeder, atau pembuatan `APP_KEY` baru. Gunakan endpoint `/up` untuk pemeriksaan dasar deployment.
+
+Batas deployment yang perlu disiapkan:
+
+- Vercel tidak otomatis menjalankan Artisan queue worker atau scheduler. **AI memerlukan worker database persisten terpisah**, dan scheduler juga perlu dijalankan dari lingkungan eksternal. `QUEUE_CONNECTION=sync` pada konfigurasi umum tidak menggantikan worker AI.
+- Upload bukti pengeluaran saat ini memakai private local storage. Filesystem Vercel bersifat sementara; penyimpanan permanen diperlukan sebelum mengandalkan fitur upload bukti di produksi. Foto menu bawaan ikut deployment dan tidak bergantung pada upload runtime.
+- Konfigurasikan pengiriman email serta backup database. Konfigurasi repo dan tes lokal tidak membuktikan bahwa deployment online, backup/restore, atau uji beban produksi sudah berhasil.
+
+Untuk hosting PHP biasa, arahkan document root ke `public/`, pasang dependency produksi, build frontend, atur environment, jalankan migrasi, lalu `php artisan optimize`. Kelola worker menggunakan process supervisor dan scheduler menggunakan cron.
+
+## Pengujian dan format
 
 ```sh
 php artisan test
 php vendor/bin/phpunit -c phpunit.pgsql.xml
+npm run test:pwa
 npm run build
 npm run format:check
 ```
 
-The test runner rejects the operational database. The fast suite uses an isolated in-memory SQLite database; the PostgreSQL suite uses the local `veltrix_test` database on `127.0.0.1:55432`. Concurrency tests run two PHP processes to exercise last-stock contention and checkout replay. Tests do not reset the application's Neon database.
+Test runner menolak database operasional. Suite cepat memakai SQLite in-memory. Suite PostgreSQL menggunakan database lokal `veltrix_test` pada `127.0.0.1:55432`, termasuk dua proses terpisah untuk menguji checkout stok terakhir dan replay permintaan. Pengujian tidak mereset database Neon aplikasi.
 
-The PostgreSQL suite requires a running local test cluster. In this workspace it resides at `.tools/pgsql-test`. TLS and channel binding are disabled only for that local suite; Neon connections retain TLS and channel binding.
+Suite PostgreSQL memerlukan cluster test lokal yang aktif. Pada workspace Windows ini, cluster berada di `.tools/pgsql-test`; kredensial dan konfigurasi tersebut terpisah dari Neon.
 
-```powershell
-$postgresControl = 'C:/Program Files/PostgreSQL/18/bin/pg_ctl.exe'
-& $postgresControl `
-    -D .tools/pgsql-test `
-    -l .tools/pgsql-test/server.log `
-    -o '-p 55432 -h 127.0.0.1' `
-    -w start
+Prettier digunakan untuk TypeScript, CSS, dan PHP dengan lebar baris 90. Jalankan `npm run format` untuk memformat source. Screenshot QA lokal disimpan pada folder `.tasteskill` yang diabaikan Git.
 
-& ./.tools/php/php.exe vendor/bin/phpunit -c phpunit.pgsql.xml
-```
+## Kebersihan repository
 
-Source uses vertical formatting with Prettier, a print width of 90, and the PHP plugin. Run `npm run format` to format source. Laravel Pint is also available for PHP style checks; the project's final formatting pass uses Prettier to wrap long lines.
+Seluruh folder `.impeccable/` diabaikan Git dan tetap menjadi data tooling lokal. Folder dependency, runtime lokal, hasil build, screenshot QA, `.env`, key, log, dan backup juga tidak disertakan ke repository.
 
-Local browser QA screenshots belong in `.tasteskill/screenshots/`, which Git ignores. Do not store them in `docs/screenshots/`.
-
-## Queue, scheduler, and email
-
-```sh
-php artisan queue:work --tries=3 --timeout=90
-php artisan schedule:run
-php artisan veltrix:notifications
-```
-
-Run the scheduler every minute. The stock notification job is scheduled hourly and avoids duplicate notifications. `MAIL_MAILER=log` is for development: password reset links will not reach inboxes until a real mail transport is configured.
-
-## Deployment
-
-Vercel deployment is configured from the repository root without Docker. Import this GitHub repository, leave **Root Directory** at `./`, select **Other** as the framework preset, and use Node.js **22.x**. The committed `vercel.json` sets the install command, build command, and output directory; keep those settings without dashboard overrides. `vercel-php@0.8.0` supplies PHP 8.4. This community runtime is archived and is not officially supported by Vercel.
-
-Add these environment variables in Vercel before deploying:
-
-| Variable | Value |
-| --- | --- |
-| `APP_KEY` | The existing Laravel application key, kept private. Reuse it when connecting to the existing database so encrypted data remains readable. |
-| `APP_URL` | The full HTTPS URL of the deployment or custom domain. |
-| `DB_HOST` | Your Neon pooled hostname. |
-| `DB_PORT` | `5432` |
-| `DB_DATABASE` | Your Neon database name. |
-| `DB_USERNAME` | Your Neon role name. |
-| `DB_PASSWORD` | Your Neon password, kept private. |
-
-The configuration enables production mode, HTTPS cookies, PostgreSQL sessions/cache, TLS for Neon, stderr logs, and synchronous queue execution. Configure SMTP separately for password reset emails. `npm run build:vercel` builds the frontend and copies only public assets into `.vercel-static`; it includes the generated menu photos and landing image, while excluding PHP entry points, the Vite hot file, private storage, and source files. Composer dependencies and package discovery are handled by the PHP runtime. The Laravel entry point creates writable view and framework cache directories in temporary storage. Local development continues using `public/index.php` as usual.
-
-Run `php artisan migrate --force` from a trusted environment configured for the target database when migrations are needed. Builds deliberately do not migrate, seed, reset data, or generate a replacement application key. Do not run DemoSeeder or DemoAccountSeeder in production. The built-in `/up` route provides a deployment health check.
-
-Vercel does not run this application's Artisan scheduler automatically. Run `php artisan schedule:run` from an external scheduler/worker environment for hourly operational notifications. Synchronous queue execution covers jobs dispatched by web requests; it does not process an existing database queue backlog. Uploads of expense receipts currently use private local storage, which is temporary on Vercel: permanent receipt storage must be configured before relying on this upload feature in production. The committed menu images are deployment assets and are available without external image storage.
-
-For traditional PHP hosting, point the web document root to `public/`, install production dependencies, build Vite assets, configure HTTPS and the environment, run migrations, and run `php artisan optimize`. Manage the queue worker through a process supervisor and the scheduler through cron or an equivalent service.
-
-Keep encrypted PostgreSQL backups outside the web root and repository. Test `pg_dump` and `pg_restore` against a separate recovery database before going live. Backup execution, a restore drill, public deployment, uptime monitoring, and production load testing have not been completed in this workspace.
-
-Never commit `.env`, API keys, database dumps, dependencies, or local runtime directories. Keep Neon and Gemini credentials out of frontend source and Git.
+Jangan commit kredensial Neon/Gemini, dump database, atau bukti pengeluaran privat. Simpan backup terenkripsi di luar web root dan repository, lalu verifikasi pemulihannya pada database terpisah.
